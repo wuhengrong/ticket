@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>地铁行程风险评估系统</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            font-family: 'Microsoft YaHei', sans-serif;
+        }
+        
+        .container {
+            max-width: 800px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            padding: 30px;
+            margin-top: 30px;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #2c3e50;
+        }
+        
+        .header h1 {
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+        
+        .header .subtitle {
+            color: #7f8c8d;
+            font-size: 16px;
+        }
+        
+        .form-card {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 25px;
+            margin-bottom: 25px;
+            border-left: 4px solid #3498db;
+        }
+        
+        .result-card {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 25px;
+            display: none;
+        }
+        
+        .form-label {
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 8px;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+            border: none;
+            padding: 12px 30px;
+            font-weight: 600;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(52, 152, 219, 0.4);
+        }
+        
+        .btn-primary:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .risk-high {
+            color: #e74c3c;
+            font-weight: bold;
+        }
+        
+        .risk-medium {
+            color: #f39c12;
+            font-weight: bold;
+        }
+        
+        .risk-low {
+            color: #27ae60;
+            font-weight: bold;
+        }
+        
+        .risk-none {
+            color: #2ecc71;
+            font-weight: bold;
+        }
+        
+        .result-item {
+            margin-bottom: 15px;
+            padding: 10px;
+            background: white;
+            border-radius: 8px;
+            border-left: 4px solid #3498db;
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .alert-custom {
+            border-radius: 10px;
+            border: none;
+            font-weight: 500;
+        }
+        
+        .error-message {
+            color: #e74c3c;
+            background: #f8d7da;
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 10px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1><i class="fas fa-subway me-2"></i>地铁行程风险评估系统</h1>
+            <p class="subtitle">基于时间与距离的智能行程可行性分析</p>
+        </div>
+        
+        <div class="form-card">
+            <h5><i class="fas fa-route me-2"></i>行程信息输入</h5>
+            <form id="tripForm">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label">上一站终点名称</label>
+                            <input type="text" class="form-control" id="previousEndStation" 
+                                   placeholder="例如：沙田" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">上一站终点时间</label>
+                            <input type="datetime-local" class="form-control" id="previousEndTime" required>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label">下一站起点名称</label>
+                            <input type="text" class="form-control" id="nextStartStation" 
+                                   placeholder="例如：科学馆" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">下一站起点时间</label>
+                            <input type="datetime-local" class="form-control" id="nextStartTime" required>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="text-center mt-4">
+                    <button type="submit" class="btn btn-primary btn-lg" id="submitBtn">
+                        <i class="fas fa-search me-2"></i>开始风险评估
+                    </button>
+                </div>
+                
+                <div class="error-message" id="errorMessage"></div>
+            </form>
+        </div>
+        
+        <div class="loading" id="loading">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">加载中...</span>
+            </div>
+            <p class="mt-2">正在分析行程可行性，请稍候...</p>
+        </div>
+        
+        <div class="result-card" id="resultCard">
+            <h5><i class="fas fa-chart-bar me-2"></i>风险评估结果</h5>
+            
+            <div class="result-item">
+                <strong>风险等级：</strong>
+                <span id="riskLevel" class="risk-high">-</span>
+            </div>
+            
+            <div class="result-item">
+                <strong>原因分析：</strong>
+                <span id="riskReason">-</span>
+            </div>
+            
+            <div class="result-item">
+                <strong>通行建议：</strong>
+                <span id="travelAdvice">-</span>
+            </div>
+            
+            <div class="result-item">
+                <strong>置信度：</strong>
+                <span id="confidence">-</span>
+            </div>
+            
+            <div class="alert alert-info alert-custom mt-3" role="alert">
+                <i class="fas fa-info-circle me-2"></i>
+                <strong>说明：</strong> 本评估基于地铁运行时间、站点距离和换乘时间等因素综合分析得出。
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // API 基础URL - 根据您的实际部署情况调整
+        const API_BASE_URL = ''; // 如果前后端同域，可以留空；如果跨域需要配置完整URL
+        
+        document.getElementById('tripForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            validateTrip();
+        });
+        
+        // 设置默认时间为当前时间
+        function setDefaultTimes() {
+            const now = new Date();
+            const timeString = formatDateTimeForInput(now);
+            
+            // 设置上一站终点时间为1小时前
+            const previousTime = new Date(now.getTime() - 60 * 60 * 1000);
+            const previousTimeString = formatDateTimeForInput(previousTime);
+            
+            document.getElementById('previousEndTime').value = previousTimeString;
+            document.getElementById('nextStartTime').value = timeString;
+        }
+        
+        // 格式化日期时间用于datetime-local输入
+        function formatDateTimeForInput(date) {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            const hours = String(date.getHours()).padStart(2, '0');
+            const minutes = String(date.getMinutes()).padStart(2, '0');
+            
+            return `${year}-${month}-${day}T${hours}:${minutes}`;
+        }
+        
+        // 格式化日期时间用于API请求
+        function formatDateTimeForAPI(dateTimeString) {
+            // 将本地时间转换为ISO格式
+            const date = new Date(dateTimeString);
+            return date.toISOString();
+        }
+        
+        // 页面加载时设置默认时间
+        window.addEventListener('load', setDefaultTimes);
+        
+        function validateTrip() {
+            // 获取表单数据
+            const previousEndStation = document.getElementById('previousEndStation').value.trim();
+            const previousEndTime = document.getElementById('previousEndTime').value;
+            const nextStartStation = document.getElementById('nextStartStation').value.trim();
+            const nextStartTime = document.getElementById('nextStartTime').value;
+            
+            // 验证输入
+            if (!previousEndStation || !previousEndTime || !nextStartStation || !nextStartTime) {
+                showError('请填写完整的行程信息！');
+                return;
+            }
+            
+            // 验证时间逻辑
+            const previousTime = new Date(previousEndTime);
+            const nextTime = new Date(nextStartTime);
+            
+            if (nextTime <= previousTime) {
+                showError('下一站起点时间必须晚于上一站终点时间！');
+                return;
+            }
+            
+            // 清除之前的错误信息
+            clearError();
+            
+            // 显示加载中，禁用提交按钮
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('resultCard').style.display = 'none';
+            document.getElementById('submitBtn').disabled = true;
+            
+            // 构建请求数据
+            const requestData = {
+                previousEndStation: previousEndStation,
+                previousEndTime: formatDateTimeForAPI(previousEndTime),
+                nextStartStation: nextStartStation,
+                nextStartTime: formatDateTimeForAPI(nextStartTime)
+            };
+            
+            console.log('发送请求数据:', requestData);
+            
+            // 调用真实的后端 API
+            fetch(`${API_BASE_URL}/api/validate-trip`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(requestData)
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP错误! 状态: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('收到响应数据:', data);
+                displayResults(data);
+            })
+            .catch(error => {
+                console.error('请求失败:', error);
+                displayError('请求失败: ' + error.message);
+            })
+            .finally(() => {
+                // 重新启用提交按钮
+                document.getElementById('submitBtn').disabled = false;
+            });
+        }
+        
+        function displayResults(result) {
+            // 隐藏加载中
+            document.getElementById('loading').style.display = 'none';
+            
+            // 检查响应是否包含错误
+            if (result.riskLevel === 'ERROR') {
+                displayError(result.reason || '评估过程中出现未知错误');
+                return;
+            }
+            
+            // 显示结果
+            const riskLevelElement = document.getElementById('riskLevel');
+            riskLevelElement.textContent = getRiskLevelText(result.riskLevel);
+            riskLevelElement.className = getRiskLevelClass(result.riskLevel);
+            
+            document.getElementById('riskReason').textContent = result.reason || '暂无原因说明';
+            
+            const travelAdvice = result.allowTravel ? 
+                '<span class="text-success"><i class="fas fa-check-circle me-1"></i>允许通行</span>' : 
+                '<span class="text-danger"><i class="fas fa-times-circle me-1"></i>不建议通行</span>';
+            document.getElementById('travelAdvice').innerHTML = travelAdvice;
+            
+            if (result.confidence !== undefined && result.confidence !== null) {
+                document.getElementById('confidence').textContent = 
+                    `置信度: ${(result.confidence * 100).toFixed(1)}%`;
+            } else {
+                document.getElementById('confidence').textContent = '置信度: 未知';
+            }
+            
+            // 显示结果卡片
+            document.getElementById('resultCard').style.display = 'block';
+            
+            // 滚动到结果区域
+            document.getElementById('resultCard').scrollIntoView({ 
+                behavior: 'smooth',
+                block: 'start'
+            });
+        }
+        
+        function showError(message) {
+            const errorElement = document.getElementById('errorMessage');
+            errorElement.textContent = message;
+            errorElement.style.display = 'block';
+            
+            // 3秒后自动隐藏错误信息
+            setTimeout(() => {
+                errorElement.style.display = 'none';
+            }, 5000);
+        }
+        
+        function clearError() {
+            document.getElementById('errorMessage').style.display = 'none';
+        }
+        
+        function displayError(message) {
+            document.getElementById('loading').style.display = 'none';
+            showError(message || '评估过程中出现错误，请稍后重试！');
+        }
+        
+        function getRiskLevelText(level) {
+            const levels = {
+                'HIGH': '高风险',
+                'MEDIUM': '中风险', 
+                'LOW': '低风险',
+                'NONE': '无风险',
+                'ERROR': '评估错误'
+            };
+            return levels[level] || level;
+        }
+        
+        function getRiskLevelClass(level) {
+            const classes = {
+                'HIGH': 'risk-high',
+                'MEDIUM': 'risk-medium',
+                'LOW': 'risk-low',
+                'NONE': 'risk-none',
+                'ERROR': 'risk-high'
+            };
+            return classes[level] || 'risk-medium';
+        }
+        
+        // 添加输入框变化监听，实时清除错误信息
+        document.querySelectorAll('input').forEach(input => {
+            input.addEventListener('input', clearError);
+        });
+    </script>
+</body>
+</html>

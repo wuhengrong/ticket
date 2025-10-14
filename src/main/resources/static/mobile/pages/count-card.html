@@ -1,0 +1,781 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>共享出行</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
+        }
+        
+        html, body {
+            height: 100%;
+            overflow: hidden;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .container {
+            width: 100%;
+            height: 100%;
+            max-width: 100%;
+            background: rgba(255, 255, 255, 0.98);
+            border-radius: 0;
+            box-shadow: none;
+            padding: 20px;
+            position: relative;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 6px;
+            background: linear-gradient(90deg, #3498db, #2ecc71, #e74c3c);
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #f0f0f0;
+            flex-shrink: 0;
+        }
+        
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 8px;
+            font-size: 24px;
+            font-weight: 600;
+        }
+        
+        .subtitle {
+            color: #7f8c8d;
+            font-size: 14px;
+        }
+        
+        .alert {
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            font-size: 14px;
+            display: none;
+        }
+        
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .alert-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .card {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: 16px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            flex-shrink: 0;
+        }
+        
+        .card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
+        }
+        
+        .card-title {
+            display: flex;
+            align-items: center;
+            color: #3498db;
+            margin-bottom: 15px;
+            font-size: 18px;
+            font-weight: 600;
+        }
+        
+        .card-title i {
+            margin-right: 10px;
+            font-size: 20px;
+        }
+        
+        /* 优化后的信息布局 */
+        .info-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .info-row {
+            background: white;
+            padding: 15px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .info-label {
+            font-size: 14px;
+            color: #7f8c8d;
+            font-weight: 500;
+        }
+        
+        .info-value {
+            font-size: 18px;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        
+        .status-available {
+            color: #2ecc71;
+        }
+        
+        .status-unavailable {
+            color: #e74c3c;
+        }
+        
+        .status-waiting {
+            color: #f39c12;
+        }
+        
+        .status-others-using {
+            color: #e74c3c;
+            font-size: 16px;
+            font-weight: bold;
+        }
+        
+        .btn-group {
+            display: flex;
+            gap: 15px;
+            margin-top: 10px;
+        }
+        
+        .btn {
+            flex: 1;
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+            color: white;
+            border: none;
+            padding: 15px 20px;
+            border-radius: 50px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 6px 15px rgba(52, 152, 219, 0.4);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            transition: left 0.5s;
+        }
+        
+        .btn:hover::before {
+            left: 100%;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(52, 152, 219, 0.6);
+        }
+        
+        .btn:active {
+            transform: translateY(0);
+        }
+        
+        .btn:disabled {
+            background: linear-gradient(135deg, #95a5a6 0%, #7f8c8d 100%);
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: 0 4px 10px rgba(149, 165, 166, 0.4);
+        }
+        
+        .btn:disabled:hover::before {
+            left: -100%;
+        }
+        
+        .btn i {
+            margin-right: 8px;
+            font-size: 16px;
+        }
+        
+        .btn-use {
+            background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+            box-shadow: 0 6px 15px rgba(46, 204, 113, 0.4);
+        }
+        
+        .btn-use:hover {
+            box-shadow: 0 8px 20px rgba(46, 204, 113, 0.6);
+        }
+        
+        .btn-return {
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+            box-shadow: 0 6px 15px rgba(231, 76, 60, 0.4);
+        }
+        
+        .btn-return:hover {
+            box-shadow: 0 8px 20px rgba(231, 76, 60, 0.6);
+        }
+        
+        .usage-history {
+            flex-grow: 1;
+            overflow-y: auto;
+        }
+        
+        .history-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .history-title i {
+            margin-right: 8px;
+            color: #3498db;
+        }
+        
+        .history-list {
+            list-style: none;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .history-item {
+            background: white;
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 12px;
+            border-left: 4px solid #3498db;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+            transition: transform 0.2s ease;
+        }
+        
+        .history-item:hover {
+            transform: translateX(5px);
+        }
+        
+        .history-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        
+        .history-user {
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        
+        .history-status {
+            font-size: 12px;
+            padding: 4px 8px;
+            border-radius: 20px;
+            font-weight: 500;
+        }
+        
+        .status-in-progress {
+            background: #fff3cd;
+            color: #856404;
+        }
+        
+        .status-completed {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+        
+        .history-time {
+            font-size: 13px;
+            color: #7f8c8d;
+        }
+        
+        .history-duration {
+            font-size: 12px;
+            color: #95a5a6;
+            margin-top: 5px;
+        }
+        
+        .no-data {
+            text-align: center;
+            color: #bdc3c7;
+            font-style: italic;
+            padding: 30px 15px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+        
+        .footer {
+            margin-top: 20px;
+            text-align: center;
+            color: #bdc3c7;
+            font-size: 12px;
+            padding-top: 15px;
+            border-top: 1px solid #f0f0f0;
+            flex-shrink: 0;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 20px 15px;
+            color: #7f8c8d;
+        }
+        
+        .loading i {
+            animation: spin 1s linear infinite;
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(-30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        
+        /* 自定义滚动条 */
+        .history-list::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .history-list::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        
+        .history-list::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 10px;
+        }
+        
+        .history-list::-webkit-scrollbar-thumb:hover {
+            background: #a8a8a8;
+        }
+        
+        @media (max-width: 480px) {
+            .container {
+                padding: 15px;
+            }
+            
+            h1 {
+                font-size: 22px;
+            }
+            
+            .info-row {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 8px;
+            }
+            
+            .btn-group {
+                flex-direction: column;
+                gap: 12px;
+            }
+            
+            .btn {
+                padding: 12px 20px;
+            }
+        }
+        
+        @media (max-height: 700px) {
+            .container {
+                padding: 15px;
+            }
+            
+            header {
+                margin-bottom: 15px;
+            }
+            
+            .card {
+                margin-bottom: 15px;
+                padding: 15px;
+            }
+            
+            .history-list {
+                max-height: 200px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🚌 信息共享</h1>
+        </header>
+        
+        <div class="alert" id="alertMessage"></div>
+        
+        <div class="card">
+            <div class="card-title">
+                <i class="fas fa-id-card"></i>
+                <span>票卡信息 请加微信：<span class='info-value status-others-using' >whengrong</span></span>
+            </div>
+            
+            <!-- 优化后的布局：四行结构 -->
+            <div class="info-list">
+                <!-- 第一行：票卡状态 -->
+                <div class="info-row">
+                    <div class="info-label">票卡状态</div>
+                    <div class="info-value" id="cardStatus">加载中...</div>
+                </div>
+                
+                <!-- 第二行：账号 -->
+                <div class="info-row" id="accountInfo">
+                    <div class="info-label">账号</div>
+                    <div class="info-value" id="currentPhone">加载中...</div>
+                </div>
+                
+                <!-- 第三行：密码 -->
+                <div class="info-row" id="passwordInfo">
+                    <div class="info-label">密码</div>
+                    <div class="info-value" id="currentPassword">加载中...</div>
+                </div>
+                
+                <!-- 第四行：按钮组 -->
+                <div class="btn-group">
+                    <button class="btn btn-use" id="useCardBtn" disabled>
+                        <i class="fas fa-play-circle"></i> 使用票卡
+                    </button>
+                    <button class="btn btn-return" id="returnCardBtn" disabled>
+                        <i class="fas fa-stop-circle"></i> 归还票卡
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="history-title">
+                <i class="fas fa-history"></i>
+                <span>使用记录</span>
+            </div>
+            <div class="usage-history">
+                <ul class="history-list" id="historyList">
+                    <li class="loading">
+                        <i class="fas fa-spinner"></i><br>
+                        <span>加载使用记录中...</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p>© 2025 分组共享出行体验</p>
+        </div>
+    </div>
+
+    <script>
+        // 从URL获取用户ID和分组ID
+        const urlParams = new URLSearchParams(window.location.search);
+        const userId = urlParams.get('userId') || 'USER001';
+        const groupId = urlParams.get('groupId') || 'GRP001';
+        
+        let userInfo = null;
+        let virtualCardInfo = null;
+        let currentUsageRecord = null;
+        
+        // 页面加载时初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('页面初始化，用户:', userId, '分组:', groupId);
+            loadUserCardInfo();
+            loadUsageHistory();
+            
+            // 绑定事件
+            document.getElementById('useCardBtn').addEventListener('click', useCard);
+            document.getElementById('returnCardBtn').addEventListener('click', returnCard);
+            
+            // 每30秒自动刷新数据
+            setInterval(refreshData, 30000);
+        });
+        
+        // 加载用户虚拟卡信息
+        async function loadUserCardInfo() {
+            try {
+                const response = await fetch(`/api/virtual-cards/user-info?groupId=${groupId}&userId=${userId}`);
+                if (response.ok) {
+                    const result = await response.json();
+                    if (result.success) {
+                        const userCardInfo = result.data;
+                        userInfo = userCardInfo.groupMember;
+                        virtualCardInfo = userCardInfo.cardInfo;
+                        updateCardDisplay();
+                        updateButtonStates();
+                    } else {
+                        showAlert('加载用户信息失败: ' + result.message, 'error');
+                    }
+                } else {
+                    showAlert('加载用户信息失败', 'error');
+                }
+            } catch (error) {
+                console.error('加载用户信息失败:', error);
+                showAlert('网络错误，请检查连接', 'error');
+            }
+        }
+        
+        // 更新卡片显示
+        function updateCardDisplay() {
+            if (!virtualCardInfo) return;
+            
+            const useBtn = document.getElementById('useCardBtn');
+            const isUseBtnDisabled = useBtn.disabled;
+            
+            // 票卡状态
+            const cardStatusEl = document.getElementById('cardStatus');
+            if (virtualCardInfo.status === 1) {
+                if (isUseBtnDisabled) {
+                    // 按钮不可用时显示等待信息
+                    cardStatusEl.textContent = '正在使用中，请稍等';
+                    cardStatusEl.className = 'info-value status-others-using';
+                } else {
+                    // 按钮可用时显示正常状态
+                    cardStatusEl.textContent = '可用';
+                    cardStatusEl.className = 'info-value status-available';
+                }
+            } else {
+                cardStatusEl.textContent = '不可用';
+                cardStatusEl.className = 'info-value status-unavailable';
+            }
+            
+            // 当前账号和密码 - 根据按钮状态显示或隐藏
+            const accountInfo = document.getElementById('accountInfo');
+            const passwordInfo = document.getElementById('passwordInfo');
+            
+            if (isUseBtnDisabled) {
+                // 按钮不可用时隐藏账号密码
+                accountInfo.style.display = 'none';
+                passwordInfo.style.display = 'none';
+            } else {
+                // 按钮可用时显示账号密码
+                accountInfo.style.display = 'flex';
+                passwordInfo.style.display = 'flex';
+                document.getElementById('currentPhone').textContent = virtualCardInfo.phone || '未知';
+                document.getElementById('currentPassword').textContent = virtualCardInfo.password || '未知';
+            }
+        }
+        
+        // 更新按钮状态
+        function updateButtonStates() {
+            const useBtn = document.getElementById('useCardBtn');
+            const returnBtn = document.getElementById('returnCardBtn');
+            
+            if (!userInfo || !virtualCardInfo) {
+                useBtn.disabled = true;
+                returnBtn.disabled = true;
+                return;
+            }
+            
+            const userOrder = userInfo.useOrder || 0;
+            const currentStatus = virtualCardInfo.currentStatus || 0;
+            const cardStatus = virtualCardInfo.status || 0;
+            
+            // 使用票卡按钮：票卡状态为1且当前状态与用户序号相等
+            useBtn.disabled = !(cardStatus === 1 && currentStatus === userOrder);
+            
+            // 归还票卡按钮：当前用户正在使用
+            returnBtn.disabled = !(virtualCardInfo.currentUsedBy === userId);
+            
+            // 更新显示状态
+            updateCardDisplay();
+        }
+        
+        // 使用票卡
+        async function useCard() {
+            try {
+                const response = await fetch('/api/usage/start', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        groupId: groupId,
+                        userId: userId
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showAlert('开始使用票卡成功！', 'success');
+                    await refreshData();
+                } else {
+                    showAlert(result.message || '操作失败，请重试', 'error');
+                }
+            } catch (error) {
+                console.error('使用票卡失败:', error);
+                showAlert('网络错误，请检查连接后重试', 'error');
+            }
+        }
+        
+        // 归还票卡
+        async function returnCard() {
+            try {
+                const response = await fetch('/api/usage/end', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        groupId: groupId,
+                        userId: userId
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showAlert('归还票卡成功！', 'success');
+                    await refreshData();
+                } else {
+                    showAlert(result.message || '操作失败，请重试', 'error');
+                }
+            } catch (error) {
+                console.error('归还票卡失败:', error);
+                showAlert('网络错误，请检查连接后重试', 'error');
+            }
+        }
+        
+        // 加载使用记录
+        async function loadUsageHistory() {
+            try {
+                const response = await fetch(`/api/usage/records/${groupId}`);
+                if (response.ok) {
+                    const result = await response.json();
+                    if (result.success) {
+                        renderUsageHistory(result.data);
+                    } else {
+                        renderUsageHistory([]);
+                    }
+                } else {
+                    renderUsageHistory([]);
+                }
+            } catch (error) {
+                console.error('加载使用记录失败:', error);
+                renderUsageHistory([]);
+            }
+        }
+        
+        // 渲染使用记录
+        function renderUsageHistory(records) {
+            const list = document.getElementById('historyList');
+            
+            if (!records || !Array.isArray(records) || records.length === 0) {
+                list.innerHTML = '<li class="no-data">暂无使用记录</li>';
+                return;
+            }
+            
+            list.innerHTML = '';
+            
+            // 显示最近10条记录
+            const displayRecords = records.slice(0, 10);
+            
+            displayRecords.forEach(record => {
+                const li = document.createElement('li');
+                li.className = 'history-item';
+                
+                const status = record.status || 'COMPLETED';
+                const statusText = status === 'IN_PROGRESS' ? '使用中' : '已完成';
+                const statusClass = status === 'IN_PROGRESS' ? 'status-in-progress' : 'status-completed';
+                const startTime = formatDateTime(record.startTime);
+                const endTime = record.endTime ? formatDateTime(record.endTime) : '进行中';
+                const duration = record.duration ? `时长: ${record.duration}分钟` : '';
+                
+                li.innerHTML = `
+                    <div class="history-header">
+                        <div class="history-user">${record.userId}</div>
+                        <div class="history-status ${statusClass}">${statusText}</div>
+                    </div>
+                    <div class="history-time">
+                        开始: ${startTime}<br>
+                        结束: ${endTime}
+                    </div>
+                    <div class="history-duration">${duration}</div>
+                `;
+                
+                list.appendChild(li);
+            });
+        }
+        
+        // 刷新数据
+        async function refreshData() {
+            await Promise.all([
+                loadUserCardInfo(),
+                loadUsageHistory()
+            ]);
+        }
+        
+        // 显示提示信息
+        function showAlert(message, type = 'success') {
+            const alertEl = document.getElementById('alertMessage');
+            alertEl.textContent = message;
+            alertEl.className = `alert alert-${type}`;
+            alertEl.style.display = 'block';
+            
+            // 3秒后自动隐藏
+            setTimeout(() => {
+                alertEl.style.display = 'none';
+            }, 3000);
+        }
+        
+        // 格式化日期时间
+        function formatDateTime(dateString) {
+            if (!dateString) return '未设置';
+            try {
+                const date = new Date(dateString);
+                return date.toLocaleString('zh-CN', { 
+                    month: '2-digit', 
+                    day: '2-digit',
+                    hour: '2-digit', 
+                    minute: '2-digit'
+                });
+            } catch (e) {
+                return '时间格式错误';
+            }
+        }
+    </script>
+</body>
+</html>
