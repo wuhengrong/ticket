@@ -16,7 +16,7 @@ public class VirtualCardTestData implements CommandLineRunner {
     private final VirtualCardRepository virtualCardRepository;
     
     // 使用构造函数注入
-    @Autowired
+    //@Autowired
     public VirtualCardTestData(VirtualCardRepository virtualCardRepository) {
         this.virtualCardRepository = virtualCardRepository;
     }
@@ -46,7 +46,7 @@ public class VirtualCardTestData implements CommandLineRunner {
         testCard.setPhysicalCardBPwd("654321");
         testCard.setUsageRule("1;2;3;4;5;6;7");
         
-        virtualCardRepository.save(testCard);
+        //virtualCardRepository.save(testCard);
         System.out.println("测试虚拟乘车卡数据创建完成: {}" + testCard.getId());
     }
 }

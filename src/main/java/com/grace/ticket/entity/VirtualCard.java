@@ -204,8 +204,9 @@ public class VirtualCard {
             return false;
         }
         
-        int todayDayOfWeek = today.getDayOfWeek().getValue();
-        return getUsageRuleDays().contains(todayDayOfWeek);
+        //int todayDayOfWeek = today.getDayOfWeek().getValue();
+        //return getUsageRuleDays().contains(todayDayOfWeek);
+        return true;
     }
     
     public CardCredentials getCurrentCredentials() {
@@ -232,17 +233,30 @@ public class VirtualCard {
         // this.status = 1;
     }
     public boolean canUserUseCard(String groupId, String userId, Integer userOrder) {
-        if (!isAvailable()) {
+        
+    	//status = 1,可用
+    	if (!isAvailable()) {
             return false;
         }
         
+    	//检查不可用列表是否包含今天
         if (!isTodayAvailable()) {
             return false;
         }
         
-        if (!periodStatus.equals(userOrder)) {
+        //判断用户顺序
+        /*
+        if (!periodStatus.equals(userOrder)) { 
             return false;
         }
+        */
+        
+        String orderSeq = userOrder.toString();
+        String curSeq = "" + periodStatus;
+        if (!orderSeq.contains(curSeq)) { 
+            return false;
+        }
+        
         
         if (currentUsedBy != null && !currentUsedBy.equals(userId)) {
             return false;

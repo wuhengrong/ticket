@@ -614,7 +614,10 @@
             const cardStatus = virtualCardInfo.status || 0;
             
             // 使用票卡按钮：票卡状态为1且当前状态与用户序号相等
-            useBtn.disabled = !(cardStatus === 1 && currentStatus === userOrder);
+			// 修改后的逻辑：将数字转换为字符串，判断 userOrder 是否包含 currentStatus
+		    const userOrderStr = userOrder.toString();
+		    const currentStatusStr = currentStatus.toString();
+		    useBtn.disabled = !(cardStatus === 1 && userOrderStr.includes(currentStatusStr));
             
             // 归还票卡按钮：当前用户正在使用
             returnBtn.disabled = !(virtualCardInfo.currentUsedBy === userId);
