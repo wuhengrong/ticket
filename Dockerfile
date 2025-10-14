@@ -1,6 +1,6 @@
 FROM maven:3.8.4-openjdk-17 AS builder
 WORKDIR /app
-COPY . .
+COPY ticket/ .  # 复制子目录内容
 RUN mvn clean package -DskipTests
 
 FROM openjdk:17-jdk-slim
