@@ -1,5 +1,8 @@
 package com.grace.ticket.service;
 
+import java.util.List;
+import java.util.Optional;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -21,6 +24,24 @@ public class VirtualCardService {
  
  @Autowired
  private GroupRepository groupRepository;
+ 
+ 
+ 
+ public List<VirtualCard> findAll() {
+     return virtualCardRepository.findAll();
+ }
+ 
+ public Optional<VirtualCard> findById(String id) {
+     return virtualCardRepository.findById(id);
+ }
+ 
+ public VirtualCard save(VirtualCard virtualCard) {
+     return virtualCardRepository.save(virtualCard);
+ }
+ 
+ public void deleteById(String id) {
+     virtualCardRepository.deleteById(id);
+ }
  
  public VirtualCard getVirtualCardByGroupId(String groupId) {
      return virtualCardRepository.findByGroupId(groupId)

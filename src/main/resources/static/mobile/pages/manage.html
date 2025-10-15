@@ -1,0 +1,1272 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>数据管理后台</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
+        }
+        
+        body {
+            background: #f5f7fa;
+            color: #333;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+        
+        .subtitle {
+            color: #7f8c8d;
+            font-size: 16px;
+        }
+        
+        .tabs {
+            display: flex;
+            margin-bottom: 20px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        
+        .tab {
+            flex: 1;
+            padding: 15px 20px;
+            text-align: center;
+            background: #f8f9fa;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            color: #6c757d;
+            transition: all 0.3s ease;
+        }
+        
+        .tab.active {
+            background: #3498db;
+            color: white;
+        }
+        
+        .tab:hover:not(.active) {
+            background: #e9ecef;
+        }
+        
+        .tab-content {
+            display: none;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+        
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .card-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        
+        .btn {
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(52, 152, 219, 0.4);
+        }
+        
+        .btn-success {
+            background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+        }
+        
+        .btn-danger {
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+        }
+        
+        .btn-small {
+            padding: 4px 8px;
+            font-size: 12px;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+        
+        th {
+            background: #f8f9fa;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        
+        tr:hover {
+            background: #f8f9fa;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        
+        input, select, textarea {
+            width: 100%;
+            padding: 10px 15px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: border 0.3s ease;
+        }
+        
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+        }
+        
+        .form-row {
+            display: flex;
+            gap: 15px;
+        }
+        
+        .form-row .form-group {
+            flex: 1;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal.active {
+            display: flex;
+        }
+        
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 700px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+        
+        .modal-header {
+            padding: 20px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .modal-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        
+        .close {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #7f8c8d;
+        }
+        
+        .modal-body {
+            padding: 20px;
+        }
+        
+        .modal-footer {
+            padding: 15px 20px;
+            border-top: 1px solid #eee;
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+        
+        .alert {
+            padding: 12px 16px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            display: none;
+        }
+        
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .alert-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .status-active {
+            color: #2ecc71;
+            font-weight: 600;
+        }
+        
+        .status-inactive {
+            color: #e74c3c;
+            font-weight: 600;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 5px;
+        }
+        
+        .action-btn {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.3s ease;
+        }
+        
+        .edit-btn {
+            background: #3498db;
+            color: white;
+        }
+        
+        .delete-btn {
+            background: #e74c3c;
+            color: white;
+        }
+        
+        .copy-btn {
+            background: #f39c12;
+            color: white;
+        }
+        
+        .access-code {
+            font-family: 'Courier New', monospace;
+            background: #f8f9fa;
+            padding: 4px 8px;
+            border-radius: 4px;
+            border: 1px solid #e9ecef;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        
+        .url-display {
+            max-width: 300px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            font-size: 12px;
+            color: #666;
+            background: #f8f9fa;
+            padding: 6px 10px;
+            border-radius: 4px;
+            border: 1px solid #e9ecef;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        @media (max-width: 768px) {
+            .form-row {
+                flex-direction: column;
+                gap: 0;
+            }
+            
+            th, td {
+                padding: 8px 10px;
+                font-size: 14px;
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+            }
+            
+            .container {
+                max-width: 100%;
+                overflow-x: auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🚌 共享出行数据管理后台</h1>
+            <p class="subtitle">管理 VirtualCards、Groups 和 GroupMembers 数据</p>
+        </header>
+        
+        <div class="alert" id="alertMessage"></div>
+        
+        <div class="tabs">
+            <button class="tab active" data-tab="virtualCards">虚拟卡管理</button>
+            <button class="tab" data-tab="groups">分组管理</button>
+            <button class="tab" data-tab="groupMembers">成员管理</button>
+        </div>
+        
+        <!-- 虚拟卡管理 -->
+        <div class="tab-content active" id="virtualCardsContent">
+            <div class="card-header">
+                <h2 class="card-title">虚拟卡列表</h2>
+                <button class="btn" onclick="openModal('virtualCard')">
+                    <i class="fas fa-plus"></i> 添加虚拟卡
+                </button>
+            </div>
+            <table id="virtualCardsTable">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>名称</th>
+                        <th>状态</th>
+                        <th>手机A</th>
+                        <th>密码A</th>
+                        <th>手机B</th>
+                        <th>密码B</th>
+                        <th>使用规则</th>
+                        <th>当前状态</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody id="virtualCardsBody">
+                    <!-- 数据将通过JavaScript动态加载 -->
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- 分组管理 -->
+        <div class="tab-content" id="groupsContent">
+            <div class="card-header">
+                <h2 class="card-title">分组列表</h2>
+                <button class="btn" onclick="openModal('group')">
+                    <i class="fas fa-plus"></i> 添加分组
+                </button>
+            </div>
+            <table id="groupsTable">
+                <thead>
+                    <tr>
+                        <th>分组ID</th>
+                        <th>分组名称</th>
+                        <th>默认间隔</th>
+                        <th>虚拟卡ID</th>
+                        <th>状态</th>
+                        <th>创建时间</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody id="groupsBody">
+                    <!-- 数据将通过JavaScript动态加载 -->
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- 成员管理 -->
+        <div class="tab-content" id="groupMembersContent">
+            <div class="card-header">
+                <h2 class="card-title">成员列表</h2>
+                <button class="btn" onclick="openModal('groupMember')">
+                    <i class="fas fa-plus"></i> 添加成员
+                </button>
+            </div>
+            <table id="groupMembersTable">
+                <thead>
+                    <tr>
+                        <th>分组ID</th>
+                        <th>用户ID</th>
+                        <th>用户名称</th>
+                        <th>使用顺序</th>
+                        <th>自定义间隔</th>
+                        <th>开始时间</th>
+                        <th>结束时间</th>
+                        <th>状态</th>
+                        <th>访问码</th>
+                        <th>个人URL</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody id="groupMembersBody">
+                    <!-- 数据将通过JavaScript动态加载 -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <!-- 虚拟卡模态框 -->
+    <div class="modal" id="virtualCardModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title" id="virtualCardModalTitle">添加虚拟卡</h3>
+                <button class="close" onclick="closeModal('virtualCardModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="virtualCardForm">
+                    <input type="hidden" id="virtualCardId">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="id">ID *</label>
+                            <input type="text" id="id" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="cardName">名称 *</label>
+                            <input type="text" id="cardName" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="status">状态 *</label>
+                            <select id="status" required>
+                                <option value="1">可用</option>
+                                <option value="0">不可用</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="currentStatus">当前状态</label>
+                            <input type="number" id="currentStatus" value="0">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="phoneA">手机A *</label>
+                            <input type="text" id="phoneA" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="pwdA">密码A *</label>
+                            <input type="text" id="pwdA" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="phoneB">手机B</label>
+                            <input type="text" id="phoneB">
+                        </div>
+                        <div class="form-group">
+                            <label for="pwdB">密码B</label>
+                            <input type="text" id="pwdB">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="usageRule">使用规则</label>
+                        <input type="text" id="usageRule" placeholder="例如: 1;3;5;7">
+                    </div>
+                    <div class="form-group">
+                        <label for="notAvailableDates">不可用日期</label>
+                        <input type="text" id="notAvailableDates" placeholder="例如: 2025.10.11;2025.10.12">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-danger" onclick="closeModal('virtualCardModal')">取消</button>
+                <button class="btn btn-success" onclick="saveVirtualCard()">保存</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 分组模态框 -->
+    <div class="modal" id="groupModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title" id="groupModalTitle">添加分组</h3>
+                <button class="close" onclick="closeModal('groupModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="groupForm">
+                    <input type="hidden" id="groupId">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="groupGroupId">分组ID *</label>
+                            <input type="text" id="groupGroupId" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="groupName">分组名称 *</label>
+                            <input type="text" id="groupName" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="defaultInterval">默认间隔(分钟) *</label>
+                            <input type="number" id="defaultInterval" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="virtualCardId">虚拟卡ID *</label>
+                            <input type="text" id="virtualCardId" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="groupStatus">状态 *</label>
+                        <select id="groupStatus" required>
+                            <option value="ACTIVE">激活</option>
+                            <option value="INACTIVE">未激活</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-danger" onclick="closeModal('groupModal')">取消</button>
+                <button class="btn btn-success" onclick="saveGroup()">保存</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 成员模态框 -->
+    <div class="modal" id="groupMemberModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title" id="groupMemberModalTitle">添加成员</h3>
+                <button class="close" onclick="closeModal('groupMemberModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="groupMemberForm">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="memberGroupId">分组ID *</label>
+                            <input type="text" id="memberGroupId" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="memberUserId">用户ID *</label>
+                            <input type="text" id="memberUserId" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="memberUserName">用户名称 *</label>
+                            <input type="text" id="memberUserName" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="useOrder">使用顺序 *</label>
+                            <input type="number" id="useOrder" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="accessCode">访问码 *</label>
+                            <div style="display: flex; gap: 10px; align-items: center;">
+                                <input type="text" id="accessCode" required style="flex: 1;">
+                                <button type="button" class="btn btn-small" onclick="generateAccessCode()">
+                                    <i class="fas fa-sync-alt"></i> 生成
+                                </button>
+                            </div>
+                            <small style="color: #666;">8位随机字符，用于用户访问验证</small>
+                        </div>
+                        <div class="form-group">
+                            <label for="memberStatus">状态 *</label>
+                            <select id="memberStatus" required>
+                                <option value="ACTIVE">激活</option>
+                                <option value="INACTIVE">未激活</option>
+                                <option value="ON_LEAVE">休假</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="customInterval">自定义间隔(分钟)</label>
+                            <input type="number" id="customInterval">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="userCardStartTime">开始时间</label>
+                            <input type="text" id="userCardStartTime" placeholder="例如: 06:00">
+                        </div>
+                        <div class="form-group">
+                            <label for="userCardEndTime">结束时间</label>
+                            <input type="text" id="userCardEndTime" placeholder="例如: 23:00">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>个人URL</label>
+                        <div id="personalUrlDisplay" style="padding: 10px; background: #f8f9fa; border-radius: 6px; border: 1px solid #ddd; font-size: 14px; color: #666; word-break: break-all;">
+                            保存后将自动生成URL
+                        </div>
+                        <small style="color: #666;">用户访问的个人链接，保存后自动生成</small>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-danger" onclick="closeModal('groupMemberModal')">取消</button>
+                <button class="btn btn-success" onclick="saveGroupMember()">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 全局数据存储
+        let virtualCards = [];
+        let groups = [];
+        let groupMembers = [];
+        const DOMAIN = "https://ticket-1-6sz7.onrender.com";
+        
+        // 页面加载时初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            loadAllData();
+            setupTabEvents();
+            setupUrlPreview();
+        });
+        
+        // 设置标签页事件
+        function setupTabEvents() {
+            const tabs = document.querySelectorAll('.tab');
+            tabs.forEach(tab => {
+                tab.addEventListener('click', function() {
+                    const tabId = this.getAttribute('data-tab');
+                    
+                    // 更新标签状态
+                    tabs.forEach(t => t.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    // 更新内容显示
+                    document.querySelectorAll('.tab-content').forEach(content => {
+                        content.classList.remove('active');
+                    });
+                    document.getElementById(tabId + 'Content').classList.add('active');
+                });
+            });
+        }
+        
+        // 设置URL预览监听
+        function setupUrlPreview() {
+            const fields = ['memberGroupId', 'memberUserId', 'accessCode'];
+            fields.forEach(field => {
+                const element = document.getElementById(field);
+                if (element) {
+                    element.addEventListener('input', updatePersonalUrlPreview);
+                }
+            });
+        }
+        
+        // 更新URL预览
+        function updatePersonalUrlPreview() {
+            const groupId = document.getElementById('memberGroupId').value;
+            const userId = document.getElementById('memberUserId').value;
+            const accessCode = document.getElementById('accessCode').value;
+            
+            if (groupId && userId && accessCode) {
+                const url = `${DOMAIN}/mobile/pages/count-card.html?userId=${userId}&groupId=${groupId}&accessCode=${accessCode}`;
+                document.getElementById('personalUrlDisplay').textContent = url;
+                document.getElementById('personalUrlDisplay').style.color = '#333';
+            } else {
+                document.getElementById('personalUrlDisplay').textContent = '保存后将自动生成URL';
+                document.getElementById('personalUrlDisplay').style.color = '#666';
+            }
+        }
+        
+        // 生成访问码
+        function generateAccessCode() {
+            const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+            let result = '';
+            for (let i = 0; i < 8; i++) {
+                result += characters.charAt(Math.floor(Math.random() * characters.length));
+            }
+            document.getElementById('accessCode').value = result;
+            updatePersonalUrlPreview();
+        }
+        
+        // 复制URL到剪贴板
+        function copyUrl(url) {
+            navigator.clipboard.writeText(url).then(() => {
+                showAlert('URL已复制到剪贴板', 'success');
+            }).catch(err => {
+                console.error('复制失败:', err);
+                showAlert('复制失败，请手动复制', 'error');
+            });
+        }
+        
+        // 复制访问码到剪贴板
+        function copyAccessCode(accessCode) {
+            navigator.clipboard.writeText(accessCode).then(() => {
+                showAlert('访问码已复制到剪贴板', 'success');
+            }).catch(err => {
+                console.error('复制失败:', err);
+                showAlert('复制失败，请手动复制', 'error');
+            });
+        }
+        
+        // 加载所有数据
+        async function loadAllData() {
+            try {
+                await Promise.all([
+                    loadVirtualCards(),
+                    loadGroups(),
+                    loadGroupMembers()
+                ]);
+            } catch (error) {
+                console.error('加载数据失败:', error);
+                showAlert('加载数据失败: ' + error.message, 'error');
+            }
+        }
+        
+        // 加载虚拟卡数据
+        async function loadVirtualCards() {
+            try {
+                const response = await fetch('/api/admin/virtual-cards');
+                if (response.ok) {
+                    const result = await response.json();
+                    virtualCards = result.data || [];
+                    renderVirtualCards();
+                } else {
+                    throw new Error('加载虚拟卡数据失败');
+                }
+            } catch (error) {
+                console.error('加载虚拟卡数据失败:', error);
+                showAlert('加载虚拟卡数据失败', 'error');
+            }
+        }
+        
+        // 加载分组数据
+        async function loadGroups() {
+            try {
+                const response = await fetch('/api/admin/groups');
+                if (response.ok) {
+                    const result = await response.json();
+                    groups = result.data || [];
+                    renderGroups();
+                } else {
+                    throw new Error('加载分组数据失败');
+                }
+            } catch (error) {
+                console.error('加载分组数据失败:', error);
+                showAlert('加载分组数据失败', 'error');
+            }
+        }
+        
+        // 加载成员数据
+        async function loadGroupMembers() {
+            try {
+                const response = await fetch('/api/admin/group-members');
+                if (response.ok) {
+                    const result = await response.json();
+                    groupMembers = result.data || [];
+                    renderGroupMembers();
+                } else {
+                    throw new Error('加载成员数据失败');
+                }
+            } catch (error) {
+                console.error('加载成员数据失败:', error);
+                showAlert('加载成员数据失败', 'error');
+            }
+        }
+        
+        // 渲染虚拟卡表格
+        function renderVirtualCards() {
+            const tbody = document.getElementById('virtualCardsBody');
+            tbody.innerHTML = '';
+            
+            virtualCards.forEach(card => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${card.id}</td>
+                    <td>${card.cardName || '-'}</td>
+                    <td><span class="${card.status === 1 ? 'status-active' : 'status-inactive'}">${card.status === 1 ? '可用' : '不可用'}</span></td>
+                    <td>${card.physicalCardAPhone || '-'}</td>
+                    <td>${card.physicalCardAPwd || '-'}</td>
+                    <td>${card.physicalCardBPhone || '-'}</td>
+                    <td>${card.physicalCardBPwd || '-'}</td>
+                    <td>${card.usageRule || '-'}</td>
+                    <td>${card.currentStatus || 0}</td>
+                    <td>
+                        <div class="action-buttons">
+                            <button class="action-btn edit-btn" onclick="editVirtualCard('${card.id}')">
+                                <i class="fas fa-edit"></i> 编辑
+                            </button>
+                            <button class="action-btn delete-btn" onclick="deleteVirtualCard('${card.id}')">
+                                <i class="fas fa-trash"></i> 删除
+                            </button>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+        
+        // 渲染分组表格
+        function renderGroups() {
+            const tbody = document.getElementById('groupsBody');
+            tbody.innerHTML = '';
+            
+            groups.forEach(group => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${group.groupId}</td>
+                    <td>${group.groupName}</td>
+                    <td>${group.defaultInterval}</td>
+                    <td>${group.virtualCardId}</td>
+                    <td><span class="${group.status === 'ACTIVE' ? 'status-active' : 'status-inactive'}">${group.status}</span></td>
+                    <td>${formatDateTime(group.createTime)}</td>
+                    <td>
+                        <div class="action-buttons">
+                            <button class="action-btn edit-btn" onclick="editGroup('${group.groupId}')">
+                                <i class="fas fa-edit"></i> 编辑
+                            </button>
+                            <button class="action-btn delete-btn" onclick="deleteGroup('${group.groupId}')">
+                                <i class="fas fa-trash"></i> 删除
+                            </button>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+        
+        // 渲染成员表格
+        function renderGroupMembers() {
+            const tbody = document.getElementById('groupMembersBody');
+            tbody.innerHTML = '';
+            
+            groupMembers.forEach(member => {
+                const personalUrl = member.personalUrl || `${DOMAIN}/mobile/pages/count-card.html?userId=${member.userId}&groupId=${member.groupId}&accessCode=${member.accessCode || ''}`;
+                const truncatedAccessCode = member.accessCode ? member.accessCode.substring(0, 10) + (member.accessCode.length > 10 ? '...' : '') : '未设置';
+                const truncatedUrl = personalUrl.substring(0, 20) + (personalUrl.length > 20 ? '...' : '');
+                
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${member.groupId}</td>
+                    <td>${member.userId}</td>
+                    <td>${member.userName || '-'}</td>
+                    <td>${member.useOrder}</td>
+                    <td>${member.customInterval || '-'}</td>
+                    <td>${member.userCardStartTime || '-'}</td>
+                    <td>${member.userCardEndTime || '-'}</td>
+                    <td><span class="${member.status === 'ACTIVE' ? 'status-active' : 'status-inactive'}">${member.status}</span></td>
+                    <td>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <span class="access-code" title="${member.accessCode || ''}">${truncatedAccessCode}</span>
+                            ${member.accessCode ? `
+                                <button class="action-btn copy-btn" onclick="copyAccessCode('${member.accessCode}')" title="复制访问码">
+                                    <i class="fas fa-copy"></i>
+                                </button>
+                            ` : ''}
+                        </div>
+                    </td>
+                    <td>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <div class="url-display" title="${personalUrl}">
+                                ${truncatedUrl}
+                            </div>
+                            <button class="action-btn copy-btn" onclick="copyUrl('${personalUrl}')" title="复制URL">
+                                <i class="fas fa-copy"></i>
+                            </button>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="action-buttons">
+                            <button class="action-btn edit-btn" onclick="editGroupMember('${member.groupId}', '${member.userId}')">
+                                <i class="fas fa-edit"></i> 编辑
+                            </button>
+                            <button class="action-btn delete-btn" onclick="deleteGroupMember('${member.groupId}', '${member.userId}')">
+                                <i class="fas fa-trash"></i> 删除
+                            </button>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+        
+        // 打开模态框
+        function openModal(type) {
+            let modalId, titleId, title;
+            
+            switch(type) {
+                case 'virtualCard':
+                    modalId = 'virtualCardModal';
+                    titleId = 'virtualCardModalTitle';
+                    title = '添加虚拟卡';
+                    resetVirtualCardForm();
+                    break;
+                case 'group':
+                    modalId = 'groupModal';
+                    titleId = 'groupModalTitle';
+                    title = '添加分组';
+                    resetGroupForm();
+                    break;
+                case 'groupMember':
+                    modalId = 'groupMemberModal';
+                    titleId = 'groupMemberModalTitle';
+                    title = '添加成员';
+                    resetGroupMemberForm();
+                    break;
+            }
+            
+            document.getElementById(titleId).textContent = title;
+            document.getElementById(modalId).classList.add('active');
+        }
+        
+        // 关闭模态框
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('active');
+        }
+        
+        // 重置虚拟卡表单
+        function resetVirtualCardForm() {
+            document.getElementById('virtualCardForm').reset();
+            document.getElementById('virtualCardId').value = '';
+        }
+        
+        // 重置分组表单
+        function resetGroupForm() {
+            document.getElementById('groupForm').reset();
+            document.getElementById('groupId').value = '';
+        }
+        
+        // 重置成员表单
+        function resetGroupMemberForm() {
+            document.getElementById('groupMemberForm').reset();
+            document.getElementById('accessCode').value = '';
+            document.getElementById('personalUrlDisplay').textContent = '保存后将自动生成URL';
+            document.getElementById('personalUrlDisplay').style.color = '#666';
+        }
+        
+        // 编辑虚拟卡
+        function editVirtualCard(id) {
+            const card = virtualCards.find(c => c.id === id);
+            if (!card) return;
+            
+            document.getElementById('virtualCardModalTitle').textContent = '编辑虚拟卡';
+            document.getElementById('virtualCardId').value = card.id;
+            document.getElementById('id').value = card.id;
+            document.getElementById('cardName').value = card.cardName || '';
+            document.getElementById('status').value = card.status;
+            document.getElementById('phoneA').value = card.physicalCardAPhone || '';
+            document.getElementById('pwdA').value = card.physicalCardAPwd || '';
+            document.getElementById('phoneB').value = card.physicalCardBPhone || '';
+            document.getElementById('pwdB').value = card.physicalCardBPwd || '';
+            document.getElementById('usageRule').value = card.usageRule || '';
+            document.getElementById('currentStatus').value = card.currentStatus || 0;
+            document.getElementById('notAvailableDates').value = card.notAvailableDates || '';
+            
+            document.getElementById('virtualCardModal').classList.add('active');
+        }
+        
+        // 编辑分组
+        function editGroup(groupId) {
+            const group = groups.find(g => g.groupId === groupId);
+            if (!group) return;
+            
+            document.getElementById('groupModalTitle').textContent = '编辑分组';
+            document.getElementById('groupId').value = group.groupId;
+            document.getElementById('groupGroupId').value = group.groupId;
+            document.getElementById('groupName').value = group.groupName;
+            document.getElementById('defaultInterval').value = group.defaultInterval;
+            document.getElementById('virtualCardId').value = group.virtualCardId;
+            document.getElementById('groupStatus').value = group.status;
+            
+            document.getElementById('groupModal').classList.add('active');
+        }
+        
+        // 编辑成员
+        function editGroupMember(groupId, userId) {
+            const member = groupMembers.find(m => m.groupId === groupId && m.userId === userId);
+            if (!member) return;
+            
+            document.getElementById('groupMemberModalTitle').textContent = '编辑成员';
+            document.getElementById('memberGroupId').value = member.groupId;
+            document.getElementById('memberUserId').value = member.userId;
+            document.getElementById('memberUserName').value = member.userName || '';
+            document.getElementById('useOrder').value = member.useOrder;
+            document.getElementById('accessCode').value = member.accessCode || '';
+            document.getElementById('customInterval').value = member.customInterval || '';
+            document.getElementById('userCardStartTime').value = member.userCardStartTime || '';
+            document.getElementById('userCardEndTime').value = member.userCardEndTime || '';
+            document.getElementById('memberStatus').value = member.status;
+            
+            // 更新URL预览
+            updatePersonalUrlPreview();
+            
+            document.getElementById('groupMemberModal').classList.add('active');
+        }
+        
+        // 保存虚拟卡
+        async function saveVirtualCard() {
+            const formData = {
+                id: document.getElementById('id').value,
+                cardName: document.getElementById('cardName').value,
+                status: parseInt(document.getElementById('status').value),
+                physicalCardAPhone: document.getElementById('phoneA').value,
+                physicalCardAPwd: document.getElementById('pwdA').value,
+                physicalCardBPhone: document.getElementById('phoneB').value,
+                physicalCardBPwd: document.getElementById('pwdB').value,
+                usageRule: document.getElementById('usageRule').value,
+                currentStatus: parseInt(document.getElementById('currentStatus').value),
+                notAvailableDates: document.getElementById('notAvailableDates').value
+            };
+            
+            const originalId = document.getElementById('virtualCardId').value;
+            const isEdit = !!originalId;
+            
+            try {
+                const url = isEdit ? `/api/admin/virtual-cards/${originalId}` : '/api/admin/virtual-cards';
+                const method = isEdit ? 'PUT' : 'POST';
+                
+                const response = await fetch(url, {
+                    method: method,
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showAlert(isEdit ? '虚拟卡更新成功！' : '虚拟卡添加成功！', 'success');
+                    closeModal('virtualCardModal');
+                    await loadVirtualCards();
+                } else {
+                    showAlert(result.message || '操作失败', 'error');
+                }
+            } catch (error) {
+                console.error('保存虚拟卡失败:', error);
+                showAlert('保存失败: ' + error.message, 'error');
+            }
+        }
+        
+        // 保存分组
+        async function saveGroup() {
+            const formData = {
+                groupId: document.getElementById('groupGroupId').value,
+                groupName: document.getElementById('groupName').value,
+                defaultInterval: parseInt(document.getElementById('defaultInterval').value),
+                virtualCardId: document.getElementById('virtualCardId').value,
+                status: document.getElementById('groupStatus').value
+            };
+            
+            const originalId = document.getElementById('groupId').value;
+            const isEdit = !!originalId;
+            
+            try {
+                const url = isEdit ? `/api/admin/groups/${originalId}` : '/api/admin/groups';
+                const method = isEdit ? 'PUT' : 'POST';
+                
+                const response = await fetch(url, {
+                    method: method,
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showAlert(isEdit ? '分组更新成功！' : '分组添加成功！', 'success');
+                    closeModal('groupModal');
+                    await loadGroups();
+                } else {
+                    showAlert(result.message || '操作失败', 'error');
+                }
+            } catch (error) {
+                console.error('保存分组失败:', error);
+                showAlert('保存失败: ' + error.message, 'error');
+            }
+        }
+        
+        // 保存成员
+        async function saveGroupMember() {
+            const groupId = document.getElementById('memberGroupId').value;
+            const userId = document.getElementById('memberUserId').value;
+            const accessCode = document.getElementById('accessCode').value;
+            
+            const formData = {
+                groupId: groupId,
+                userId: userId,
+                userName: document.getElementById('memberUserName').value,
+                useOrder: parseInt(document.getElementById('useOrder').value),
+                accessCode: accessCode,
+                personalUrl: `${DOMAIN}/mobile/pages/count-card.html?userId=${userId}&groupId=${groupId}&accessCode=${accessCode}`,
+                customInterval: document.getElementById('customInterval').value ? parseInt(document.getElementById('customInterval').value) : null,
+                userCardStartTime: document.getElementById('userCardStartTime').value,
+                userCardEndTime: document.getElementById('userCardEndTime').value,
+                status: document.getElementById('memberStatus').value
+            };
+            
+            try {
+                const response = await fetch('/api/admin/group-members', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showAlert('成员保存成功！', 'success');
+                    closeModal('groupMemberModal');
+                    await loadGroupMembers();
+                } else {
+                    showAlert(result.message || '操作失败', 'error');
+                }
+            } catch (error) {
+                console.error('保存成员失败:', error);
+                showAlert('保存失败: ' + error.message, 'error');
+            }
+        }
+        
+        // 删除虚拟卡
+        async function deleteVirtualCard(id) {
+            if (!confirm(`确定要删除虚拟卡 ${id} 吗？`)) return;
+            
+            try {
+                const response = await fetch(`/api/admin/virtual-cards/${id}`, {
+                    method: 'DELETE'
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showAlert('虚拟卡删除成功！', 'success');
+                    await loadVirtualCards();
+                } else {
+                    showAlert(result.message || '删除失败', 'error');
+                }
+            } catch (error) {
+                console.error('删除虚拟卡失败:', error);
+                showAlert('删除失败: ' + error.message, 'error');
+            }
+        }
+        
+        // 删除分组
+        async function deleteGroup(groupId) {
+            if (!confirm(`确定要删除分组 ${groupId} 吗？`)) return;
+            
+            try {
+                const response = await fetch(`/api/admin/groups/${groupId}`, {
+                    method: 'DELETE'
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showAlert('分组删除成功！', 'success');
+                    await loadGroups();
+                } else {
+                    showAlert(result.message || '删除失败', 'error');
+                }
+            } catch (error) {
+                console.error('删除分组失败:', error);
+                showAlert('删除失败: ' + error.message, 'error');
+            }
+        }
+        
+        // 删除成员
+        async function deleteGroupMember(groupId, userId) {
+            if (!confirm(`确定要删除成员 ${userId} 吗？`)) return;
+            
+            try {
+                const response = await fetch(`/api/admin/group-members/${groupId}/${userId}`, {
+                    method: 'DELETE'
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showAlert('成员删除成功！', 'success');
+                    await loadGroupMembers();
+                } else {
+                    showAlert(result.message || '删除失败', 'error');
+                }
+            } catch (error) {
+                console.error('删除成员失败:', error);
+                showAlert('删除失败: ' + error.message, 'error');
+            }
+        }
+        
+        // 显示提示信息
+        function showAlert(message, type = 'success') {
+            const alertEl = document.getElementById('alertMessage');
+            alertEl.textContent = message;
+            alertEl.className = `alert alert-${type}`;
+            alertEl.style.display = 'block';
+            
+            // 3秒后自动隐藏
+            setTimeout(() => {
+                alertEl.style.display = 'none';
+            }, 3000);
+        }
+        
+        // 格式化日期时间
+        function formatDateTime(dateString) {
+            if (!dateString) return '-';
+            try {
+                const date = new Date(dateString);
+                return date.toLocaleString('zh-CN');
+            } catch (e) {
+                return dateString;
+            }
+        }
+    </script>
+</body>
+</html>

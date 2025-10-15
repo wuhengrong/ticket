@@ -10,8 +10,17 @@ import lombok.NoArgsConstructor;
 public class UsageRequest {
     private String groupId;
     private String userId;
+    private String accessCode; // 新增字段
     
-    // 如果Lombok不工作，手动添加getter方法
+    public String getAccessCode() {
+		return accessCode;
+	}
+
+	public void setAccessCode(String accessCode) {
+		this.accessCode = accessCode;
+	}
+
+	// 如果Lombok不工作，手动添加getter方法
     public String getGroupId() {
         return groupId;
     }

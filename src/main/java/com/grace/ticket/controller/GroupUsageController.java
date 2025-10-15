@@ -1,23 +1,34 @@
 package com.grace.ticket.controller;
 
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
 import com.grace.ticket.dto.ApiResponse;
 import com.grace.ticket.dto.CardInfo;
 import com.grace.ticket.dto.UsageRequest;
 import com.grace.ticket.entity.GroupMember;
 import com.grace.ticket.entity.UsageRecord;
+import com.grace.ticket.service.AccessValidationService;
 import com.grace.ticket.service.GroupUsageService;
 import com.grace.ticket.service.VirtualCardService;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/api")
 @CrossOrigin(origins = "*")
 public class GroupUsageController {
-    
+    @Autowired
+    private AccessValidationService accessValidationService;
+     
     @Autowired
     private GroupUsageService groupUsageService;
     
@@ -27,8 +38,16 @@ public class GroupUsageController {
     @GetMapping("/group-members/{groupId}/{userId}")
     public ResponseEntity<ApiResponse<GroupMember>> getUserInfo(
             @PathVariable String groupId, 
-            @PathVariable String userId) {
+            @PathVariable String userId,
+            @RequestParam(required = false) String accessCode) {
         try {
+            // 只有当提供了accessCode参数时才进行验证
+            if (accessCode != null && !accessCode.isEmpty()) {
+                if (!accessValidationService.validateAccess(userId, groupId, accessCode)) {
+                    return ResponseEntity.badRequest().body(ApiResponse.error("访问被拒绝：无效的访问码"));
+                }
+            }
+            
             GroupMember member = groupUsageService.getUserInfo(groupId, userId);
             return ResponseEntity.ok(ApiResponse.success(member));
         } catch (Exception e) {
@@ -46,12 +65,20 @@ public class GroupUsageController {
         }
     }
     
-    // 新增：获取用户完整的虚拟卡信息（包含用户信息和虚拟卡信息）
+    // 获取用户完整的虚拟卡信息（包含用户信息和虚拟卡信息）
     @GetMapping("/virtual-cards/user-info")
     public ResponseEntity<ApiResponse<Object>> getUserVirtualCardInfo(
             @RequestParam String groupId,
-            @RequestParam String userId) {
+            @RequestParam String userId,
+            @RequestParam(required = false) String accessCode) {
         try {
+            // 只有当提供了accessCode参数时才进行验证
+            if (accessCode != null && !accessCode.isEmpty()) {
+                if (!accessValidationService.validateAccess(userId, groupId, accessCode)) {
+                    return ResponseEntity.badRequest().body(ApiResponse.error("访问被拒绝：无效的访问码"));
+                }
+            }
+            
             // 获取用户信息
             GroupMember member = groupUsageService.getUserInfo(groupId, userId);
             // 获取虚拟卡信息
@@ -72,6 +99,13 @@ public class GroupUsageController {
     public ResponseEntity<ApiResponse<UsageRecord>> startUsage(
             @RequestBody UsageRequest request) {
         try {
+            // 只有当提供了accessCode参数时才进行验证
+            if (request.getAccessCode() != null && !request.getAccessCode().isEmpty()) {
+                if (!accessValidationService.validateAccess(request.getUserId(), request.getGroupId(), request.getAccessCode())) {
+                    return ResponseEntity.badRequest().body(ApiResponse.error("访问被拒绝：无效的访问码"));
+                }
+            }
+            
             com.grace.ticket.dto.UsageResponse response = groupUsageService.startUsage(request.getGroupId(), request.getUserId());
             if (response.isSuccess()) {
                 return ResponseEntity.ok(ApiResponse.success((UsageRecord) response.getData(), response.getMessage()));
@@ -87,6 +121,13 @@ public class GroupUsageController {
     public ResponseEntity<ApiResponse<Object>> endUsage(
             @RequestBody UsageRequest request) {
         try {
+            // 只有当提供了accessCode参数时才进行验证
+            if (request.getAccessCode() != null && !request.getAccessCode().isEmpty()) {
+                if (!accessValidationService.validateAccess(request.getUserId(), request.getGroupId(), request.getAccessCode())) {
+                    return ResponseEntity.badRequest().body(ApiResponse.error("访问被拒绝：无效的访问码"));
+                }
+            }
+            
             com.grace.ticket.dto.UsageResponse response = groupUsageService.endUsage(request.getGroupId(), request.getUserId());
             if (response.isSuccess()) {
                 return ResponseEntity.ok(ApiResponse.success(response.getData(), response.getMessage()));
@@ -100,11 +141,20 @@ public class GroupUsageController {
     
     @GetMapping("/usage/records/{groupId}")
     public ResponseEntity<ApiResponse<List<UsageRecord>>> getUsageRecords(
-            @PathVariable String groupId) {
+            @PathVariable String groupId,
+            @RequestParam(required = false) String userId,
+            @RequestParam(required = false) String accessCode) {
         try {
+            // 只有当提供了accessCode参数时才进行验证
+            if (accessCode != null && !accessCode.isEmpty() && userId != null && !userId.isEmpty()) {
+                if (!accessValidationService.validateAccess(userId, groupId, accessCode)) {
+                    return ResponseEntity.badRequest().body(ApiResponse.error("访问被拒绝：无效的访问码"));
+                }
+            }
+            
             List<UsageRecord> records = groupUsageService.getUsageHistory(groupId, 10); 
             for(UsageRecord rec:records) {
-            	rec.setUserId("***");
+                rec.setUserId("***");
             }
             return ResponseEntity.ok(ApiResponse.success(records));
         } catch (Exception e) {

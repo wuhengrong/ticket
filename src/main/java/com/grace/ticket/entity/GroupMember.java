@@ -26,6 +26,29 @@ public class GroupMember {
  @Column(name = "use_order")
  private Integer useOrder;
  
+ @Column(name = "access_code", unique = true, length = 32)
+ private String accessCode;
+ 
+ @Column(name = "user_name", length = 100)
+ private String userName;
+ 
+ // getter 和 setter
+ public String getUserName() {
+     return userName;
+ }
+ 
+ public void setUserName(String userName) {
+     this.userName = userName;
+ }
+ 
+ // getter 和 setter
+ public String getAccessCode() {
+     return accessCode;
+ }
+ 
+ public void setAccessCode(String accessCode) {
+     this.accessCode = accessCode;
+ }
  public Long getId() {
 	return id;
 }

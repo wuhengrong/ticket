@@ -145,6 +145,17 @@ public class VirtualCard {
     @Column(name = "card_initial_start_time")
     private LocalDateTime cardInitialStartTime;
     
+    @Column(name = "card_name", length = 100)
+    private String cardName;
+    
+    // getter 和 setter
+    public String getCardName() {
+        return cardName;
+    }
+    
+    public void setCardName(String cardName) {
+        this.cardName = cardName;
+    }
     
     // 手动添加setter方法（如果Lombok不工作）
     public void setCurrentUsedBy(String currentUsedBy) {
