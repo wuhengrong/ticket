@@ -22,6 +22,29 @@ public class SecureUrlService {
     }
     
     /**
+     * 简单的固定accessCode生成方法（备用）
+     */
+    public String generateSimpleFixedAccessCode(String userId, String groupId) {
+        // 使用简单的哈希组合
+        String combined = userId + groupId;
+        int hash = combined.hashCode();
+        
+        // 确保为正数并转换为16进制
+        String hex = Integer.toHexString(Math.abs(hash));
+        
+        // 填充到16位，不足补0，超过则截取
+        if (hex.length() < 16) {
+            StringBuilder sb = new StringBuilder(hex);
+            while (sb.length() < 16) {
+                sb.append('0');
+            }
+            return sb.toString().toUpperCase();
+        } else {
+            return hex.substring(0, 16).toUpperCase();
+        }
+    }
+    
+    /**
      * 存储访问码映射（可选）
      */
     public void storeAccessCode(String accessCode, String groupId, String userId) {

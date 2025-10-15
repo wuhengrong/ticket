@@ -102,7 +102,7 @@ public class DataInitializer implements CommandLineRunner {
         
         // 为每个成员生成唯一的访问码和URL
         for (GroupMember member : groupMembers) {
-            String accessCode = secureUrlService.generateAccessCode();
+            String accessCode = secureUrlService.generateSimpleFixedAccessCode(member.getUserId(),member.getGroupId());
             member.setAccessCode(accessCode);
             
             String personalUrl = String.format("%s/mobile/pages/count-card.html?userId=%s&groupId=%s&accessCode=%s", 
