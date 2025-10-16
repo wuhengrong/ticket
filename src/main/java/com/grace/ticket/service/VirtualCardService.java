@@ -26,6 +26,26 @@ public class VirtualCardService {
  private GroupRepository groupRepository;
  
  
+ /**
+  * 重置虚拟卡到初始状态
+  */
+ public boolean resetToInitialState(String id) {
+     try {
+         Optional<VirtualCard> optionalCard = virtualCardRepository.findById(id);
+         if (optionalCard.isPresent()) {
+             VirtualCard card = optionalCard.get();
+             
+             // 重置当前状态为0（初始状态）
+             card.resetToInitialState();
+             
+             virtualCardRepository.save(card);
+             return true;
+         }
+         return false;
+     } catch (Exception e) {
+         throw new RuntimeException("重置虚拟卡失败: " + e.getMessage());
+     }
+ }
  
  public List<VirtualCard> findAll() {
      return virtualCardRepository.findAll();

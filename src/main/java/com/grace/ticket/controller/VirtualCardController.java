@@ -1,14 +1,24 @@
 // VirtualCardController.java
 package com.grace.ticket.controller;
 
+import java.util.List;
+import java.util.Optional;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
 import com.grace.ticket.dto.ApiResponse;
 import com.grace.ticket.entity.VirtualCard;
 import com.grace.ticket.service.VirtualCardService;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/admin/virtual-cards")
@@ -29,6 +39,28 @@ public class VirtualCardController {
         }
     }
     
+    /**
+     * 重置虚拟卡到初始状态
+     */
+    @PostMapping("/{id}/reset")
+    public ResponseEntity<?> resetVirtualCard(@PathVariable String id) {
+        try {
+            boolean success = virtualCardService.resetToInitialState(id);
+            if (success) {
+                return ResponseEntity.ok().body(
+                    ApiResponse.success(null, "虚拟卡重置成功")
+                );
+            } else {
+                return ResponseEntity.badRequest().body(
+                    ApiResponse.error("虚拟卡重置失败")
+                );
+            }
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(
+                ApiResponse.error("重置失败: " + e.getMessage())
+            );
+        }
+    }
     // 根据ID获取虚拟卡
     @GetMapping("/{id}")
     public ApiResponse<VirtualCard> getVirtualCardById(@PathVariable String id) {

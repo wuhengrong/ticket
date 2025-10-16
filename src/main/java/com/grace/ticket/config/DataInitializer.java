@@ -51,7 +51,7 @@ public class DataInitializer implements CommandLineRunner {
         List<VirtualCard> virtualCards = Arrays.asList(
             // 虚拟卡1 - 工作日使用
             createVirtualCard("VC001","工作日票卡", "2025.10.11;2025.10.12", 1, 1, 
-                "1318920379", "Aa123456", "15687556072", "Aa123456", "1;3;5;7", 0),
+                "1318920379", "Aa123456", "13692585850", "Test5850", "1;3;5;7", 0),
             
             
             // 虚拟卡2 - 全天可用
