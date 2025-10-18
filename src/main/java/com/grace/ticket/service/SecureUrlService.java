@@ -33,14 +33,14 @@ public class SecureUrlService {
         String hex = Integer.toHexString(Math.abs(hash));
         
         // 填充到16位，不足补0，超过则截取
-        if (hex.length() < 16) {
+        if (hex.length() < 8) {
             StringBuilder sb = new StringBuilder(hex);
-            while (sb.length() < 16) {
+            while (sb.length() < 8) {
                 sb.append('0');
             }
             return sb.toString().toUpperCase();
         } else {
-            return hex.substring(0, 16).toUpperCase();
+            return hex.substring(0, 8).toUpperCase();
         }
     }
     

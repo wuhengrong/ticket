@@ -33,7 +33,7 @@ public class AccessValidationService {
      if (member.isPresent()) {
          GroupMember groupMember = member.get();
          // 验证访问码是否匹配
-         return accessCode.equals(groupMember.getAccessCode());
+         return accessCode.equals(groupMember.getAccessCode()) || null==groupMember.getAccessCode();
      }
      
      return false;

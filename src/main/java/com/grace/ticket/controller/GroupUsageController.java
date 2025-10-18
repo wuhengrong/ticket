@@ -1,5 +1,9 @@
 package com.grace.ticket.controller;
 
+/** note:
+ * AccessValidationService的validateAccess中添加如下，获取为空时也给通过：
+return accessCode.equals(groupMember.getAccessCode()) || null==groupMember.getAccessCode();
+ */
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,30 +39,30 @@ public class GroupUsageController {
     @Autowired
     private VirtualCardService virtualCardService;
     
-    @GetMapping("/group-members/{groupId}/{userId}")
+    @GetMapping("/group-members/{gId}/{uId}")
     public ResponseEntity<ApiResponse<GroupMember>> getUserInfo(
-            @PathVariable String groupId, 
-            @PathVariable String userId,
-            @RequestParam(required = false) String accessCode) {
+            @PathVariable String gId, 
+            @PathVariable String uId,
+            @RequestParam(required = false) String code) {
         try {
-            // 只有当提供了accessCode参数时才进行验证
-            if (accessCode != null && !accessCode.isEmpty()) {
-                if (!accessValidationService.validateAccess(userId, groupId, accessCode)) {
+            // 只有当提供了code参数时才进行验证
+            if (code != null && !code.isEmpty()) {
+                if (!accessValidationService.validateAccess(uId, gId, code)) {
                     return ResponseEntity.badRequest().body(ApiResponse.error("访问被拒绝：无效的访问码"));
                 }
             }
             
-            GroupMember member = groupUsageService.getUserInfo(groupId, userId);
+            GroupMember member = groupUsageService.getUserInfo(gId, uId);
             return ResponseEntity.ok(ApiResponse.success(member));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
         }
     }
     
-    @GetMapping("/virtual-cards/group/{groupId}")
-    public ResponseEntity<ApiResponse<CardInfo>> getVirtualCardInfo(@PathVariable String groupId) {
+    @GetMapping("/virtual-cards/group/{gId}")
+    public ResponseEntity<ApiResponse<CardInfo>> getVirtualCardInfo(@PathVariable String gId) {
         try {
-            CardInfo cardInfo = virtualCardService.getCardInfo(groupId);
+            CardInfo cardInfo = virtualCardService.getCardInfo(gId);
             return ResponseEntity.ok(ApiResponse.success(cardInfo));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
@@ -68,21 +72,24 @@ public class GroupUsageController {
     // 获取用户完整的虚拟卡信息（包含用户信息和虚拟卡信息）
     @GetMapping("/virtual-cards/user-info")
     public ResponseEntity<ApiResponse<Object>> getUserVirtualCardInfo(
-            @RequestParam String groupId,
-            @RequestParam String userId,
-            @RequestParam(required = false) String accessCode) {
+            @RequestParam String gId,
+            @RequestParam String uId,
+            @RequestParam(required = false) String code) {
         try {
-            // 只有当提供了accessCode参数时才进行验证
-            if (accessCode != null && !accessCode.isEmpty()) {
-                if (!accessValidationService.validateAccess(userId, groupId, accessCode)) {
+            // 只有当提供了code参数时才进行验证
+            if (code != null && !code.isEmpty()) {
+                if (!accessValidationService.validateAccess(uId, gId, code)) {
                     return ResponseEntity.badRequest().body(ApiResponse.error("访问被拒绝：无效的访问码"));
                 }
             }
             
             // 获取用户信息
-            GroupMember member = groupUsageService.getUserInfo(groupId, userId);
+            GroupMember member = groupUsageService.getUserInfo(gId, uId);
             // 获取虚拟卡信息
-            CardInfo cardInfo = virtualCardService.getCardInfo(groupId);
+            CardInfo cardInfo2 = virtualCardService.getCardInfo(gId);
+            
+         // 或者使用时间逻辑版本
+            CardInfo cardInfo = virtualCardService.getCardInfoWithTimeLogic(gId, uId, member.getPasswordSpecialTime());
             
             // 创建组合响应对象
             UserCardInfo userCardInfo = new UserCardInfo();
@@ -99,7 +106,7 @@ public class GroupUsageController {
     public ResponseEntity<ApiResponse<UsageRecord>> startUsage(
             @RequestBody UsageRequest request) {
         try {
-            // 只有当提供了accessCode参数时才进行验证
+            // 只有当提供了code参数时才进行验证
             if (request.getAccessCode() != null && !request.getAccessCode().isEmpty()) {
                 if (!accessValidationService.validateAccess(request.getUserId(), request.getGroupId(), request.getAccessCode())) {
                     return ResponseEntity.badRequest().body(ApiResponse.error("访问被拒绝：无效的访问码"));
@@ -121,7 +128,7 @@ public class GroupUsageController {
     public ResponseEntity<ApiResponse<Object>> endUsage(
             @RequestBody UsageRequest request) {
         try {
-            // 只有当提供了accessCode参数时才进行验证
+            // 只有当提供了code参数时才进行验证
             if (request.getAccessCode() != null && !request.getAccessCode().isEmpty()) {
                 if (!accessValidationService.validateAccess(request.getUserId(), request.getGroupId(), request.getAccessCode())) {
                     return ResponseEntity.badRequest().body(ApiResponse.error("访问被拒绝：无效的访问码"));
@@ -139,20 +146,20 @@ public class GroupUsageController {
         }
     }
     
-    @GetMapping("/usage/records/{groupId}")
+    @GetMapping("/usage/records/{gId}")
     public ResponseEntity<ApiResponse<List<UsageRecord>>> getUsageRecords(
-            @PathVariable String groupId,
-            @RequestParam(required = false) String userId,
-            @RequestParam(required = false) String accessCode) {
+            @PathVariable String gId,
+            @RequestParam(required = false) String uId,
+            @RequestParam(required = false) String code) {
         try {
-            // 只有当提供了accessCode参数时才进行验证
-            if (accessCode != null && !accessCode.isEmpty() && userId != null && !userId.isEmpty()) {
-                if (!accessValidationService.validateAccess(userId, groupId, accessCode)) {
+            // 只有当提供了code参数时才进行验证
+            if (code != null && !code.isEmpty() && uId != null && !uId.isEmpty()) {
+                if (!accessValidationService.validateAccess(uId, gId, code)) {
                     return ResponseEntity.badRequest().body(ApiResponse.error("访问被拒绝：无效的访问码"));
                 }
             }
             
-            List<UsageRecord> records = groupUsageService.getUsageHistory(groupId, 10); 
+            List<UsageRecord> records = groupUsageService.getUsageHistory(gId, 10); 
             for(UsageRecord rec:records) {
                 rec.setUserId("***");
             }

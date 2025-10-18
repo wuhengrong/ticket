@@ -120,6 +120,17 @@ public String getPersonalUrl() {
 public void setPersonalUrl(String personalUrl) {
 	this.personalUrl = personalUrl;
 }
+@Column(name = "password_special_time")
+private String passwordSpecialTime; // 格式: "07:00"
+
+// getter 和 setter
+public String getPasswordSpecialTime() {
+    return passwordSpecialTime;
+}
+
+public void setPasswordSpecialTime(String passwordSpecialTime) {
+    this.passwordSpecialTime = passwordSpecialTime;
+}
 
 @Column(name = "custom_interval")
  private Integer customInterval;

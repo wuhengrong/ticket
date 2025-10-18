@@ -591,14 +591,14 @@
         document.addEventListener('DOMContentLoaded', function() {
             // 从URL获取所有参数
             const urlParams = new URLSearchParams(window.location.search);
-            accessCode = urlParams.get('accessCode');
-            userId = urlParams.get('userId');
-            groupId = urlParams.get('groupId');
+            accessCode = urlParams.get('code');
+            userId = urlParams.get('uId');
+            groupId = urlParams.get('gId');
             
             console.log('URL参数:', { accessCode, userId, groupId });
             
             if (!accessCode || !userId || !groupId) {
-                showAccessDenied('无效的访问链接：缺少必要的参数（accessCode、userId、groupId）');
+                showAccessDenied('无效的访问链接：缺少必要的参数（code、uId、gId）');
                 return;
             }
 
@@ -610,8 +610,8 @@
             showLoadingState();
             
             try {
-                // 调用验证接口
-                const response = await fetch(`/api/virtual-cards/user-info?groupId=${groupId}&userId=${userId}&accessCode=${accessCode}`);
+                // 调用验证接口 - 修改了参数名称
+                const response = await fetch(`/api/virtual-cards/user-info?gId=${groupId}&uId=${userId}&code=${accessCode}`);
                 
                 if (!response.ok) {
                     throw new Error('网络请求失败');
@@ -686,7 +686,8 @@
         // 加载用户虚拟卡信息
         async function loadUserCardInfo() {
             try {
-                const response = await fetch(`/api/virtual-cards/user-info?groupId=${groupId}&userId=${userId}&accessCode=${accessCode}`);
+                // 修改了参数名称
+                const response = await fetch(`/api/virtual-cards/user-info?gId=${groupId}&uId=${userId}&code=${accessCode}`);
                 if (response.ok) {
                     const result = await response.json();
                     if (result.success) {
@@ -848,7 +849,8 @@
         // 加载使用记录
         async function loadUsageHistory() {
             try {
-                const response = await fetch(`/api/usage/records/${groupId}?userId=${userId}&accessCode=${accessCode}`);
+                // 修改了参数名称
+                const response = await fetch(`/api/usage/records/${groupId}?uId=${userId}&code=${accessCode}`);
                 if (response.ok) {
                     const result = await response.json();
                     if (result.success) {

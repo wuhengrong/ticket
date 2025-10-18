@@ -125,7 +125,7 @@ public class VirtualCard {
     private String physicalCardAPwd;
     
     @Column(name = "physical_card_b_phone")
-    private String physicalCardBPhone;
+    private String physicalCardBPhone; 
     
     @Column(name = "physical_card_b_pwd")
     private String physicalCardBPwd;
@@ -268,8 +268,8 @@ public class VirtualCard {
             return false;
         }
         
-        
-        if (currentUsedBy != null && !currentUsedBy.equals(userId)) {
+        //currentUsedBy不为空或者null，而且与userId不等
+        if (currentUsedBy != null && !currentUsedBy.equals(userId) && !"".equals(currentUsedBy)) {
             return false;
         }
         
@@ -280,7 +280,55 @@ public class VirtualCard {
 		return cardInitialStartTime;
 	}
 
+	public LocalDate getUsageDate() {
+		return usageDate;
+	}
+
+	public void setUsageDate(LocalDate usageDate) {
+		this.usageDate = usageDate;
+	}
+
+	public String getTodayAccount() {
+		return todayAccount;
+	}
+
+	public void setTodayAccount(String todayAccount) {
+		this.todayAccount = todayAccount;
+	}
+
+	public String getTodayPassword() {
+		return todayPassword;
+	}
+
+	public void setTodayPassword(String todayPassword) {
+		this.todayPassword = todayPassword;
+	}
+
+	public String getYesterdayAccount() {
+		return yesterdayAccount;
+	}
+
+	public void setYesterdayAccount(String yesterdayAccount) {
+		this.yesterdayAccount = yesterdayAccount;
+	}
+
+	public String getYesterdayPassword() {
+		return yesterdayPassword;
+	}
+
+	public void setYesterdayPassword(String yesterdayPassword) {
+		this.yesterdayPassword = yesterdayPassword;
+	}
+
 	public void setCardInitialStartTime(LocalDateTime cardInitialStartTime) {
 		this.cardInitialStartTime = cardInitialStartTime;
 	}
+	
+	  // 新增字段
+    private LocalDate usageDate;        // 使用日期
+    private String todayAccount;        // 当天账号
+    private String todayPassword;       // 当天密码
+    private String yesterdayAccount;    // 昨天账号
+    private String yesterdayPassword;   // 昨天密码
+    
 }

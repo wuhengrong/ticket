@@ -349,6 +349,70 @@
             border: 1px solid #e9ecef;
         }
         
+        /* 虚拟卡表格简化样式 */
+        .account-info {
+            background: #f8f9fa;
+            border-radius: 6px;
+            padding: 8px 12px;
+            margin: 2px 0;
+            font-family: monospace;
+            font-size: 13px;
+        }
+        
+        .account-label {
+            color: #7f8c8d;
+            font-size: 12px;
+            margin-bottom: 2px;
+        }
+        
+        .current-user {
+            background: #e8f4fd;
+            border-left: 3px solid #3498db;
+            padding: 8px 12px;
+            border-radius: 4px;
+        }
+        
+        .usage-time {
+            color: #7f8c8d;
+            font-size: 12px;
+            margin-top: 4px;
+        }
+        
+        .expandable-row {
+            cursor: pointer;
+        }
+        
+        .expanded-details {
+            background: #f8f9fa;
+            padding: 15px;
+            border-top: 1px solid #e9ecef;
+        }
+        
+        .detail-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+        
+        .detail-item {
+            background: white;
+            padding: 12px;
+            border-radius: 6px;
+            border-left: 3px solid #3498db;
+        }
+        
+        .detail-label {
+            color: #7f8c8d;
+            font-size: 12px;
+            margin-bottom: 4px;
+        }
+        
+        .detail-value {
+            color: #2c3e50;
+            font-weight: 500;
+            font-family: monospace;
+        }
+        
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(-10px); }
             to { opacity: 1; transform: translateY(0); }
@@ -391,7 +455,7 @@
             <button class="tab" data-tab="groupMembers">成员管理</button>
         </div>
         
-        <!-- 虚拟卡管理 -->
+        <!-- 虚拟卡管理 - 简化版 -->
         <div class="tab-content active" id="virtualCardsContent">
             <div class="card-header">
                 <h2 class="card-title">虚拟卡列表</h2>
@@ -405,19 +469,10 @@
                         <th>ID</th>
                         <th>名称</th>
                         <th>状态</th>
-                        <th>手机A</th>
-                        <th>密码A</th>
-                        <th>手机B</th>
-                        <th>密码B</th>
-                        <th>使用规则</th>
-                        <th>当前状态</th>
+                        <th>账号池</th>
+                        <th>今日账号</th>
+                        <th>当前使用</th>
                         <th>使用日期</th>
-                        <th>当天账号</th>
-                        <th>当天密码</th>
-                        <th>昨天账号</th>
-                        <th>昨天密码</th>
-                        <th>当前使用者</th>
-                        <th>当前使用时间</th>
                         <th>操作</th>
                     </tr>
                 </thead>
@@ -820,30 +875,64 @@
             }
         }
         
-        // 渲染虚拟卡表格
+        // 渲染虚拟卡表格 - 简化版
         function renderVirtualCards() {
             const tbody = document.getElementById('virtualCardsBody');
             tbody.innerHTML = '';
             
             virtualCards.forEach(card => {
                 const tr = document.createElement('tr');
+                tr.className = 'expandable-row';
+                
+                // 状态显示
+                let statusBadge = '';
+                if (card.status === 1) {
+                    if (card.currentUsedBy) {
+                        statusBadge = '<span class="status-active">使用中</span>';
+                    } else {
+                        statusBadge = '<span class="status-active">可用</span>';
+                    }
+                } else {
+                    statusBadge = '<span class="status-inactive">不可用</span>';
+                }
+                
+                // 账号池信息
+                const accountPool = `
+                    <div>
+                        <div class="account-label">账号A:</div>
+                        <div class="account-info">${card.physicalCardAPhone || '-'} / ${card.physicalCardAPwd || '-'}</div>
+                        <div class="account-label">账号B:</div>
+                        <div class="account-info">${card.physicalCardBPhone || '-'} / ${card.physicalCardBPwd || '-'}</div>
+                    </div>
+                `;
+                
+                // 今日账号信息
+                const todayAccount = `
+                    <div>
+                        <div class="account-info">${card.todayAccount || '-'}</div>
+                        <div class="account-info">${card.todayPassword || '-'}</div>
+                    </div>
+                `;
+                
+                // 当前使用信息
+                let currentUsage = '<div style="color: #bdc3c7; font-style: italic;">未使用</div>';
+                if (card.currentUsedBy) {
+                    currentUsage = `
+                        <div class="current-user">
+                            <div>${card.currentUsedBy}</div>
+                            <div class="usage-time">${formatDateTime(card.currentUsageStartTime) || '-'}</div>
+                        </div>
+                    `;
+                }
+                
                 tr.innerHTML = `
                     <td>${card.id}</td>
-                    <td>${card.cardName || '-'}</td>
-                    <td><span class="${card.status === 1 ? 'status-active' : 'status-inactive'}">${card.status === 1 ? '可用' : '不可用'}</span></td>
-                    <td>${card.physicalCardAPhone || '-'}</td>
-                    <td>${card.physicalCardAPwd || '-'}</td>
-                    <td>${card.physicalCardBPhone || '-'}</td>
-                    <td>${card.physicalCardBPwd || '-'}</td>
-                    <td>${card.usageRule || '-'}</td>
-                    <td>${card.currentStatus || 0}</td>
+                    <td><strong>${card.cardName || '-'}</strong></td>
+                    <td>${statusBadge}</td>
+                    <td>${accountPool}</td>
+                    <td>${todayAccount}</td>
+                    <td>${currentUsage}</td>
                     <td>${formatDate(card.usageDate) || '-'}</td>
-                    <td>${card.todayAccount || '-'}</td>
-                    <td>${card.todayPassword || '-'}</td>
-                    <td>${card.yesterdayAccount || '-'}</td>
-                    <td>${card.yesterdayPassword || '-'}</td>
-                    <td>${card.currentUsedBy || '-'}</td>
-                    <td>${formatDateTime(card.currentUsageStartTime) || '-'}</td>
                     <td>
                         <div class="action-buttons">
                             <button class="action-btn edit-btn" onclick="editVirtualCard('${card.id}')">
@@ -858,7 +947,51 @@
                         </div>
                     </td>
                 `;
+                
+                // 添加展开详情行
+                const detailRow = document.createElement('tr');
+                detailRow.className = 'expanded-details';
+                detailRow.style.display = 'none';
+                detailRow.innerHTML = `
+                    <td colspan="8">
+                        <div class="detail-grid">
+                            <div class="detail-item">
+                                <div class="detail-label">昨日账号</div>
+                                <div class="detail-value">${card.yesterdayAccount || '-'} / ${card.yesterdayPassword || '-'}</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">使用规则</div>
+                                <div class="detail-value">${card.usageRule || '-'}</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">当前状态</div>
+                                <div class="detail-value">${card.currentStatus || 0}</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">不可用日期</div>
+                                <div class="detail-value">${card.notAvailableDates || '-'}</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">账号池关系</div>
+                                <div class="detail-value">
+                                    <div>今日 ← ${card.todayAccount === card.physicalCardAPhone ? '账号A' : '账号B'}</div>
+                                    <div>昨日 ← ${card.yesterdayAccount === card.physicalCardAPhone ? '账号A' : '账号B'}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </td>
+                `;
+                
+                // 点击行展开/收起详情
+                tr.addEventListener('click', (e) => {
+                    if (!e.target.closest('.action-buttons')) {
+                        const isVisible = detailRow.style.display !== 'none';
+                        detailRow.style.display = isVisible ? 'none' : 'table-row';
+                    }
+                });
+                
                 tbody.appendChild(tr);
+                tbody.appendChild(detailRow);
             });
         }
         

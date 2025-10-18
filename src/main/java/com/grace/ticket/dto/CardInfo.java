@@ -1,81 +1,101 @@
 package com.grace.ticket.dto;
 
 import lombok.Data;
+import java.time.LocalDate;
 
 @Data
 public class CardInfo {
     private String virtualCardId;
     private String phone;
-    public String getVirtualCardId() {
-		return virtualCardId;
-	}
-
-	public void setVirtualCardId(String virtualCardId) {
-		this.virtualCardId = virtualCardId;
-	}
-
-	public String getPhone() {
-		return phone;
-	}
-
-	public void setPhone(String phone) {
-		this.phone = phone;
-	}
-
-	public String getPassword() {
-		return password;
-	}
-
-	public void setPassword(String password) {
-		this.password = password;
-	}
-
-	public Integer getStatus() {
-		return status;
-	}
-
-	public void setStatus(Integer status) {
-		this.status = status;
-	}
-
-	public Integer getCurrentStatus() {
-		return currentStatus;
-	}
-
-	public void setCurrentStatus(Integer currentStatus) {
-		this.currentStatus = currentStatus;
-	}
-
-	public String getCurrentUsedBy() {
-		return currentUsedBy;
-	}
-
-	public void setCurrentUsedBy(String currentUsedBy) {
-		this.currentUsedBy = currentUsedBy;
-	}
-
-	public Boolean getTodayAvailable() {
-		return todayAvailable;
-	}
-
-	public void setTodayAvailable(Boolean todayAvailable) {
-		this.todayAvailable = todayAvailable;
-	}
-
-	public Boolean getPeriodAvailable() {
-		return periodAvailable;
-	}
-
-	public void setPeriodAvailable(Boolean periodAvailable) {
-		this.periodAvailable = periodAvailable;
-	}
-
-	private String password;
+    private String password;
     private Integer status;
     private Integer currentStatus;
     private String currentUsedBy;
     private Boolean todayAvailable;
     private Boolean periodAvailable;
+    private LocalDate usageDate; // 新增字段
+    private Integer periodStatus;
+
+    public Integer getPeriodStatus() {
+		return periodStatus;
+	}
+
+	public void setPeriodStatus(Integer periodStatus) {
+		this.periodStatus = periodStatus;
+	}
+
+	public String getVirtualCardId() {
+        return virtualCardId;
+    }
+
+    public void setVirtualCardId(String virtualCardId) {
+        this.virtualCardId = virtualCardId;
+    }
+
+    public String getPhone() {
+        return phone;
+    }
+
+    public void setPhone(String phone) {
+        this.phone = phone;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
+    public Integer getStatus() {
+        return status;
+    }
+
+    public void setStatus(Integer status) {
+        this.status = status;
+    }
+
+    public Integer getCurrentStatus() {
+        return currentStatus;
+    }
+
+    public void setCurrentStatus(Integer currentStatus) {
+        this.currentStatus = currentStatus;
+    }
+
+    public String getCurrentUsedBy() {
+        return currentUsedBy;
+    }
+
+    public void setCurrentUsedBy(String currentUsedBy) {
+        this.currentUsedBy = currentUsedBy;
+    }
+
+    public Boolean getTodayAvailable() {
+        return todayAvailable;
+    }
+
+    public void setTodayAvailable(Boolean todayAvailable) {
+        this.todayAvailable = todayAvailable;
+    }
+
+    public Boolean getPeriodAvailable() {
+        return periodAvailable;
+    }
+
+    public void setPeriodAvailable(Boolean periodAvailable) {
+        this.periodAvailable = periodAvailable;
+    }
+
+    // 新增字段的getter和setter
+    public LocalDate getUsageDate() {
+        return usageDate;
+    }
+
+    public void setUsageDate(LocalDate usageDate) {
+        this.usageDate = usageDate;
+    }
 
     // 私有构造函数用于Builder
     private CardInfo(Builder builder) {
@@ -87,6 +107,8 @@ public class CardInfo {
         this.currentUsedBy = builder.currentUsedBy;
         this.todayAvailable = builder.todayAvailable;
         this.periodAvailable = builder.periodAvailable;
+        this.usageDate = builder.usageDate; // 新增
+        this.periodStatus=builder.periodStatus;
     }
 
     // 手动实现Builder类
@@ -99,6 +121,8 @@ public class CardInfo {
         private String currentUsedBy;
         private Boolean todayAvailable;
         private Boolean periodAvailable;
+        private LocalDate usageDate; // 新增 
+        private Integer periodStatus;
 
         public Builder virtualCardId(String virtualCardId) {
             this.virtualCardId = virtualCardId;
@@ -109,7 +133,12 @@ public class CardInfo {
             this.phone = phone;
             return this;
         }
-
+        
+        public Builder periodStatus(Integer periodStatus) {
+            this.periodStatus = periodStatus;
+            return this;
+        }
+        
         public Builder password(String password) {
             this.password = password;
             return this;
@@ -137,6 +166,12 @@ public class CardInfo {
 
         public Builder periodAvailable(Boolean periodAvailable) {
             this.periodAvailable = periodAvailable;
+            return this;
+        }
+
+        // 新增的usageDate builder方法
+        public Builder usageDate(LocalDate usageDate) {
+            this.usageDate = usageDate;
             return this;
         }
 

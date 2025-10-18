@@ -42,6 +42,9 @@ public class VirtualCardController {
     /**
      * 重置虚拟卡到初始状态
      */
+    /**
+     * 重置虚拟卡到初始状态
+     */
     @PostMapping("/{id}/reset")
     public ResponseEntity<?> resetVirtualCard(@PathVariable String id) {
         try {
@@ -52,7 +55,7 @@ public class VirtualCardController {
                 );
             } else {
                 return ResponseEntity.badRequest().body(
-                    ApiResponse.error("虚拟卡重置失败")
+                    ApiResponse.error("虚拟卡重置失败：虚拟卡不存在")
                 );
             }
         } catch (Exception e) {
