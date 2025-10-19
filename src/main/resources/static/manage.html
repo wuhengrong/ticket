@@ -935,11 +935,11 @@
                     <td>${formatDate(card.usageDate) || '-'}</td>
                     <td>
                         <div class="action-buttons">
-                            <button class="action-btn edit-btn" onclick="editVirtualCard('${card.id}')">
-                                <i class="fas fa-edit"></i> 编辑
-                            </button>
                             <button class="action-btn reset-btn" onclick="resetVirtualCard('${card.id}')">
                                 <i class="fas fa-redo"></i> 初始化
+                            </button>
+                            <button class="action-btn edit-btn" onclick="editVirtualCard('${card.id}')">
+                                <i class="fas fa-edit"></i> 编辑
                             </button>
                             <button class="action-btn delete-btn" onclick="deleteVirtualCard('${card.id}')">
                                 <i class="fas fa-trash"></i> 删除

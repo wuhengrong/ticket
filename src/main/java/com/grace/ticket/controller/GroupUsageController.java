@@ -85,8 +85,6 @@ public class GroupUsageController {
             
             // 获取用户信息
             GroupMember member = groupUsageService.getUserInfo(gId, uId);
-            // 获取虚拟卡信息
-            CardInfo cardInfo2 = virtualCardService.getCardInfo(gId);
             
          // 或者使用时间逻辑版本
             CardInfo cardInfo = virtualCardService.getCardInfoWithTimeLogic(gId, uId, member.getPasswordSpecialTime());

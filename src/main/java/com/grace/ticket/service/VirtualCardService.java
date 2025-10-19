@@ -35,15 +35,19 @@ public class VirtualCardService {
  @Autowired
  private GroupMemberRepository groupMemberRepository;
  
- 
+ private static int RESET_HOUR=19;
+ private static int RESET_MIN=30;
  // 获取北京时间
- private LocalDateTime getBeijingTime() {
-     return LocalDateTime.now(ZoneId.of("Asia/Shanghai"));
- }
- 
+
  private LocalDate getBeijingDate() {
      return LocalDate.now(ZoneId.of("Asia/Shanghai"));
  }
+ 
+//获取当前北京时间（包含日期和时间）
+private LocalDateTime getBeijingDateTime() {
+  return LocalDateTime.now(ZoneId.of("Asia/Shanghai"));
+}
+
  
  /**
   * 重置虚拟卡到初始状态
@@ -57,8 +61,18 @@ public class VirtualCardService {
              // 获取当前北京时间
              LocalDate currentDate = getBeijingDate();
              
-             // 1. 使用日期设置为当前日期 + 1天
-             card.setUsageDate(currentDate.plusDays(1));
+          // 定义常量参数：判断时间阈值（6:30）
+             LocalTime thresholdTime = LocalTime.of(RESET_HOUR, RESET_MIN);
+
+             // 获取当前北京时间（包含时分）
+             LocalDateTime currentBeijingTime = getBeijingDateTime();
+
+             // 判断逻辑：如果当前时间小于6:30，使用日期设置为当天，否则设置为当前日期 + 1天
+             if (currentBeijingTime.toLocalTime().isBefore(thresholdTime)) {
+                 card.setUsageDate(currentDate);  // 当天
+             } else {
+                 card.setUsageDate(currentDate.plusDays(1));  // 第二天
+             }
              
              // 2. 将当天账号密码挪到昨天账号密码
              card.setYesterdayAccount(card.getTodayAccount());

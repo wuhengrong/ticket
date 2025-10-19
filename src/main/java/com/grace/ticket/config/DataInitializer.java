@@ -68,13 +68,13 @@ public class DataInitializer implements CommandLineRunner {
         List<VirtualCard> virtualCards = Arrays.asList(
             // 虚拟卡1 - 工作日使用
             createVirtualCard("VC001", "工作日票卡", "2025.10.11;2025.10.12", 1, 1, 
-                "1318920379", "Aa123456", "13692585850", "Test5850", "1;3;5;7", 1, null,
+                "13189203798", "Aa123456", "13400784761", "Aa123456", "1;3;5;7", 1, null,
                 // 新增字段
                 currentDate.plusDays(1),                    // 使用日期：明天
-                "1318920379",                               // 当天账号：手机A
-                "Aa123456",                                 // 当天密码：密码A
-                "13692585850",                              // 昨天账号：手机B
-                "Test5850",                                 // 昨天密码：密码B
+                null,                                // 当天账号：手机A
+                null,                                   // 当天密码：密码A
+                null,                                 // 昨天账号：手机B
+                null,                                    // 昨天密码：密码B
                 null,                                       // 当前使用者
                 null                                        // 当前使用时间
             ),
