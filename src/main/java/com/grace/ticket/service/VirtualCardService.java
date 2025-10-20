@@ -10,6 +10,7 @@ import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.grace.ticket.config.Constants;
 import com.grace.ticket.dto.CardCredentials;
 import com.grace.ticket.dto.CardInfo;
 import com.grace.ticket.entity.Group;
@@ -35,8 +36,6 @@ public class VirtualCardService {
  @Autowired
  private GroupMemberRepository groupMemberRepository;
  
- private static int RESET_HOUR=19;
- private static int RESET_MIN=30;
  // 获取北京时间
 
  private LocalDate getBeijingDate() {
@@ -62,7 +61,7 @@ private LocalDateTime getBeijingDateTime() {
              LocalDate currentDate = getBeijingDate();
              
           // 定义常量参数：判断时间阈值（6:30）
-             LocalTime thresholdTime = LocalTime.of(RESET_HOUR, RESET_MIN);
+             LocalTime thresholdTime = LocalTime.of(Constants.RESET_HOUR, Constants.RESET_MIN);
 
              // 获取当前北京时间（包含时分）
              LocalDateTime currentBeijingTime = getBeijingDateTime();

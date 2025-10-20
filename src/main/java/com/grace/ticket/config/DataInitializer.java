@@ -20,7 +20,7 @@ import com.grace.ticket.service.SecureUrlService;
 
 @Component
 public class DataInitializer implements CommandLineRunner {
-    private static final String DOMAIN = "https://ticket-1-6sz7.onrender.com";
+	//private static final String DOMAIN = "https://ticket-1-6sz7.onrender.com";
     //private static final String DOMAIN = "http://localhost:8080";
     
     @Autowired
@@ -169,7 +169,7 @@ public class DataInitializer implements CommandLineRunner {
             member.setAccessCode(accessCode);
             
             String personalUrl = String.format("%s/card.html?uId=%s&gId=%s&code=%s", 
-                    DOMAIN, member.getUserId(), member.getGroupId(), accessCode);
+            		Constants.DOMAIN, member.getUserId(), member.getGroupId(), accessCode);
             member.setPersonalUrl(personalUrl);
         }
         

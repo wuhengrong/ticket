@@ -700,6 +700,7 @@
             </div>
             <div class="modal-body">
                 <form id="groupMemberForm">
+                    <input type="hidden" id="memberAccessCode">
                     <div class="form-row">
                         <div class="form-group">
                             <label for="memberGroupId">分组ID *</label>
@@ -798,6 +799,24 @@
                     document.getElementById(tabId + 'Content').classList.add('active');
                 });
             });
+        }
+        
+        // 从URL中提取accessCode
+        function extractAccessCodeFromUrl(url) {
+            if (!url) return null;
+            try {
+                const urlObj = new URL(url);
+                return urlObj.searchParams.get('code');
+            } catch (e) {
+                // 如果URL解析失败，尝试从字符串中提取
+                const match = url.match(/[?&]code=([^&]+)/);
+                return match ? match[1] : null;
+            }
+        }
+        
+        // 生成新的访问码
+        function generateAccessCode() {
+            return Math.random().toString(36).substring(2, 10).toUpperCase();
         }
         
         // 复制URL到剪贴板
@@ -1030,7 +1049,13 @@
             tbody.innerHTML = '';
             
             groupMembers.forEach(member => {
-                const personalUrl = member.personalUrl || `${DOMAIN}/mobile/pages/count-card.html?userId=${member.userId}&groupId=${member.groupId}`;
+                // 确保 URL 包含 code 参数
+                let personalUrl = member.personalUrl;
+                if (!personalUrl || !personalUrl.includes('code=')) {
+                    const accessCode = member.accessCode || generateAccessCode();
+                    personalUrl = `${DOMAIN}/card.html?uId=${member.userId}&gId=${member.groupId}&code=${accessCode}`;
+                }
+                
                 const truncatedUrl = personalUrl.substring(0, 20) + (personalUrl.length > 20 ? '...' : '');
                 
                 const tr = document.createElement('tr');
@@ -1118,6 +1143,7 @@
         // 重置成员表单
         function resetGroupMemberForm() {
             document.getElementById('groupMemberForm').reset();
+            document.getElementById('memberAccessCode').value = '';
             document.getElementById('personalUrlDisplay').textContent = '保存后将自动生成URL';
             document.getElementById('personalUrlDisplay').style.color = '#666';
         }
@@ -1184,8 +1210,12 @@
             document.getElementById('userCardEndTime').value = member.userCardEndTime || '';
             document.getElementById('memberStatus').value = member.status;
             
-            // 更新URL预览
-            const personalUrl = member.personalUrl || `${DOMAIN}/mobile/pages/count-card.html?userId=${member.userId}&groupId=${member.groupId}`;
+            // 获取原有的 accessCode
+            const existingAccessCode = extractAccessCodeFromUrl(member.personalUrl) || member.accessCode || generateAccessCode();
+            document.getElementById('memberAccessCode').value = existingAccessCode;
+            
+            // 更新URL预览，保持原有的 accessCode
+            const personalUrl = `${DOMAIN}/card.html?uId=${member.userId}&gId=${member.groupId}&code=${existingAccessCode}`;
             document.getElementById('personalUrlDisplay').textContent = personalUrl;
             document.getElementById('personalUrlDisplay').style.color = '#333';
             
@@ -1290,13 +1320,17 @@
             const groupId = document.getElementById('memberGroupId').value;
             const userId = document.getElementById('memberUserId').value;
             
+            // 获取原有的 accessCode，如果没有则生成新的
+            const accessCode = document.getElementById('memberAccessCode').value || generateAccessCode();
+            
             const formData = {
                 groupId: groupId,
                 userId: userId,
                 userName: document.getElementById('memberUserName').value,
                 useOrder: parseInt(document.getElementById('useOrder').value),
                 passwordSpecialTime: document.getElementById('passwordSpecialTime').value,
-                personalUrl: `${DOMAIN}/mobile/pages/count-card.html?userId=${userId}&groupId=${groupId}`,
+                personalUrl: `${DOMAIN}/card.html?uId=${userId}&gId=${groupId}&code=${accessCode}`,
+                accessCode: accessCode, // 同时保存 accessCode 到数据库
                 customInterval: document.getElementById('customInterval').value ? parseInt(document.getElementById('customInterval').value) : null,
                 userCardStartTime: document.getElementById('userCardStartTime').value,
                 userCardEndTime: document.getElementById('userCardEndTime').value,
