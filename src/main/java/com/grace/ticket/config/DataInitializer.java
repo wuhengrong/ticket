@@ -312,8 +312,16 @@ public class DataInitializer implements CommandLineRunner {
         try { 
             // 创建示例数据
             List<TicketCard> sampleCards = Arrays.asList(
-                createSampleCard(1, "http://19.nat0.cn:29027/mobile/shenzhen/pages/count-card.html?code=ROT5RAYDVH07TIHU", "可用"),
-                createSampleCard(2, "http://19.nat0.cn:29027/mobile/shenzhen/pages/count-card.html?code=ZAMRPNKKOFBGZO1J", "可用")
+                createSampleCard(1, "http://19.nat0.cn:29027/mobile/shenzhen/pages/count-card.html?code=DRVDCW6LBYWRTHBI", "已分配",0),
+                createSampleCard(2, "http://19.nat0.cn:29027/mobile/shenzhen/pages/count-card.html?code=WLNPORWN1UO8PRCG", "已分配",5),
+                createSampleCard(3, "http://19.nat0.cn:29027/mobile/shenzhen/pages/count-card.html?code=N1JHM7X96CBSINWE", "可用",5),
+                createSampleCard(4, "http://19.nat0.cn:29027/mobile/shenzhen/pages/count-card.html?code=WLNPORWN1UO8PRCG", "可用",10),
+                createSampleCard(5, "http://19.nat0.cn:29027/mobile/shenzhen/pages/count-card.html?code=GSINEXTL2QZZ51RL", "可用",2),
+                createSampleCard(6, "http://19.nat0.cn:29027/mobile/shenzhen/pages/count-card.html?code=MFDFEEHUOTEJXHVB", "可用",2),
+                createSampleCard(7, "http://19.nat0.cn:29027/mobile/shenzhen/pages/count-card.html?code=OTJCWC5AJZ7255D8", "可用",2),
+                createSampleCard(8, "http://19.nat0.cn:29027/mobile/shenzhen/pages/count-card.html?code=7SRE8ROYWSIILAFL", "可用",2),
+                createSampleCard(9, "http://19.nat0.cn:29027/mobile/shenzhen/pages/count-card.html?code=ON0KCWDCJ7AOFBZG", "可用",2)
+                
             );
             
             List<TicketCard> savedCards = new ArrayList<>();
@@ -332,11 +340,11 @@ public class DataInitializer implements CommandLineRunner {
         }
     }
     
-    private TicketCard createSampleCard(Integer serialNumber, String cardUrl, String status) {
+    private TicketCard createSampleCard(Integer serialNumber, String cardUrl, String status,int count) {
         TicketCard card = new TicketCard();
         card.setSerialNumber(serialNumber);
         card.setCardUrl(cardUrl);
-        card.setUsageCount(0);
+        card.setUsageCount(count);
         card.setStatus(status);
         card.setCreatedTime(LocalDateTime.now());
         return card;

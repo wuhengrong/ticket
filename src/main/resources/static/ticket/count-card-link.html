@@ -5,13 +5,171 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>地铁乘车服务</title>
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
         body {
-            font-family: Arial, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif;
+            background-color: #f5f5f5;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
             max-width: 600px;
             margin: 0 auto;
-            padding: 20px;
-            background-color: #f5f5f5;
         }
+        
+        /* 微信联系方式样式 - 缩小版 */
+        .wechat-main {
+            background: white;
+            border-radius: 16px;
+            padding: 25px 20px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+            text-align: center;
+            margin-bottom: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .wechat-main::before {
+            content: "";
+            position: absolute;
+            top: -30px;
+            right: -30px;
+            width: 70px;
+            height: 70px;
+            background: #07c160;
+            border-radius: 50%;
+            opacity: 0.08;
+        }
+        
+        .wechat-main::after {
+            content: "";
+            position: absolute;
+            bottom: -20px;
+            left: -20px;
+            width: 60px;
+            height: 60px;
+            background: #07c160;
+            border-radius: 50%;
+            opacity: 0.08;
+        }
+        
+        .icon-wechat {
+            font-size: 40px;
+            color: #07c160;
+            margin-bottom: 12px;
+            display: block;
+        }
+        
+        .title {
+            font-size: 22px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 8px;
+        }
+        
+        .subtitle {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 20px;
+            line-height: 1.4;
+        }
+        
+        .discount-badge {
+            background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+            color: white;
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-size: 16px;
+            font-weight: bold;
+            display: inline-block;
+            margin-bottom: 20px;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.03); }
+            100% { transform: scale(1); }
+        }
+        
+        .wechat-card {
+            background: #f8f9fa;
+            border: 2px dashed #07c160;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 15px;
+            position: relative;
+        }
+        
+        .wechat-label {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 12px;
+            display: block;
+        }
+        
+        .wechat-id {
+            font-size: 24px;
+            font-weight: bold;
+            color: #07c160;
+            letter-spacing: 1px;
+            margin-bottom: 18px;
+            font-family: 'Courier New', monospace;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .wechat-id:hover {
+            transform: scale(1.03);
+        }
+        
+        .copy-btn {
+            background: linear-gradient(135deg, #07c160, #06ae56);
+            color: white;
+            border: none;
+            padding: 14px 30px;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        .copy-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(7, 193, 96, 0.3);
+        }
+        
+        .copy-btn:active {
+            transform: translateY(0);
+        }
+        
+        .copy-btn.copied {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+        }
+        
+        .success-message {
+            background: #d4edda;
+            color: #155724;
+            padding: 12px;
+            border-radius: 8px;
+            margin-top: 15px;
+            font-size: 14px;
+            display: none;
+        }
+        
+        /* 使用方式样式 */
         .section {
             background: white;
             border-radius: 10px;
@@ -19,20 +177,12 @@
             margin-bottom: 20px;
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
-        .wechat-section {
-            text-align: center;
-            background: linear-gradient(135deg, #07c160, #05a050);
-            color: white;
-        }
-        .wechat-id {
-            font-size: 24px;
-            font-weight: bold;
-            margin: 10px 0;
-        }
+        
         .instruction-section {
             background: #fff3cd;
             border: 1px solid #ffeaa7;
         }
+        
         .instruction-title {
             color: #856404;
             font-size: 18px;
@@ -40,27 +190,32 @@
             margin-bottom: 15px;
             text-align: center;
         }
+        
         .method-section {
             margin-bottom: 20px;
         }
+        
         .method-title {
             color: #856404;
             font-weight: bold;
             margin-bottom: 10px;
             font-size: 16px;
         }
+        
         .step {
             margin: 8px 0;
             padding-left: 20px;
             position: relative;
             color: #856404;
         }
+        
         .step:before {
             content: "•";
             position: absolute;
             left: 8px;
             color: #856404;
         }
+        
         .note {
             background: #f8d7da;
             color: #721c24;
@@ -70,6 +225,7 @@
             font-size: 14px;
             border: 1px solid #f5c6cb;
         }
+        
         .contact-wechat {
             background: #d4edda;
             color: #155724;
@@ -79,6 +235,7 @@
             display: inline-block;
             font-weight: bold;
         }
+        
         .qr-button {
             background: linear-gradient(135deg, #3498db, #2980b9);
             color: white;
@@ -94,21 +251,25 @@
             align-items: center;
             gap: 8px;
         }
+        
         .qr-button:hover {
             transform: translateY(-2px);
             box-shadow: 0 4px 15px rgba(52, 152, 219, 0.4);
         }
+        
         .qr-button:disabled {
             background: #95a5a6;
             cursor: not-allowed;
             transform: none;
             box-shadow: none;
         }
+        
         .loading {
             text-align: center;
             padding: 20px;
             color: #666;
         }
+        
         .error-message {
             text-align: center;
             padding: 20px;
@@ -117,6 +278,7 @@
             border-radius: 6px;
             margin: 10px 0;
         }
+        
         .retry-btn {
             background: #3498db;
             color: white;
@@ -126,41 +288,98 @@
             cursor: pointer;
             margin-top: 10px;
         }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .wechat-main, .section {
+            animation: fadeIn 0.6s ease-out;
+        }
+        
+        @media (max-width: 480px) {
+            .wechat-main {
+                padding: 20px 15px;
+            }
+            
+            .title {
+                font-size: 20px;
+            }
+            
+            .wechat-id {
+                font-size: 22px;
+            }
+            
+            .discount-badge {
+                font-size: 15px;
+                padding: 7px 18px;
+            }
+            
+            .icon-wechat {
+                font-size: 36px;
+            }
+            
+            .copy-btn {
+                padding: 12px 25px;
+                font-size: 15px;
+            }
+        }
     </style>
 </head>
 <body>
-    <!-- 第一部分：微信联系方式 -->
-    <div class="section wechat-section">
-        <h2>请联系客服微信</h2>
-        <div class="wechat-id">whengrong</div>
-        <p>如有问题请添加微信咨询</p>
-    </div>
-    
-    <!-- 第二部分：使用方式 -->
-    <div class="section instruction-section">
-        <div class="instruction-title">📋 使用方式</div>
-        
-        <div class="method-section">
-            <div class="method-title">📱 App乘车：</div>
-            <div class="step">请下载打开'深圳地铁'APP</div>
-            <div class="step">点击'立即登录-切换账号-密码登录'</div>
-            <div class="step">登录后选择'首页-虚拟票-我的票卡-使用'</div>
-            <div class="contact-wechat">联系客服微信：whengrong</div>
-            <div class="note">
-                💡 备注：点击'我的票卡-交易记录'，确认最新状态为'出站'状态再使用
+    <div class="container">
+        <!-- 第一部分：微信联系方式 -->
+        <div class="wechat-main">
+            <span class="icon-wechat">💬</span>
+            <h1 class="title">添加微信享专属优惠</h1>
+            <p class="subtitle">立即添加客服微信，享受贴心服务</p>
+            
+            <div class="discount-badge">
+                🎉 立减0.5元优惠 🎉
+            </div>
+            
+            <div class="wechat-card">
+                <span class="wechat-label">微信号（点击复制）</span>
+                <div class="wechat-id" id="wechatId">whengrong</div>
+                <button class="copy-btn" id="copyBtn">
+                    <span>📋</span>
+                    点击复制微信号
+                </button>
+                <div class="success-message" id="successMessage">
+                    ✅ 微信号已复制！快去微信添加好友吧~
+                </div>
             </div>
         </div>
         
-        <div class="method-section">
-            <div class="method-title">🔗 二维码乘车：</div>
-            <div class="step">点击"准备乘车"按钮</div>
-            <div class="step">点击"确认"</div>
-            <div class="step">点击"进站 扣除一次乘车次数"</div>
-            <button id="qr-code-button" class="qr-button" onclick="openQRCodePage()">
-                📱 点击二维码乘车
-            </button>
-            <div class="note">
-                💡 备注：提前2分钟点击进站再扫码进站更好(最多只能提前10分钟占票)
+        <!-- 第二部分：使用方式 -->
+        <div class="section instruction-section">
+            <div class="instruction-title">📋 使用方式</div>
+            
+            <!-- 二维码乘车部分 - 现在放在上面 -->
+            <div class="method-section">
+                <div class="method-title">🔗 二维码乘车：</div>
+                <div class="step">点击"准备乘车"按钮</div>
+                <div class="step">点击"确认"</div>
+                <div class="step">点击"进站 扣除一次乘车次数"</div>
+                <button id="qr-code-button" class="qr-button" onclick="openQRCodePage()">
+                    📱 点击二维码乘车
+                </button>
+                <div class="note">
+                    💡 备注：提前2分钟点击进站再扫码进站更好(最多只能提前10分钟占票)
+                </div>
+            </div>
+            
+            <!-- App乘车部分 - 现在放在下面 -->
+            <div class="method-section">
+                <div class="method-title">📱 App乘车：</div>
+                <div class="step">请下载打开'深圳地铁'APP</div>
+                <div class="step">点击'立即登录-切换账号-密码登录'</div>
+                <div class="step">登录后选择'首页-虚拟票-我的票卡-使用'</div>
+                <div class="contact-wechat">联系客服微信：whengrong</div>
+                <div class="note">
+                    💡 备注：点击'我的票卡-交易记录'，确认最新状态为'出站'状态再使用
+                </div>
             </div>
         </div>
     </div>
@@ -241,6 +460,47 @@
             qrButton.disabled = true;
             qrButton.textContent = '🚫 票卡加载失败';
         }
+
+        // 复制微信号功能
+        document.getElementById('copyBtn').addEventListener('click', function() {
+            const wechatId = 'whengrong';
+            const successMessage = document.getElementById('successMessage');
+            const copyBtn = document.getElementById('copyBtn');
+            
+            navigator.clipboard.writeText(wechatId).then(function() {
+                successMessage.style.display = 'block';
+                copyBtn.innerHTML = '<span>✅</span> 复制成功！';
+                copyBtn.classList.add('copied');
+                
+                setTimeout(function() {
+                    successMessage.style.display = 'none';
+                    copyBtn.innerHTML = '<span>📋</span> 点击复制微信号';
+                    copyBtn.classList.remove('copied');
+                }, 3000);
+                
+            }).catch(function(err) {
+                const textArea = document.createElement('textarea');
+                textArea.value = wechatId;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+                
+                successMessage.style.display = 'block';
+                copyBtn.innerHTML = '<span>✅</span> 复制成功！';
+                copyBtn.classList.add('copied');
+                
+                setTimeout(function() {
+                    successMessage.style.display = 'none';
+                    copyBtn.innerHTML = '<span>📋</span> 点击复制微信号';
+                    copyBtn.classList.remove('copied');
+                }, 3000);
+            });
+        });
+        
+        document.getElementById('wechatId').addEventListener('click', function() {
+            document.getElementById('copyBtn').click();
+        });
 
         // 页面加载完成后执行
         document.addEventListener('DOMContentLoaded', function() {
