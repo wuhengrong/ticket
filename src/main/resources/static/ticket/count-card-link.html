@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>地铁乘车服务</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .section {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .wechat-section {
+            text-align: center;
+            background: linear-gradient(135deg, #07c160, #05a050);
+            color: white;
+        }
+        .wechat-id {
+            font-size: 24px;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        .instruction-section {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+        }
+        .instruction-title {
+            color: #856404;
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+        .method-section {
+            margin-bottom: 20px;
+        }
+        .method-title {
+            color: #856404;
+            font-weight: bold;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+        .step {
+            margin: 8px 0;
+            padding-left: 20px;
+            position: relative;
+            color: #856404;
+        }
+        .step:before {
+            content: "•";
+            position: absolute;
+            left: 8px;
+            color: #856404;
+        }
+        .note {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 10px;
+            font-size: 14px;
+            border: 1px solid #f5c6cb;
+        }
+        .contact-wechat {
+            background: #d4edda;
+            color: #155724;
+            padding: 8px 12px;
+            border-radius: 4px;
+            margin: 10px 0;
+            display: inline-block;
+            font-weight: bold;
+        }
+        .qr-button {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 10px 0;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .qr-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(52, 152, 219, 0.4);
+        }
+        .qr-button:disabled {
+            background: #95a5a6;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+        }
+        .error-message {
+            text-align: center;
+            padding: 20px;
+            color: #e74c3c;
+            background: #f8d7da;
+            border-radius: 6px;
+            margin: 10px 0;
+        }
+        .retry-btn {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <!-- 第一部分：微信联系方式 -->
+    <div class="section wechat-section">
+        <h2>请联系客服微信</h2>
+        <div class="wechat-id">whengrong</div>
+        <p>如有问题请添加微信咨询</p>
+    </div>
+    
+    <!-- 第二部分：使用方式 -->
+    <div class="section instruction-section">
+        <div class="instruction-title">📋 使用方式</div>
+        
+        <div class="method-section">
+            <div class="method-title">📱 App乘车：</div>
+            <div class="step">请下载打开'深圳地铁'APP</div>
+            <div class="step">点击'立即登录-切换账号-密码登录'</div>
+            <div class="step">登录后选择'首页-虚拟票-我的票卡-使用'</div>
+            <div class="contact-wechat">联系客服微信：whengrong</div>
+            <div class="note">
+                💡 备注：点击'我的票卡-交易记录'，确认最新状态为'出站'状态再使用
+            </div>
+        </div>
+        
+        <div class="method-section">
+            <div class="method-title">🔗 二维码乘车：</div>
+            <div class="step">点击"准备乘车"按钮</div>
+            <div class="step">点击"确认"</div>
+            <div class="step">点击"进站 扣除一次乘车次数"</div>
+            <button id="qr-code-button" class="qr-button" onclick="openQRCodePage()">
+                📱 点击二维码乘车
+            </button>
+            <div class="note">
+                💡 备注：提前2分钟点击进站再扫码进站更好(最多只能提前10分钟占票)
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // 全局变量存储票卡信息
+        let currentTicketCard = null;
+
+        // 动态获取API基础路径
+        function getApiBaseUrl() {
+            const currentProtocol = window.location.protocol;
+            const currentHost = window.location.host;
+            return `${currentProtocol}//${currentHost}/api`;
+        }
+
+        const API_BASE = getApiBaseUrl();
+
+        // 获取URL参数中的code
+        function getUrlParameter(name) {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get(name);
+        }
+
+        // 根据code获取票卡信息
+        async function loadTicketCardByCode() {
+            const code = getUrlParameter('code');
+
+            if (!code) {
+                showError('未找到票卡代码');
+                return;
+            }
+
+            try {
+                const apiUrl = `${API_BASE}/ticket-cards/code/${code}`;
+                
+                const response = await fetch(apiUrl, {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json',
+                    },
+                    mode: 'cors'
+                });
+                
+                if (response.ok) {
+                    const ticketCard = await response.json();
+                    currentTicketCard = ticketCard;
+                    
+                    if (ticketCard && ticketCard.cardUrl) {
+                        // 启用二维码乘车按钮
+                        const qrButton = document.getElementById('qr-code-button');
+                        qrButton.disabled = false;
+                        qrButton.textContent = '📱 点击二维码乘车';
+                    } else {
+                        showError('票卡信息不完整');
+                    }
+                } else {
+                    showError('服务器错误，请稍后重试');
+                }
+            } catch (error) {
+                console.error('加载票卡失败:', error);
+                showError('网络错误，请检查网络连接');
+            }
+        }
+
+        // 打开二维码乘车页面
+        function openQRCodePage() {
+            if (currentTicketCard && currentTicketCard.cardUrl) {
+                window.open(currentTicketCard.cardUrl, '_blank');
+            } else {
+                showError('票卡链接无效');
+            }
+        }
+
+        // 显示错误信息
+        function showError(message) {
+            const qrButton = document.getElementById('qr-code-button');
+            qrButton.disabled = true;
+            qrButton.textContent = '🚫 票卡加载失败';
+        }
+
+        // 页面加载完成后执行
+        document.addEventListener('DOMContentLoaded', function() {
+            // 初始禁用二维码按钮，等待数据加载
+            const qrButton = document.getElementById('qr-code-button');
+            qrButton.disabled = true;
+            qrButton.textContent = '⏳ 加载中...';
+            
+            loadTicketCardByCode();
+        });
+    </script>
+</body>
+</html>

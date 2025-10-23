@@ -3,6 +3,7 @@ package com.grace.ticket.config;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -12,11 +13,13 @@ import org.springframework.stereotype.Component;
 
 import com.grace.ticket.entity.Group;
 import com.grace.ticket.entity.GroupMember;
+import com.grace.ticket.entity.TicketCard;
 import com.grace.ticket.entity.VirtualCard;
 import com.grace.ticket.repository.GroupMemberRepository;
 import com.grace.ticket.repository.GroupRepository;
 import com.grace.ticket.repository.VirtualCardRepository;
 import com.grace.ticket.service.SecureUrlService;
+import com.grace.ticket.service.TicketCardService;
 
 @Component
 public class DataInitializer implements CommandLineRunner {
@@ -35,7 +38,51 @@ public class DataInitializer implements CommandLineRunner {
     @Autowired
     private SecureUrlService secureUrlService;
     
-    // 获取北京时间
+    @Autowired
+    private TicketCardService ticketCardService;
+    
+    
+    public VirtualCardRepository getVirtualCardRepository() {
+		return virtualCardRepository;
+	}
+
+	public void setVirtualCardRepository(VirtualCardRepository virtualCardRepository) {
+		this.virtualCardRepository = virtualCardRepository;
+	}
+
+	public GroupRepository getGroupRepository() {
+		return groupRepository;
+	}
+
+	public void setGroupRepository(GroupRepository groupRepository) {
+		this.groupRepository = groupRepository;
+	}
+
+	public GroupMemberRepository getGroupMemberRepository() {
+		return groupMemberRepository;
+	}
+
+	public void setGroupMemberRepository(GroupMemberRepository groupMemberRepository) {
+		this.groupMemberRepository = groupMemberRepository;
+	}
+
+	public SecureUrlService getSecureUrlService() {
+		return secureUrlService;
+	}
+
+	public void setSecureUrlService(SecureUrlService secureUrlService) {
+		this.secureUrlService = secureUrlService;
+	}
+
+	public TicketCardService getTicketCardService() {
+		return ticketCardService;
+	}
+
+	public void setTicketCardService(TicketCardService ticketCardService) {
+		this.ticketCardService = ticketCardService;
+	}
+
+	// 获取北京时间
     private LocalDateTime getBeijingTime() {
         return LocalDateTime.now(ZoneId.of("Asia/Shanghai"));
     }
@@ -55,6 +102,9 @@ public class DataInitializer implements CommandLineRunner {
         // 初始化组成员数据
         initializeGroupMembers();
         
+     // 初始化票卡url数据
+        initSampleUrlData();
+        
         System.out.println("测试数据初始化完成 - 共生成" + virtualCardRepository.count() + "张虚拟卡，" 
                          + groupRepository.count() + "个分组，" 
                          + groupMemberRepository.count() + "个组成员");
@@ -67,8 +117,46 @@ public class DataInitializer implements CommandLineRunner {
         
         List<VirtualCard> virtualCards = Arrays.asList(
             // 虚拟卡1 - 工作日使用
-            createVirtualCard("VC001", "工作日票卡", "2025.10.11;2025.10.12", 1, 1, 
+            createVirtualCard("VC001", "自有卡1", "2025.10.11;2025.10.12", 1, 1, 
                 "13189203798", "Aa123456", "13400784761", "Aa123456", "1;3;5;7", 1, null,
+                // 新增字段
+                currentDate.plusDays(0),                    // 使用日期：明天
+                null,                                // 当天账号：手机A
+                null,                                   // 当天密码：密码A
+                null,                                 // 昨天账号：手机B
+                null,                                    // 昨天密码：密码B
+                null,                                       // 当前使用者
+                null                                        // 当前使用时间
+            ),
+            // 虚拟卡2 - 正在使用的卡
+            createVirtualCard("VC002", "借用卡1", "2025.10.01;2025.10.02", 1, 1, 
+                "18202006469", "Aa668899", "17796260629", "Aa668899", "1;2;3;4;5;6;7", 1, "USER001",
+                // 新增字段
+                currentDate.plusDays(0),                    // 使用日期：明天
+                null,                                // 当天账号：手机A
+                null,                                   // 当天密码：密码A
+                null,                                 // 昨天账号：手机B
+                null,                                    // 昨天密码：密码B
+                null,                                       // 当前使用者
+                null                                        // 当前使用时间
+            ),
+            // 虚拟卡3 - 全天可用
+            createVirtualCard("VC003", "自有卡2", "2025.09.25;2025.09.26", 1, 1, 
+            	"19372315927", "Aa123456", "13358302048", "Aa123456", "1;3;5;7", 1, null,
+                // 新增字段
+                currentDate.plusDays(0),                    // 使用日期：明天
+                null,                                // 当天账号：手机A
+                null,                                   // 当天密码：密码A
+                null,                                 // 昨天账号：手机B
+                null,                                    // 昨天密码：密码B
+                null,                                       // 当前使用者
+                null                                        // 当前使用时间
+            )
+           ,
+            
+            // 虚拟卡4 - 
+            createVirtualCard("VC004", "备用卡1", "2025.10.01;2025.10.02", 1, 1, 
+            	"19397319339", "Aa123456", "13692585850", "Test5850", "1;3;5;7", 1, null,
                 // 新增字段
                 currentDate.plusDays(1),                    // 使用日期：明天
                 null,                                // 当天账号：手机A
@@ -77,46 +165,8 @@ public class DataInitializer implements CommandLineRunner {
                 null,                                    // 昨天密码：密码B
                 null,                                       // 当前使用者
                 null                                        // 当前使用时间
-            ),
-            
-            // 虚拟卡2 - 全天可用
-            createVirtualCard("VC002", "工作日票卡", "2025.09.25;2025.09.26", 1, 1, 
-                "17820635357", "5Test12345", "13692585850", "Test5850", "1;3;5;7", 1, null,
-                // 新增字段
-                currentDate.plusDays(1),                    // 使用日期：明天
-                "17820635357",                              // 当天账号：手机A
-                "5Test12345",                               // 当天密码：密码A
-                "13692585850",                              // 昨天账号：手机B
-                "Test5850",                                 // 昨天密码：密码B
-                null,                                       // 当前使用者
-                null                                        // 当前使用时间
-            ),
-            
-            // 虚拟卡3 - 周末使用
-            createVirtualCard("VC003", "工作日票卡", "2025.10.01;2025.10.02", 1, 1, 
-                "13800138003", "pass789", "13800138004", "pass101", "2;4;6", 1, null,
-                // 新增字段
-                currentDate.plusDays(1),                    // 使用日期：明天
-                "13800138004",                              // 当天账号：手机B（周末使用B卡）
-                "pass101",                                  // 当天密码：密码B
-                "13800138003",                              // 昨天账号：手机A
-                "pass789",                                  // 昨天密码：密码A
-                null,                                       // 当前使用者
-                null                                        // 当前使用时间
-            ),
-            
-            // 虚拟卡4 - 正在使用的卡
-            createVirtualCard("VC004", "测试用卡", "2025.11.01;2025.11.02", 1, 1, 
-                "13900139001", "test111", "13900139002", "test222", "1;2;3;4;5;6;7", 1, "USER001",
-                // 新增字段
-                currentDate,                                // 使用日期：今天
-                "13900139001",                              // 当天账号：手机A
-                "test111",                                  // 当天密码：密码A
-                "13900139002",                              // 昨天账号：手机B
-                "test222",                                  // 昨天密码：密码B
-                "USER001",                                  // 当前使用者
-                currentDateTime.minusMinutes(15)            // 当前使用时间：15分钟前
             )
+           
         );
         
         virtualCardRepository.saveAll(virtualCards);
@@ -129,13 +179,13 @@ public class DataInitializer implements CommandLineRunner {
             createGroup("GRP001", "中山公园-沙田-华强南-沙田-中山公园-沙田", 60, "VC001", "ACTIVE"),
             
             // 分组2 - 市场部
-            createGroup("GRP002", "市场部分享组", 60, "VC002", "ACTIVE"),
+            createGroup("GRP002", "技术大学-科学馆-借用", 60, "VC002", "ACTIVE"),
             
             // 分组3 - 研发团队（未激活）
-            createGroup("GRP003", "研发团队组", 60, "VC003", "INACTIVE"),
+            createGroup("GRP003", "梅林关-长圳-元芬-科学馆", 60, "VC003", "ACTIVE"),
             
             // 分组4 - 测试组
-            createGroup("GRP004", "测试分组", 45, "VC004", "ACTIVE")
+            createGroup("GRP004", "备用组1", 60, "VC004", "ACTIVE")
         );
         
         groupRepository.saveAll(groups);
@@ -151,16 +201,15 @@ public class DataInitializer implements CommandLineRunner {
             createGroupMember("GRP001", "USER004", "地铁客户-闲鱼-Andy", 5, 60, "06:00", "23:00", "ACTIVE"),
             
             // GRP002 组成员
-            createGroupMember("GRP002", "USER005", "USER005", 1, null, "06:00", "23:00", "ACTIVE"),
+            createGroupMember("GRP002", "USER005", "地铁客户-闲鱼-用户-长期通勤", 1, null, "06:00", "23:00", "ACTIVE"),
             createGroupMember("GRP002", "USER006", "USER006", 2, 40, "06:00", "23:00", "ACTIVE"),
             createGroupMember("GRP002", "USER007", "USER007", 3, 45, "06:00", "23:00", "ACTIVE"),
             
             // GRP003 组成员（未激活分组）
-            createGroupMember("GRP003", "USER008", "测试用户A", 1, 30, "07:00", "22:00", "INACTIVE"),
-            createGroupMember("GRP003", "USER009", "测试用户B", 2, 35, "07:00", "22:00", "INACTIVE"),
+            createGroupMember("GRP003", "USER008", "豆豆不哭", 14, 30, "07:00", "22:00", "ACTIVE"),
+            createGroupMember("GRP003", "USER009", "地铁客户-闲鱼-小玲", 25, 35, "07:00", "22:00", "ACTIVE"),
+            createGroupMember("GRP003", "USER010", "地铁客户-闲鱼-是只vip", 36, 35, "07:00", "22:00", "ACTIVE")
             
-            // GRP004 组成员
-            createGroupMember("GRP004", "USER010", "测试用户C", 1, 50, "06:30", "23:30", "ACTIVE")
         );
         
         // 为每个成员生成唯一的访问码和URL
@@ -257,5 +306,39 @@ public class DataInitializer implements CommandLineRunner {
         member.setUserCardEndTime(endTime);
         member.setStatus(status);
         return member;
+    }
+    
+    public void initSampleUrlData() {
+        try { 
+            // 创建示例数据
+            List<TicketCard> sampleCards = Arrays.asList(
+                createSampleCard(1, "http://19.nat0.cn:29027/mobile/shenzhen/pages/count-card.html?code=ROT5RAYDVH07TIHU", "可用"),
+                createSampleCard(2, "http://19.nat0.cn:29027/mobile/shenzhen/pages/count-card.html?code=ZAMRPNKKOFBGZO1J", "可用")
+            );
+            
+            List<TicketCard> savedCards = new ArrayList<>();
+            for (TicketCard card : sampleCards) {
+                try {
+                    TicketCard savedCard = ticketCardService.createTicketCard(card);
+                    savedCards.add(savedCard);
+                } catch (Exception e) {
+                    // 如果序号已存在，跳过
+                    System.out.println("跳过重复序号: " + card.getSerialNumber());
+                }
+            }
+            
+        } catch (Exception e) {
+            
+        }
+    }
+    
+    private TicketCard createSampleCard(Integer serialNumber, String cardUrl, String status) {
+        TicketCard card = new TicketCard();
+        card.setSerialNumber(serialNumber);
+        card.setCardUrl(cardUrl);
+        card.setUsageCount(0);
+        card.setStatus(status);
+        card.setCreatedTime(LocalDateTime.now());
+        return card;
     }
 }

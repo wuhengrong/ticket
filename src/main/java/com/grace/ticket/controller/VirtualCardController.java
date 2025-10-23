@@ -16,17 +16,22 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.grace.ticket.config.Constants;
 import com.grace.ticket.dto.ApiResponse;
 import com.grace.ticket.entity.VirtualCard;
 import com.grace.ticket.service.VirtualCardService;
 
 @RestController
 @RequestMapping("/api/admin/virtual-cards")
-@CrossOrigin(origins = "*")
 public class VirtualCardController {
     
     @Autowired
     private VirtualCardService virtualCardService;
+    
+    // 密码校验方法
+    private boolean validatePassword(String password) {
+        return Constants.MANAGEMENT_ACCESS_PASSWORD.equals(password);
+    }
     
     // 获取所有虚拟卡
     @GetMapping
@@ -42,12 +47,16 @@ public class VirtualCardController {
     /**
      * 重置虚拟卡到初始状态
      */
-    /**
-     * 重置虚拟卡到初始状态
-     */
     @PostMapping("/{id}/reset")
-    public ResponseEntity<?> resetVirtualCard(@PathVariable String id) {
+    public ResponseEntity<?> resetVirtualCard(@PathVariable String id, @RequestBody(required = false) PasswordRequest passwordRequest) {
         try {
+            // 密码校验
+            if (passwordRequest == null || !validatePassword(passwordRequest.getPassword())) {
+                return ResponseEntity.status(401).body(
+                    ApiResponse.error("未授权访问：密码错误")
+                );
+            }
+            
             boolean success = virtualCardService.resetToInitialState(id);
             if (success) {
                 return ResponseEntity.ok().body(
@@ -64,6 +73,7 @@ public class VirtualCardController {
             );
         }
     }
+    
     // 根据ID获取虚拟卡
     @GetMapping("/{id}")
     public ApiResponse<VirtualCard> getVirtualCardById(@PathVariable String id) {
@@ -81,8 +91,15 @@ public class VirtualCardController {
     
     // 创建虚拟卡
     @PostMapping
-    public ApiResponse<VirtualCard> createVirtualCard(@RequestBody VirtualCard virtualCard) {
+    public ApiResponse<VirtualCard> createVirtualCard(@RequestBody VirtualCardRequest request) {
         try {
+            // 密码校验
+            if (!validatePassword(request.getPassword())) {
+                return ApiResponse.error("未授权访问：密码错误");
+            }
+            
+            VirtualCard virtualCard = request.getVirtualCard();
+            
             // 检查ID是否已存在
             if (virtualCardService.findById(virtualCard.getId()).isPresent()) {
                 return ApiResponse.error("虚拟卡ID已存在");
@@ -97,8 +114,15 @@ public class VirtualCardController {
     
     // 更新虚拟卡
     @PutMapping("/{id}")
-    public ApiResponse<VirtualCard> updateVirtualCard(@PathVariable String id, @RequestBody VirtualCard virtualCard) {
+    public ApiResponse<VirtualCard> updateVirtualCard(@PathVariable String id, @RequestBody VirtualCardRequest request) {
         try {
+            // 密码校验
+            if (!validatePassword(request.getPassword())) {
+                return ApiResponse.error("未授权访问：密码错误");
+            }
+            
+            VirtualCard virtualCard = request.getVirtualCard();
+            
             // 检查虚拟卡是否存在
             if (!virtualCardService.findById(id).isPresent()) {
                 return ApiResponse.error("虚拟卡不存在");
@@ -114,8 +138,13 @@ public class VirtualCardController {
     
     // 删除虚拟卡
     @DeleteMapping("/{id}")
-    public ApiResponse<Void> deleteVirtualCard(@PathVariable String id) {
+    public ApiResponse<Void> deleteVirtualCard(@PathVariable String id, @RequestBody(required = false) PasswordRequest passwordRequest) {
         try {
+            // 密码校验
+            if (passwordRequest == null || !validatePassword(passwordRequest.getPassword())) {
+                return ApiResponse.error("未授权访问：密码错误");
+            }
+            
             if (!virtualCardService.findById(id).isPresent()) {
                 return ApiResponse.error("虚拟卡不存在");
             }
@@ -124,6 +153,41 @@ public class VirtualCardController {
             return ApiResponse.success(null, "虚拟卡删除成功");
         } catch (Exception e) {
             return ApiResponse.error("删除虚拟卡失败: " + e.getMessage());
+        }
+    }
+    
+    // 密码请求DTO
+    public static class PasswordRequest {
+        private String password;
+        
+        public String getPassword() {
+            return password;
+        }
+        
+        public void setPassword(String password) {
+            this.password = password;
+        }
+    }
+    
+    // 虚拟卡请求DTO（包含密码）
+    public static class VirtualCardRequest {
+        private String password;
+        private VirtualCard virtualCard;
+        
+        public String getPassword() {
+            return password;
+        }
+        
+        public void setPassword(String password) {
+            this.password = password;
+        }
+        
+        public VirtualCard getVirtualCard() {
+            return virtualCard;
+        }
+        
+        public void setVirtualCard(VirtualCard virtualCard) {
+            this.virtualCard = virtualCard;
         }
     }
 }

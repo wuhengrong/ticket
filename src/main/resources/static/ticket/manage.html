@@ -1,0 +1,782 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>票卡管理系统</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
+        }
+        
+        body {
+            background: #f5f7fa;
+            color: #333;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .card-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        
+        .btn {
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(52, 152, 219, 0.4);
+        }
+        
+        .btn-success {
+            background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+        }
+        
+        .btn-danger {
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+        
+        th {
+            background: #f8f9fa;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        
+        tr:hover {
+            background: #f8f9fa;
+        }
+        
+        .url-display {
+            max-width: 200px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            font-size: 12px;
+            color: #666;
+            background: #f8f9fa;
+            padding: 6px 10px;
+            border-radius: 4px;
+            border: 1px solid #e9ecef;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 5px;
+            flex-wrap: wrap;
+        }
+        
+        .action-btn {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+        
+        .generate-btn {
+            background: #3498db;
+            color: white;
+        }
+        
+        .edit-btn {
+            background: #f39c12;
+            color: white;
+        }
+        
+        .delete-btn {
+            background: #e74c3c;
+            color: white;
+        }
+        
+        .copy-btn {
+            background: #9b59b6;
+            color: white;
+        }
+        
+        .status-available {
+            color: #2ecc71;
+            font-weight: 600;
+        }
+        
+        .status-used {
+            color: #e74c3c;
+            font-weight: 600;
+        }
+        
+        .status-disabled {
+            color: #95a5a6;
+            font-weight: 600;
+        }
+        
+        .status-assigned {
+            color: #3498db;
+            font-weight: 600;
+        }
+        
+        .alert {
+            padding: 12px 16px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            display: none;
+        }
+        
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .alert-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .alert-info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal.active {
+            display: flex;
+        }
+        
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+        
+        .modal-header {
+            padding: 20px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .modal-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        
+        .close {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #7f8c8d;
+        }
+        
+        .modal-body {
+            padding: 20px;
+        }
+        
+        .modal-footer {
+            padding: 15px 20px;
+            border-top: 1px solid #eee;
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        
+        input, select, textarea {
+            width: 100%;
+            padding: 10px 15px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+        
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+        }
+
+        /* 密码验证模态框样式 */
+        .password-modal {
+            display: flex;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .password-content {
+            background: white;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 400px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            padding: 30px;
+        }
+        
+        .password-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .password-input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            font-size: 16px;
+            margin-bottom: 15px;
+        }
+        
+        .password-input:focus {
+            outline: none;
+            border-color: #3498db;
+        }
+        
+        .password-error {
+            color: #e74c3c;
+            font-size: 14px;
+            margin-bottom: 15px;
+            text-align: center;
+            display: none;
+        }
+        
+        .password-buttons {
+            display: flex;
+            gap: 10px;
+        }
+    </style>
+</head>
+<body>
+    <!-- 密码验证模态框 -->
+    <div class="password-modal" id="passwordModal">
+        <div class="password-content">
+            <h3 class="password-title">🔐 请输入管理密码</h3>
+            <input type="password" id="passwordInput" class="password-input" placeholder="请输入访问密码" autocomplete="off">
+            <div class="password-error" id="passwordError">密码错误，请重新输入</div>
+            <div class="password-buttons">
+                <button class="btn btn-danger" onclick="cancelAccess()" style="flex: 1;">取消</button>
+                <button class="btn btn-success" onclick="verifyPassword()" style="flex: 1;">确认</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 主内容区域 - 初始隐藏 -->
+    <div id="mainContent" style="display: none;">
+        <div class="container">
+            <header>
+                <h1>🚇 地铁票卡管理系统</h1>
+                <p>管理票卡URL和生成用户访问链接</p>
+            </header>
+            
+            <div class="alert" id="alertMessage"></div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">票卡列表</h2>
+                    <button class="btn" onclick="addTicketCard()">
+                        <i class="fas fa-plus"></i> 添加票卡
+                    </button>
+                </div>
+                
+                <table id="ticketCardsTable">
+                    <thead>
+                        <tr>
+                            <th>序号</th>
+                            <th>卡票URL</th>
+                            <th>次数</th>
+                            <th>状态</th>
+                            <th>用户URL</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="ticketCardsBody">
+                        <!-- 数据将通过JavaScript动态加载 -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <!-- 编辑票卡模态框 -->
+        <div class="modal" id="ticketModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 class="modal-title" id="modalTitle">编辑票卡</h3>
+                    <button class="close" onclick="closeModal('ticketModal')">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <form id="ticketForm">
+                        <input type="hidden" id="ticketId">
+                        <div class="form-group">
+                            <label for="serialNumber">序号 *</label>
+                            <input type="number" id="serialNumber" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="cardUrl">卡票URL *</label>
+                            <input type="url" id="cardUrl" required placeholder="https://example.com/ticket">
+                            <small style="color: #666;">请输入单个URL地址</small>
+                        </div>
+                        <div class="form-group">
+                            <label for="usageCount">使用次数</label>
+                            <input type="number" id="usageCount" value="0">
+                        </div>
+                        <div class="form-group">
+                            <label for="status">状态</label>
+                            <select id="status">
+                                <option value="可用">可用</option>
+                                <option value="已使用">已使用</option>
+                                <option value="禁用">禁用</option>
+                                <option value="已分配">已分配</option>
+                            </select>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-danger" onclick="closeModal('ticketModal')">取消</button>
+                    <button class="btn btn-success" onclick="saveTicketCard()">保存</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 全局数据存储
+        let ticketCards = [];
+        const API_BASE = '/api/ticket-cards';
+        
+        // 密码验证相关函数
+        async function verifyPassword() {
+            const password = document.getElementById('passwordInput').value;
+            const errorElement = document.getElementById('passwordError');
+            
+            if (!password) {
+                errorElement.textContent = '请输入密码';
+                errorElement.style.display = 'block';
+                return;
+            }
+            
+            try {
+                // 修正URL路径
+                const response = await fetch('/api/ticket-cards/auth/verify-management-password', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ password: password })
+                });
+                
+                if (response.ok) {
+                    // 密码正确，显示主内容
+                    document.getElementById('passwordModal').style.display = 'none';
+                    document.getElementById('mainContent').style.display = 'block';
+                    // 加载票卡数据
+                    loadTicketCards();
+                } else {
+                    const result = await response.json();
+                    errorElement.textContent = result.error || '密码错误';
+                    errorElement.style.display = 'block';
+                    // 清空密码输入框
+                    document.getElementById('passwordInput').value = '';
+                    document.getElementById('passwordInput').focus();
+                }
+            } catch (error) {
+                errorElement.textContent = '验证失败，请重试';
+                errorElement.style.display = 'block';
+            }
+        }
+        
+        function cancelAccess() {
+            // 关闭页面或跳转到首页
+            window.location.href = '/';
+        }
+        
+        // 监听回车键
+        document.getElementById('passwordInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                verifyPassword();
+            }
+        });
+        
+        // 页面加载完成后自动聚焦到密码输入框
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('passwordInput').focus();
+        });
+
+        // 原有的JavaScript函数保持不变
+        // 加载票卡数据
+        async function loadTicketCards() {
+            try {
+                showAlert('正在加载数据...', 'info');
+                const response = await fetch(API_BASE);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    ticketCards = data;
+                    renderTicketCards();
+                    showAlert(`加载成功，共 ${data.length} 条记录`, 'success');
+                } else {
+                    throw new Error('加载数据失败');
+                }
+            } catch (error) {
+                console.error('加载票卡数据失败:', error);
+                showAlert('加载数据失败: ' + error.message, 'error');
+            }
+        }
+        
+        // 渲染票卡表格
+        function renderTicketCards() {
+            const tbody = document.getElementById('ticketCardsBody');
+            tbody.innerHTML = '';
+            
+            if (ticketCards.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="6" style="text-align: center; color: #999; padding: 40px;">
+                            <i class="fas fa-inbox" style="font-size: 48px; margin-bottom: 10px; display: block;"></i>
+                            <p>暂无数据，请点击"添加票卡"按钮添加数据</p>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+            
+            ticketCards.forEach(card => {
+                const tr = document.createElement('tr');
+                
+                // 格式化卡票URL显示
+                const cardUrlDisplay = card.cardUrl ? 
+                    `<div style="display: flex; align-items: center; gap: 8px;">
+                        <div class="url-display" title="${card.cardUrl}">${card.cardUrl}</div>
+                        <button class="action-btn copy-btn" onclick="copyToClipboard('${card.cardUrl}')" title="复制URL">
+                            <i class="fas fa-copy"></i>
+                        </button>
+                    </div>` : 
+                    '-';
+                
+                // 格式化用户URL显示
+                const userUrlDisplay = card.userUrl ? 
+                    `<div style="display: flex; align-items: center; gap: 8px;">
+                        <div class="url-display" title="${card.userUrl}">${card.userUrl}</div>
+                        <button class="action-btn copy-btn" onclick="copyToClipboard('${card.userUrl}')" title="复制URL">
+                            <i class="fas fa-copy"></i>
+                        </button>
+                    </div>` : 
+                    '-';
+                
+                tr.innerHTML = `
+                    <td>${card.serialNumber}</td>
+                    <td>${cardUrlDisplay}</td>
+                    <td>${card.usageCount}</td>
+                    <td><span class="status-${getStatusClass(card.status)}">${card.status}</span></td>
+                    <td>${userUrlDisplay}</td>
+                    <td>
+                        <div class="action-buttons">
+                            <button class="action-btn generate-btn" onclick="generateUserUrl(${card.serialNumber})" ${card.userUrl ? 'disabled' : ''}>
+                                <i class="fas fa-link"></i> ${card.userUrl ? '已生成' : '生成链接'}
+                            </button>
+                            <button class="action-btn edit-btn" onclick="editTicketCard(${card.id})">
+                                <i class="fas fa-edit"></i> 编辑
+                            </button>
+                            <button class="action-btn delete-btn" onclick="deleteTicketCard(${card.id})">
+                                <i class="fas fa-trash"></i> 删除
+                            </button>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+        
+        // 获取状态对应的CSS类
+        function getStatusClass(status) {
+            switch(status) {
+                case '可用': return 'available';
+                case '已使用': return 'used';
+                case '禁用': return 'disabled';
+                case '已分配': return 'assigned';
+                default: return 'available';
+            }
+        }
+        
+        // 添加票卡（自动生成）
+        async function addTicketCard() {
+            try {
+                showAlert('正在添加票卡...', 'info');
+                
+                // 自动生成序号（当前最大序号+1）
+                const maxSerial = ticketCards.length > 0 ? Math.max(...ticketCards.map(card => card.serialNumber)) : 0;
+                const newSerial = maxSerial + 1;
+                
+                // 自动生成默认URL
+                const defaultUrl = `http://19.nat0.cn:29027/mobile/shenzhen/pages/count-card.html?code=AUTO${newSerial}`;
+                
+                const formData = {
+                    serialNumber: newSerial,
+                    cardUrl: defaultUrl,
+                    usageCount: 0,
+                    status: '可用'
+                };
+                
+                const response = await fetch(API_BASE, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+                
+                if (response.ok) {
+                    showAlert('票卡添加成功！', 'success');
+                    await loadTicketCards();
+                } else {
+                    const error = await response.json();
+                    throw new Error(error.error || '添加失败');
+                }
+            } catch (error) {
+                console.error('添加票卡失败:', error);
+                showAlert('添加失败: ' + error.message, 'error');
+            }
+        }
+        
+        // 生成用户URL
+        async function generateUserUrl(serialNumber) {
+            try {
+                showAlert('正在生成用户链接...', 'info');
+                
+                const response = await fetch(`${API_BASE}/${serialNumber}/generate-url`, {
+                    method: 'POST'
+                });
+                
+                if (response.ok) {
+                    showAlert('用户链接生成成功！', 'success');
+                    await loadTicketCards();
+                } else {
+                    const error = await response.json();
+                    throw new Error(error.error || '生成链接失败');
+                }
+            } catch (error) {
+                console.error('生成用户URL失败:', error);
+                showAlert('生成链接失败: ' + error.message, 'error');
+            }
+        }
+        
+        // 编辑票卡
+        function editTicketCard(id) {
+            const card = ticketCards.find(c => c.id === id);
+            if (!card) return;
+            
+            document.getElementById('modalTitle').textContent = '编辑票卡';
+            document.getElementById('ticketId').value = card.id;
+            document.getElementById('serialNumber').value = card.serialNumber;
+            document.getElementById('cardUrl').value = card.cardUrl || '';
+            document.getElementById('usageCount').value = card.usageCount || 0;
+            document.getElementById('status').value = card.status || '可用';
+            
+            document.getElementById('ticketModal').classList.add('active');
+        }
+        
+        // 删除票卡
+        async function deleteTicketCard(id) {
+            if (!confirm('确定要删除这个票卡吗？此操作不可恢复。')) {
+                return;
+            }
+            
+            try {
+                showAlert('正在删除票卡...', 'info');
+                
+                const response = await fetch(`${API_BASE}/${id}`, {
+                    method: 'DELETE'
+                });
+                
+                if (response.ok) {
+                    showAlert('票卡删除成功！', 'success');
+                    await loadTicketCards();
+                } else {
+                    const error = await response.json();
+                    throw new Error(error.error || '删除失败');
+                }
+            } catch (error) {
+                console.error('删除票卡失败:', error);
+                showAlert('删除失败: ' + error.message, 'error');
+            }
+        }
+        
+        // 复制到剪贴板
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                showAlert('URL已复制到剪贴板', 'success');
+            }).catch(err => {
+                console.error('复制失败:', err);
+                showAlert('复制失败，请手动复制', 'error');
+            });
+        }
+        
+        // 关闭模态框
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('active');
+        }
+        
+        // 保存票卡
+        async function saveTicketCard() {
+            const ticketId = document.getElementById('ticketId').value;
+            const formData = {
+                serialNumber: parseInt(document.getElementById('serialNumber').value),
+                cardUrl: document.getElementById('cardUrl').value,
+                usageCount: parseInt(document.getElementById('usageCount').value) || 0,
+                status: document.getElementById('status').value
+            };
+            
+            // 基础验证
+            if (!formData.serialNumber || !formData.cardUrl) {
+                showAlert('请填写完整的必填字段', 'error');
+                return;
+            }
+            
+            try {
+                showAlert('正在保存...', 'info');
+                
+                const url = ticketId ? `${API_BASE}/${ticketId}` : API_BASE;
+                const method = ticketId ? 'PUT' : 'POST';
+                
+                const response = await fetch(url, {
+                    method: method,
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+                
+                if (response.ok) {
+                    showAlert(ticketId ? '票卡更新成功！' : '票卡添加成功！', 'success');
+                    closeModal('ticketModal');
+                    await loadTicketCards();
+                } else {
+                    const error = await response.json();
+                    throw new Error(error.error || (ticketId ? '更新失败' : '添加失败'));
+                }
+            } catch (error) {
+                console.error('保存票卡失败:', error);
+                showAlert('保存失败: ' + error.message, 'error');
+            }
+        }
+        
+        // 显示提示信息
+        function showAlert(message, type = 'success') {
+            const alertEl = document.getElementById('alertMessage');
+            alertEl.textContent = message;
+            alertEl.className = `alert alert-${type}`;
+            alertEl.style.display = 'block';
+            
+            // 如果是成功或信息提示，3秒后自动隐藏；错误提示保持显示
+            if (type === 'success' || type === 'info') {
+                setTimeout(() => {
+                    alertEl.style.display = 'none';
+                }, 3000);
+            }
+        }
+    </script>
+</body>
+</html>
