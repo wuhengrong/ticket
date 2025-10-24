@@ -315,7 +315,7 @@ public class DataInitializer implements CommandLineRunner {
                 createSampleCard(1, "http://19.nat0.cn:29027/mobile/shenzhen/pages/count-card.html?code=DRVDCW6LBYWRTHBI", "已分配",0),
                 createSampleCard(2, "http://19.nat0.cn:29027/mobile/shenzhen/pages/count-card.html?code=WLNPORWN1UO8PRCG", "已分配",5),
                 createSampleCard(3, "http://19.nat0.cn:29027/mobile/shenzhen/pages/count-card.html?code=N1JHM7X96CBSINWE", "可用",5),
-                createSampleCard(4, "http://19.nat0.cn:29027/mobile/shenzhen/pages/count-card.html?code=WLNPORWN1UO8PRCG", "可用",10),
+                createSampleCard(4, "http://19.nat0.cn:29027/mobile/shenzhen/pages/count-card.html?code=C6FVGXJMV9HVVGXE", "可用",10),
                 createSampleCard(5, "http://19.nat0.cn:29027/mobile/shenzhen/pages/count-card.html?code=GSINEXTL2QZZ51RL", "可用",2),
                 createSampleCard(6, "http://19.nat0.cn:29027/mobile/shenzhen/pages/count-card.html?code=MFDFEEHUOTEJXHVB", "可用",2),
                 createSampleCard(7, "http://19.nat0.cn:29027/mobile/shenzhen/pages/count-card.html?code=OTJCWC5AJZ7255D8", "可用",2),

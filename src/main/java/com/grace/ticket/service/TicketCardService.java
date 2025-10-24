@@ -54,7 +54,7 @@ public class TicketCardService {
         }
         
         // 生成随机code
-        String code = generateRandomCode();
+        String code = getCodeParameter(card.getCardUrl());
         
         // 构建用户URL - 使用您的域名
         String userUrl = Constants.USER_URL_TEMPLATE + code;
@@ -64,6 +64,25 @@ public class TicketCardService {
         card.setStatus("已分配");
         
         return ticketCardRepository.save(card);
+    }
+    
+    public static String getCodeParameter(String url) {
+        try {
+            String[] urlParts = url.split("\\?");
+            if (urlParts.length < 2) return null;
+            
+            String[] params = urlParts[1].split("&");
+            
+            for (String param : params) {
+                String[] keyValue = param.split("=");
+                if (keyValue.length == 2 && "code".equals(keyValue[0])) {
+                    return keyValue[1];
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
     }
     // 创建新的票卡
     public TicketCard createTicketCard(TicketCard card) {
