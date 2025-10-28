@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>行程验证系统</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        .card {
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .table-editable td.editable {
+            background-color: #f8f9fa;
+        }
+        .table-editable td.readonly {
+            background-color: #e9ecef;
+        }
+        .suggestion-positive {
+            color: #198754;
+            font-weight: bold;
+        }
+        .suggestion-warning {
+            color: #dc3545;
+            font-weight: bold;
+        }
+        .loading {
+            opacity: 0.6;
+            pointer-events: none;
+        }
+        .btn-action {
+            padding: 0.25rem 0.5rem;
+            font-size: 0.875rem;
+        }
+        .time-error {
+            border-color: #dc3545 !important;
+            background-color: #f8d7da !important;
+        }
+        .dropdown-menu {
+            max-height: 200px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid py-4">
+        <div class="row">
+            <div class="col-12">
+                <h1 class="mb-4">行程验证系统</h1>
+                
+                <!-- 乘车信息卡片 -->
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0"><i class="bi bi-geo-alt"></i> 乘车信息（将要乘车）</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label for="boardingStation" class="form-label">上车站点（将要乘车）</label>
+                                <div class="dropdown">
+                                    <input type="text" class="form-control" id="boardingStation" 
+                                           placeholder="输入或选择上车站点" autocomplete="off"
+                                           data-bs-toggle="dropdown" aria-expanded="false"
+                                           oninput="filterStations(this.value)">
+                                    <ul class="dropdown-menu w-100" id="stationDropdown">
+                                        <!-- 站点选项将动态生成 -->
+                                    </ul>
+                                </div>
+                                <div class="form-text">请输入或选择您将要上车的站点</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="boardingTime" class="form-label">上车时间（将要乘车）</label>
+                                <input type="datetime-local" class="form-control" id="boardingTime">
+                                <div class="form-text">请选择您将要乘车的时间</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 票卡信息卡片 -->
+                <div class="card">
+                    <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0"><i class="bi bi-card-list"></i> 票卡信息表（上一站信息）</h5>
+                        <div>
+                            <button class="btn btn-light btn-sm me-2" onclick="addNewTicket()">
+                                <i class="bi bi-plus-circle"></i> 新增票卡
+                            </button>
+                            <button class="btn btn-warning btn-sm" onclick="validateAllTickets()">
+                                <i class="bi bi-check-circle"></i> 验证行程
+                            </button>
+                            <button class="btn btn-info btn-sm ms-2" onclick="loadTicketsFromServer()">
+                                <i class="bi bi-arrow-clockwise"></i> 刷新数据
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="alert alert-info">
+                            <i class="bi bi-info-circle"></i> 
+                            <strong>说明：</strong>票卡信息表中的下车时间和下车站点是您<strong>上一站</strong>的信息，乘车信息中的上车时间和上车站点是您<strong>将要乘车</strong>的信息。
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-hover table-editable" id="ticketTable">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th width="80">操作</th>
+                                        <th width="120">票卡号码</th>
+                                        <th width="150">上一出站</th>
+                                        <th width="180">出站时间</th>
+                                        <th width="150">将乘车站点</th>
+                                        <th width="180">将乘车时间</th>
+                                        <th width="120">间隔时间</th>
+                                        <th width="120">地铁时间</th>
+                                        <th width="120">打车时间</th>
+                                        <th>通行建议</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="ticketTableBody">
+                                    <!-- 动态生成行 -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let stations = [];
+        let nextTicketId = 1;
+
+        // 初始化应用
+        document.addEventListener('DOMContentLoaded', function() {
+            initApp();
+        });
+
+        async function initApp() {
+            await loadStations();
+            setDefaultTime();
+            await loadTicketsFromServer(); // 页面加载时从服务器获取数据
+        }
+
+        // 过滤站点显示
+        function filterStations(searchText) {
+            const dropdown = document.getElementById('stationDropdown');
+            dropdown.innerHTML = '';
+            
+            if (!searchText) {
+                // 如果没有输入，显示所有站点
+                stations.forEach(station => {
+                    const li = document.createElement('li');
+                    li.innerHTML = `<a class="dropdown-item" href="#" onclick="selectStation('${station}')">${station}</a>`;
+                    dropdown.appendChild(li);
+                });
+                return;
+            }
+            
+            // 过滤匹配的站点
+            const filteredStations = stations.filter(station => 
+                station.toLowerCase().includes(searchText.toLowerCase())
+            );
+            
+            if (filteredStations.length > 0) {
+                filteredStations.forEach(station => {
+                    const li = document.createElement('li');
+                    li.innerHTML = `<a class="dropdown-item" href="#" onclick="selectStation('${station}')">${station}</a>`;
+                    dropdown.appendChild(li);
+                });
+            } else {
+                const li = document.createElement('li');
+                li.innerHTML = '<a class="dropdown-item disabled" href="#">未找到匹配站点</a>';
+                dropdown.appendChild(li);
+            }
+        }
+
+        // 选择站点
+        function selectStation(station) {
+            document.getElementById('boardingStation').value = station;
+            // 隐藏下拉菜单
+            const dropdown = new bootstrap.Dropdown(document.getElementById('boardingStation'));
+            dropdown.hide();
+        }
+
+        // 从服务器加载票卡数据
+        async function loadTicketsFromServer() {
+            try {
+                setLoading(true);
+                const response = await fetch('/api/tickets');
+                
+                if (response.ok) {
+                    const tickets = await response.json();
+                    populateTableWithServerData(tickets);
+                    showAlert(`成功加载 ${tickets.length} 条票卡记录`, 'success');
+                } else {
+                    showAlert('加载票卡数据失败', 'danger');
+                }
+            } catch (error) {
+                console.error('加载票卡数据失败:', error);
+                showAlert('网络请求失败: ' + error.message, 'danger');
+            } finally {
+                setLoading(false);
+            }
+        }
+
+        // 用服务器数据填充表格
+        function populateTableWithServerData(tickets) {
+            const tbody = document.getElementById('ticketTableBody');
+            tbody.innerHTML = ''; // 清空现有数据
+            
+            // 重置nextTicketId为最大ID+1
+            if (tickets.length > 0) {
+                const maxId = Math.max(...tickets.map(ticket => ticket.id));
+                nextTicketId = maxId + 1;
+            } else {
+                nextTicketId = 1;
+            }
+            
+            tickets.forEach(ticket => {
+                const row = createTableRowFromTicket(ticket);
+                tbody.appendChild(row);
+            });
+        }
+
+        // 从Ticket对象创建表格行
+        function createTableRowFromTicket(ticket) {
+            const row = document.createElement('tr');
+            row.id = `ticket-${ticket.id}`;
+            
+            row.innerHTML = `
+                <td>
+                    <button class="btn btn-danger btn-sm btn-action" onclick="deleteTicket(${ticket.id})">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </td>
+                <td class="editable">
+                    <input type="text" class="form-control form-control-sm" id="ticketNumber-${ticket.id}" 
+                           value="${ticket.ticketNumber || ''}" placeholder="输入票卡号码">
+                </td>
+                <td class="editable">
+                    <input type="text" class="form-control form-control-sm" id="alightingStation-${ticket.id}" 
+                           value="${ticket.alightingStation || ''}" placeholder="输入上一出站站点"
+                           onchange="validateTimeLogic(${ticket.id})">
+                </td>
+                <td class="editable">
+                    <input type="datetime-local" class="form-control form-control-sm" id="alightingTime-${ticket.id}" 
+                           value="${formatDateTimeForInput(ticket.alightingTime)}" onchange="validateTimeLogic(${ticket.id})">
+                </td>
+                <td class="readonly">
+                    <input type="text" class="form-control form-control-sm" id="boardingStation-${ticket.id}" 
+                           value="${ticket.boardingStation || ''}" readonly>
+                </td>
+                <td class="readonly">
+                    <input type="text" class="form-control form-control-sm" id="boardingTime-${ticket.id}" 
+                           value="${formatDateTime(ticket.boardingTime)}" readonly>
+                </td>
+                <td class="readonly">
+                    <input type="text" class="form-control form-control-sm" id="timeInterval-${ticket.id}" 
+                           value="${calculateTimeInterval(ticket.alightingTime, ticket.boardingTime)}" readonly>
+                </td>
+                <td class="readonly">
+                    <input type="text" class="form-control form-control-sm" id="subwayTravelTime-${ticket.id}" 
+                           value="${ticket.subwayTravelTime || '0'}" readonly>
+                </td>
+                <td class="readonly">
+                    <input type="text" class="form-control form-control-sm" id="taxiTime-${ticket.id}" 
+                           value="${ticket.taxiTime || '0'}" readonly>
+                </td>
+                <td class="readonly">
+                    <input type="text" class="form-control form-control-sm" id="suggestion-${ticket.id}" 
+                           value="${ticket.travelSuggestion || ''}" readonly>
+                </td>
+            `;
+            
+            // 设置建议样式
+            const suggestionInput = document.getElementById(`suggestion-${ticket.id}`);
+            if (ticket.travelSuggestion) {
+                if (ticket.travelSuggestion.includes('建议') && !ticket.travelSuggestion.includes('不足')) {
+                    suggestionInput.classList.add('suggestion-positive');
+                    suggestionInput.classList.remove('suggestion-warning');
+                } else {
+                    suggestionInput.classList.add('suggestion-warning');
+                    suggestionInput.classList.remove('suggestion-positive');
+                }
+            }
+            
+            return row;
+        }
+
+        // 计算时间间隔（分钟）
+        function calculateTimeInterval(alightingTime, boardingTime) {
+            if (!alightingTime || !boardingTime) return '0';
+            
+            try {
+                const alighting = new Date(alightingTime);
+                const boarding = new Date(boardingTime);
+                const diffMs = boarding - alighting;
+                const diffMinutes = Math.floor(diffMs / (1000 * 60));
+                return diffMinutes > 0 ? diffMinutes.toString() : '0';
+            } catch (e) {
+                return '0';
+            }
+        }
+
+        // 格式化日期时间为datetime-local输入格式
+        function formatDateTimeForInput(dateTimeStr) {
+            if (!dateTimeStr) return '';
+            try {
+                const date = new Date(dateTimeStr);
+                if (isNaN(date.getTime())) return '';
+                
+                // 转换为YYYY-MM-DDTHH:mm格式
+                return date.toISOString().slice(0, 16);
+            } catch (e) {
+                return '';
+            }
+        }
+
+        // 设置默认时间（当前时间）
+        function setDefaultTime() {
+            const now = new Date();
+            now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+            document.getElementById('boardingTime').value = now.toISOString().slice(0, 16);
+        }
+
+        // 加载站点数据
+        async function loadStations() {
+            try {
+                const response = await fetch('/api/stations');
+                if (response.ok) {
+                    stations = await response.json();
+                    populateStationDropdown(); // 初始化下拉菜单
+                } else {
+                    // 默认站点列表
+                    stations = ['福田', '红山', '马安山', '科学馆', '沙田', '珠光', '站A', '站B', '站C'];
+                    populateStationDropdown();
+                }
+            } catch (error) {
+                console.error('加载站点数据失败:', error);
+                stations = ['福田', '红山', '马安山', '科学馆', '沙田', '珠光', '站A', '站B', '站C'];
+                populateStationDropdown();
+            }
+        }
+
+        // 填充站点下拉菜单
+        function populateStationDropdown() {
+            const dropdown = document.getElementById('stationDropdown');
+            dropdown.innerHTML = '';
+            
+            stations.forEach(station => {
+                const li = document.createElement('li');
+                li.innerHTML = `<a class="dropdown-item" href="#" onclick="selectStation('${station}')">${station}</a>`;
+                dropdown.appendChild(li);
+            });
+        }
+
+        // 添加新票卡
+        function addNewTicket() {
+            const tbody = document.getElementById('ticketTableBody');
+            const ticketId = nextTicketId++;
+            
+            const row = document.createElement('tr');
+            row.id = `ticket-${ticketId}`;
+            row.innerHTML = `
+                <td>
+                    <button class="btn btn-danger btn-sm btn-action" onclick="deleteTicket(${ticketId})">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </td>
+                <td class="editable">
+                    <input type="text" class="form-control form-control-sm" id="ticketNumber-${ticketId}" 
+                           placeholder="输入票卡号码">
+                </td>
+                <td class="editable">
+                    <input type="text" class="form-control form-control-sm" id="alightingStation-${ticketId}" 
+                           placeholder="输入上一出站站点" onchange="validateTimeLogic(${ticketId})">
+                </td>
+                <td class="editable">
+                    <input type="datetime-local" class="form-control form-control-sm" id="alightingTime-${ticketId}" 
+                           onchange="validateTimeLogic(${ticketId})">
+                </td>
+                <td class="readonly">
+                    <input type="text" class="form-control form-control-sm" id="boardingStation-${ticketId}" readonly>
+                </td>
+                <td class="readonly">
+                    <input type="text" class="form-control form-control-sm" id="boardingTime-${ticketId}" readonly>
+                </td>
+                <td class="readonly">
+                    <input type="text" class="form-control form-control-sm" id="timeInterval-${ticketId}" readonly>
+                </td>
+                <td class="readonly">
+                    <input type="text" class="form-control form-control-sm" id="subwayTravelTime-${ticketId}" readonly>
+                </td>
+                <td class="readonly">
+                    <input type="text" class="form-control form-control-sm" id="taxiTime-${ticketId}" readonly>
+                </td>
+                <td class="readonly">
+                    <input type="text" class="form-control form-control-sm" id="suggestion-${ticketId}" readonly>
+                </td>
+            `;
+            
+            tbody.appendChild(row);
+        }
+
+        // 删除票卡
+        function deleteTicket(ticketId) {
+            const row = document.getElementById(`ticket-${ticketId}`);
+            if (row) {
+                row.remove();
+            }
+        }
+
+        // 验证时间逻辑
+        function validateTimeLogic(ticketId) {
+            const alightingTimeInput = document.getElementById(`alightingTime-${ticketId}`);
+            const boardingTime = document.getElementById('boardingTime').value;
+            
+            if (alightingTimeInput.value && boardingTime) {
+                const alightingTime = new Date(alightingTimeInput.value);
+                const nextBoardingTime = new Date(boardingTime);
+                
+                if (alightingTime >= nextBoardingTime) {
+                    alightingTimeInput.classList.add('time-error');
+                    showAlert(`票卡 ${ticketId}: 下车时间（上一站）必须早于上车时间（将要乘车）`, 'warning');
+                } else {
+                    alightingTimeInput.classList.remove('time-error');
+                }
+            } else {
+                alightingTimeInput.classList.remove('time-error');
+            }
+        }
+
+        // 验证所有票卡
+        async function validateAllTickets() {
+            const boardingStation = document.getElementById('boardingStation').value;
+            const boardingTime = document.getElementById('boardingTime').value;
+
+            if (!boardingStation || !boardingTime) {
+                showAlert('请填写完整的乘车信息', 'warning');
+                return;
+            }
+
+            // 检查时间逻辑
+            if (!validateAllTimeLogic()) {
+                showAlert('请检查时间逻辑：下车时间（上一站）必须早于上车时间（将要乘车）', 'danger');
+                return;
+            }
+
+            const ticketData = collectTicketData();
+            if (ticketData.length === 0) {
+                showAlert('请至少添加一条票卡信息', 'warning');
+                return;
+            }
+
+            try {
+                setLoading(true);
+
+                const requestData = {
+                    boardingStation: boardingStation,
+                    boardingTime: boardingTime,
+                    ticketInfos: ticketData
+                };
+
+                console.log('发送验证请求:', requestData);
+
+                const response = await fetch('/api/validate-tickets', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(requestData)
+                });
+
+                const result = await response.json();
+                console.log('验证响应:', result);
+
+                if (result.success) {
+                    updateTableWithResults(result.validatedTickets);
+                    showAlert(`成功验证 ${result.validatedTickets.length} 条票卡信息`, 'success');
+                } else {
+                    showAlert('验证失败: ' + result.message, 'danger');
+                }
+            } catch (error) {
+                console.error('验证请求失败:', error);
+                showAlert('网络请求失败: ' + error.message, 'danger');
+            } finally {
+                setLoading(false);
+            }
+        }
+
+        // 验证所有票卡的时间逻辑
+        function validateAllTimeLogic() {
+            const boardingTime = new Date(document.getElementById('boardingTime').value);
+            let allValid = true;
+            
+            const rows = document.getElementById('ticketTableBody').querySelectorAll('tr');
+            rows.forEach(row => {
+                const ticketId = row.id.split('-')[1];
+                const alightingTimeInput = document.getElementById(`alightingTime-${ticketId}`);
+                
+                if (alightingTimeInput.value) {
+                    const alightingTime = new Date(alightingTimeInput.value);
+                    if (alightingTime >= boardingTime) {
+                        alightingTimeInput.classList.add('time-error');
+                        allValid = false;
+                    } else {
+                        alightingTimeInput.classList.remove('time-error');
+                    }
+                }
+            });
+            
+            return allValid;
+        }
+
+        // 收集表格数据
+        function collectTicketData() {
+            const rows = document.getElementById('ticketTableBody').querySelectorAll('tr');
+            const ticketData = [];
+
+            rows.forEach(row => {
+                const ticketId = row.id.split('-')[1];
+                const ticketNumber = document.getElementById(`ticketNumber-${ticketId}`).value;
+                const alightingStation = document.getElementById(`alightingStation-${ticketId}`).value;
+                const alightingTime = document.getElementById(`alightingTime-${ticketId}`).value;
+
+                // 只收集有完整信息的票卡
+                if (ticketNumber && alightingStation && alightingTime) {
+                    ticketData.push({
+                        id: parseInt(ticketId),
+                        ticketNumber: ticketNumber,
+                        alightingStation: alightingStation,
+                        alightingTime: alightingTime
+                    });
+                }
+            });
+
+            return ticketData;
+        }
+
+        // 用验证结果更新表格
+        function updateTableWithResults(validatedTickets) {
+            validatedTickets.forEach(ticket => {
+                const ticketId = ticket.id;
+                
+                // 更新只读字段
+                document.getElementById(`boardingStation-${ticketId}`).value = ticket.boardingStation || '';
+                document.getElementById(`boardingTime-${ticketId}`).value = formatDateTime(ticket.boardingTime);
+                document.getElementById(`timeInterval-${ticketId}`).value = ticket.timeInterval || '0';
+                document.getElementById(`subwayTravelTime-${ticketId}`).value = ticket.subwayTravelTime || '0';
+                document.getElementById(`taxiTime-${ticketId}`).value = ticket.taxiTime || '0';
+                
+                // 更新通行建议
+                const suggestionInput = document.getElementById(`suggestion-${ticketId}`);
+                suggestionInput.value = ticket.travelSuggestion || '';
+                
+                // 根据建议类型设置样式
+                if (ticket.travelSuggestion) {
+                    if (ticket.travelSuggestion.includes('建议') && !ticket.travelSuggestion.includes('不足')) {
+                        suggestionInput.classList.add('suggestion-positive');
+                        suggestionInput.classList.remove('suggestion-warning');
+                    } else {
+                        suggestionInput.classList.add('suggestion-warning');
+                        suggestionInput.classList.remove('suggestion-positive');
+                    }
+                }
+            });
+        }
+
+        // 格式化日期时间
+        function formatDateTime(dateTimeStr) {
+            if (!dateTimeStr) return '';
+            try {
+                const date = new Date(dateTimeStr);
+                if (isNaN(date.getTime())) {
+                    return dateTimeStr; // 如果解析失败，返回原始字符串
+                }
+                return date.toLocaleString('zh-CN', {
+                    year: 'numeric',
+                    month: '2-digit',
+                    day: '2-digit',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                }).replace(/\//g, '-');
+            } catch (e) {
+                return dateTimeStr;
+            }
+        }
+
+        // 设置加载状态
+        function setLoading(loading) {
+            const table = document.getElementById('ticketTable');
+            const validateBtn = document.querySelector('.btn-warning');
+            const refreshBtn = document.querySelector('.btn-info');
+            
+            if (loading) {
+                table.classList.add('loading');
+                validateBtn.disabled = true;
+                refreshBtn.disabled = true;
+                refreshBtn.innerHTML = '<i class="bi bi-hourglass-split"></i> 加载中...';
+            } else {
+                table.classList.remove('loading');
+                validateBtn.disabled = false;
+                refreshBtn.disabled = false;
+                refreshBtn.innerHTML = '<i class="bi bi-arrow-clockwise"></i> 刷新数据';
+            }
+        }
+
+        // 显示提示信息
+        function showAlert(message, type) {
+            // 移除现有的提示
+            const existingAlert = document.querySelector('.alert');
+            if (existingAlert) {
+                existingAlert.remove();
+            }
+            
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+            alertDiv.innerHTML = `
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            
+            document.querySelector('.container-fluid').insertBefore(alertDiv, document.querySelector('.card'));
+            
+            setTimeout(() => {
+                if (alertDiv.parentNode) {
+                    alertDiv.remove();
+                }
+            }, 5000);
+        }
+    </script>
+</body>
+</html>

@@ -14,9 +14,11 @@ import org.springframework.stereotype.Component;
 import com.grace.ticket.entity.Group;
 import com.grace.ticket.entity.GroupMember;
 import com.grace.ticket.entity.TicketCard;
+import com.grace.ticket.entity.TicketInfo;
 import com.grace.ticket.entity.VirtualCard;
 import com.grace.ticket.repository.GroupMemberRepository;
 import com.grace.ticket.repository.GroupRepository;
+import com.grace.ticket.repository.TicketInfoRepository;
 import com.grace.ticket.repository.VirtualCardRepository;
 import com.grace.ticket.service.SecureUrlService;
 import com.grace.ticket.service.TicketCardService;
@@ -41,6 +43,13 @@ public class DataInitializer implements CommandLineRunner {
     @Autowired
     private TicketCardService ticketCardService;
     
+    @Autowired
+    private final TicketInfoRepository ticketInfoRepository;
+
+    public DataInitializer(TicketInfoRepository ticketInfoRepository) {
+        this.ticketInfoRepository = ticketInfoRepository;
+    }
+
     
     public VirtualCardRepository getVirtualCardRepository() {
 		return virtualCardRepository;
@@ -82,6 +91,11 @@ public class DataInitializer implements CommandLineRunner {
 		this.ticketCardService = ticketCardService;
 	}
 
+	public TicketInfoRepository getTicketInfoRepository() {
+		return ticketInfoRepository;
+	}
+
+
 	// 获取北京时间
     private LocalDateTime getBeijingTime() {
         return LocalDateTime.now(ZoneId.of("Asia/Shanghai"));
@@ -102,12 +116,41 @@ public class DataInitializer implements CommandLineRunner {
         // 初始化组成员数据
         initializeGroupMembers();
         
-     // 初始化票卡url数据
+        // 初始化票卡url数据
         initSampleUrlData();
+        
+        // 初始化票卡最后行程数据
+        initializeTicketInfoData();
         
         System.out.println("测试数据初始化完成 - 共生成" + virtualCardRepository.count() + "张虚拟卡，" 
                          + groupRepository.count() + "个分组，" 
                          + groupMemberRepository.count() + "个组成员");
+    }
+    
+    private void initializeTicketInfoData() {
+        // 检查是否已有数据，避免重复初始化
+        if (ticketInfoRepository.count() == 0) {
+            // 第一行数据
+            TicketInfo ticket1 = new TicketInfo();
+            ticket1.setTicketNumber("17820635357");
+            ticket1.setAlightingStation("科学馆");
+            ticket1.setAlightingTime(LocalDateTime.of(2025, 10, 28, 16, 50, 0));
+
+            // 第二行数据
+            TicketInfo ticket2 = new TicketInfo();
+            ticket2.setTicketNumber("17820635358");
+            ticket2.setAlightingTime(LocalDateTime.of(2025, 10, 28, 16, 50, 0));
+            ticket2.setAlightingStation("沙田");
+            
+
+            // 保存数据
+            ticketInfoRepository.save(ticket1);
+            ticketInfoRepository.save(ticket2);
+
+            System.out.println("TicketInfo表数据初始化完成，共插入2条记录");
+        } else {
+            System.out.println("TicketInfo表已有数据，跳过初始化");
+        }
     }
     
     private void initializeVirtualCards() {
@@ -118,7 +161,7 @@ public class DataInitializer implements CommandLineRunner {
         List<VirtualCard> virtualCards = Arrays.asList(
             // 虚拟卡1 - 工作日使用
             createVirtualCard("VC001", "自有卡1", "2025.10.11;2025.10.12", 1, 1, 
-                "13189203798", "Aa123456", "13400784761", "Aa123456", "1;3;5;7", 1, null,
+                "13189203798", "Aa123456", "19372315927", "Aa123456", "1;3;5;7", 1, null,
                 // 新增字段
                 currentDate.plusDays(0),                    // 使用日期：明天
                 null,                                // 当天账号：手机A
@@ -130,7 +173,7 @@ public class DataInitializer implements CommandLineRunner {
             ),
             // 虚拟卡2 - 正在使用的卡
             createVirtualCard("VC002", "借用卡1", "2025.10.01;2025.10.02", 1, 1, 
-                "18202006469", "Aa668899", "17796260629", "Aa668899", "1;2;3;4;5;6;7", 1, "USER001",
+                "17796260629", "Aa668899", "18202006469", "Aa668899", "1;2;3;4;5;6;7", 1, "USER001",
                 // 新增字段
                 currentDate.plusDays(0),                    // 使用日期：明天
                 null,                                // 当天账号：手机A
@@ -142,7 +185,7 @@ public class DataInitializer implements CommandLineRunner {
             ),
             // 虚拟卡3 - 全天可用
             createVirtualCard("VC003", "自有卡2", "2025.09.25;2025.09.26", 1, 1, 
-            	"19372315927", "Aa123456", "13358302048", "Aa123456", "1;3;5;7", 1, null,
+            		"15922411329", "Aaaa1111", "13358302048", "Aa123456", "1;3;5;7", 1, null,
                 // 新增字段
                 currentDate.plusDays(0),                    // 使用日期：明天
                 null,                                // 当天账号：手机A
@@ -156,7 +199,7 @@ public class DataInitializer implements CommandLineRunner {
             
             // 虚拟卡4 - 
             createVirtualCard("VC004", "备用卡1", "2025.10.01;2025.10.02", 1, 1, 
-            	"19397319339", "Aa123456", "13692585850", "Test5850", "1;3;5;7", 1, null,
+            	"19397319339", "Aa123456", "13400784761", "Aa123456", "1;3;5;7", 1, null,
                 // 新增字段
                 currentDate.plusDays(1),                    // 使用日期：明天
                 null,                                // 当天账号：手机A
