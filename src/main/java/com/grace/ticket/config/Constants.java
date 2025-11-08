@@ -12,4 +12,7 @@ public class Constants {
     //初始化时当前时间大于如下设置，则初始化为第二天
     public static final int RESET_HOUR=21;
     public static final int RESET_MIN=30;
+    
+    //行程是否运行
+    public static final String GREE_LIGHT = "1";
 }

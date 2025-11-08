@@ -313,7 +313,7 @@ public class MetroTransferValidator {
         
         // 测试数据
         String givenWorkTime = "9:00";
-        String givenWorkStartStation = "马安山";
+        String givenWorkStartStation = "桥头";
         
         List<TransferValidationResult> results = validator.validateTransferTime(givenWorkTime, givenWorkStartStation);
         

@@ -3,6 +3,7 @@ package com.grace.ticket.config;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -15,10 +16,14 @@ import com.grace.ticket.entity.Group;
 import com.grace.ticket.entity.GroupMember;
 import com.grace.ticket.entity.TicketCard;
 import com.grace.ticket.entity.TicketInfo;
+import com.grace.ticket.entity.VipCard;
+import com.grace.ticket.entity.VipCustomer;
 import com.grace.ticket.entity.VirtualCard;
 import com.grace.ticket.repository.GroupMemberRepository;
 import com.grace.ticket.repository.GroupRepository;
 import com.grace.ticket.repository.TicketInfoRepository;
+import com.grace.ticket.repository.VipCardRepository;
+import com.grace.ticket.repository.VipCustomerRepository;
 import com.grace.ticket.repository.VirtualCardRepository;
 import com.grace.ticket.service.SecureUrlService;
 import com.grace.ticket.service.TicketCardService;
@@ -45,6 +50,12 @@ public class DataInitializer implements CommandLineRunner {
     
     @Autowired
     private final TicketInfoRepository ticketInfoRepository;
+    
+    @Autowired
+    private VipCardRepository vipCardRepository;
+    
+    @Autowired
+    private VipCustomerRepository vipCustomerRepository;
 
     public DataInitializer(TicketInfoRepository ticketInfoRepository) {
         this.ticketInfoRepository = ticketInfoRepository;
@@ -54,6 +65,26 @@ public class DataInitializer implements CommandLineRunner {
     public VirtualCardRepository getVirtualCardRepository() {
 		return virtualCardRepository;
 	}
+
+	public VipCardRepository getVipCardRepository() {
+		return vipCardRepository;
+	}
+
+
+	public void setVipCardRepository(VipCardRepository vipCardRepository) {
+		this.vipCardRepository = vipCardRepository;
+	}
+
+
+	public VipCustomerRepository getVipCustomerRepository() {
+		return vipCustomerRepository;
+	}
+
+
+	public void setVipCustomerRepository(VipCustomerRepository vipCustomerRepository) {
+		this.vipCustomerRepository = vipCustomerRepository;
+	}
+
 
 	public void setVirtualCardRepository(VirtualCardRepository virtualCardRepository) {
 		this.virtualCardRepository = virtualCardRepository;
@@ -122,9 +153,126 @@ public class DataInitializer implements CommandLineRunner {
         // 初始化票卡最后行程数据
         initializeTicketInfoData();
         
+        initializeVipCards();
+        initializeVipCustomers();
+        
         System.out.println("测试数据初始化完成 - 共生成" + virtualCardRepository.count() + "张虚拟卡，" 
                          + groupRepository.count() + "个分组，" 
                          + groupMemberRepository.count() + "个组成员");
+    }
+    
+    
+    /**
+     * 初始化VIP卡数据
+     */
+    private void initializeVipCards() {
+        if (vipCardRepository.count() == 0) {
+            List<VipCard> vipCards = Arrays.asList(
+            		  createVipCard("19002009147", "Aa112233", VipCard.CardStatus.IN_USE, 
+            				  LocalDateTime.parse("2025-11-08 16:00", DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")), //初次使用时间
+            				  LocalDateTime.parse("2025-11-08 16:00", DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")), //有效时间
+                              LocalDateTime.parse("2025-11-08 16:00", DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")), //进站时间
+                              "元芬", 
+                              LocalDateTime.parse("2025-11-08 16:35", DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")),//出站时间
+                              "东门", 
+                              VipCard.InOutStatus.IN, null),
+            		  
+            		  createVipCard("17701999040", "Aa112233", VipCard.CardStatus.AVAILABLE, 
+            				  LocalDateTime.parse("2025-11-08 07:50", DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")), //初次使用时间
+            				  LocalDateTime.parse("2025-11-09 07:00", DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")), //有效时间
+                              LocalDateTime.parse("2025-11-08 12:30", DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")), //进站时间
+                              "湾厦", 
+                              LocalDateTime.parse("2025-11-08 15:30", DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")),//出站时间
+                              "岗厦北", 
+                              VipCard.InOutStatus.OUT, null),
+            		  
+                createVipCard("18027147763", "Aa112233", VipCard.CardStatus.AVAILABLE, 
+                		 LocalDateTime.parse("2025-11-08 12:50", DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")), //初次使用时间
+       				  	 LocalDateTime.parse("2025-11-09 12:50", DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")), //有效时间
+                         LocalDateTime.parse("2025-11-08 12:30", DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")), //进站时间
+                         "湾厦", 
+                         LocalDateTime.parse("2025-11-08 15:34", DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")),//出站时间
+                         "下水径", 
+                         VipCard.InOutStatus.OUT, null),
+                
+                createVipCard("18027240680", "Aa112233", VipCard.CardStatus.UNAVAILABLE, 
+                    LocalDateTime.now().minusMonths(1), LocalDateTime.now().minusDays(1),
+                    null, null, null, null, null, null),
+                
+                createVipCard("19002007047", "Aa112233", VipCard.CardStatus.STANDBY, 
+                    null, LocalDateTime.now().plusMonths(6), null, null, null, null, null, null)
+                
+              
+            );
+
+            vipCardRepository.saveAll(vipCards);
+            System.out.println("初始化VIP卡数据完成，共创建 " + vipCards.size() + " 张VIP卡");
+        } else {
+            System.out.println("VIP卡数据已存在，跳过初始化");
+        }
+    }
+
+    /**
+     * 创建VIP卡对象
+     */
+    private VipCard createVipCard(String cardNumber, String cardPassword, VipCard.CardStatus status,
+                                 LocalDateTime firstUseTime, LocalDateTime expiryTime,
+                                 LocalDateTime boardingTime, String boardingStation,
+                                 LocalDateTime alightingTime, String alightingStation,
+                                 VipCard.InOutStatus inOutStatus, LocalDateTime estimatedAlightingTime) {
+        VipCard card = new VipCard();
+        card.setCardNumber(cardNumber);
+        card.setCardPassword(cardPassword);
+        card.setStatus(status);
+        card.setFirstUseTime(firstUseTime);
+        card.setExpiryTime(expiryTime);
+        card.setBoardingTime(boardingTime);
+        card.setBoardingStation(boardingStation);
+        card.setAlightingTime(alightingTime);
+        card.setAlightingStation(alightingStation);
+        card.setInOutStatus(inOutStatus);
+        card.setEstimatedAlightingTime(estimatedAlightingTime);
+        return card;
+    }
+
+    /**
+     * 初始化VIP客户数据
+     */
+    private void initializeVipCustomers() {
+        if (vipCustomerRepository.count() == 0) {
+            List<VipCustomer> vipCustomers = Arrays.asList(
+                createVipCustomer("张三", 1001L, "技术部", 15, "技术部高级会员"),
+                createVipCustomer("李四", 1001L, "技术部", 8, "技术部普通会员"),
+                createVipCustomer("王五", 1002L, "销售部", 20, "销售部VIP"),
+                createVipCustomer("赵六", 1003L, "市场部", 5, "市场部新会员"),
+                createVipCustomer("钱七", 1002L, "销售部", 12, "销售部高级会员")
+            );
+
+            vipCustomerRepository.saveAll(vipCustomers);
+            System.out.println("初始化VIP客户数据完成，共创建 " + vipCustomers.size() + " 个VIP客户");
+        } else {
+            System.out.println("VIP客户数据已存在，跳过初始化");
+        }
+    }
+
+    /**
+     * 创建VIP客户对象
+     */
+    private VipCustomer createVipCustomer(String userName, Long groupId, String groupName, 
+                                        Integer rideCount, String remark) {
+        VipCustomer customer = new VipCustomer();
+        customer.setUserName(userName);
+        customer.setGroupId(groupId);
+        customer.setGroupName(groupName);
+        customer.setRideCount(rideCount);
+        customer.setRemark(remark);
+        
+        // 生成访问码和VIP URL
+        String accessCode = secureUrlService.generateSimpleFixedAccessCode(userName, groupId.toString());
+        String vipUrl = String.format("vip.html?uId=%s&gId=%s&code=%s", userName, groupId, accessCode);
+        customer.setVipUrl(vipUrl);
+        
+        return customer;
     }
     
     private void initializeTicketInfoData() {

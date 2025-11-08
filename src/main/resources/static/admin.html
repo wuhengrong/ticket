@@ -1,0 +1,1119 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VIP管理系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+        }
+        
+        body {
+            background-color: #f5f5f5;
+            color: #333;
+            line-height: 1.6;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        h1, h2 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .tabs {
+            display: flex;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #ecf0f1;
+        }
+        
+        .tab {
+            padding: 12px 24px;
+            background: #ecf0f1;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            margin-right: 5px;
+            border-radius: 8px 8px 0 0;
+            transition: all 0.3s;
+        }
+        
+        .tab.active {
+            background: #3498db;
+            color: white;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .toolbar {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            align-items: center;
+        }
+        
+        .btn {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        
+        .btn:hover {
+            background: #2980b9;
+        }
+        
+        .btn-success {
+            background: #2ecc71;
+        }
+        
+        .btn-success:hover {
+            background: #27ae60;
+        }
+        
+        .btn-danger {
+            background: #e74c3c;
+        }
+        
+        .btn-danger:hover {
+            background: #c0392b;
+        }
+        
+        .btn-warning {
+            background: #f39c12;
+        }
+        
+        .btn-warning:hover {
+            background: #e67e22;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+        
+        th, td {
+            padding: 10px 8px;
+            text-align: left;
+            border-bottom: 1px solid #ecf0f1;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 150px;
+        }
+        
+        th {
+            background: #f8f9fa;
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+        }
+        
+        tr:hover {
+            background: #f8f9fa;
+        }
+        
+        .table-container {
+            overflow-x: auto;
+            max-height: 600px;
+            overflow-y: auto;
+            border: 1px solid #ecf0f1;
+            border-radius: 8px;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #555;
+        }
+        
+        input, select, textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+        
+        input:focus, select:focus, textarea:focus {
+            border-color: #3498db;
+            outline: none;
+        }
+        
+        .form-row {
+            display: flex;
+            gap: 15px;
+        }
+        
+        .form-row .form-group {
+            flex: 1;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+        }
+        
+        .modal-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #ecf0f1;
+        }
+        
+        .close {
+            font-size: 24px;
+            cursor: pointer;
+            color: #7f8c8d;
+        }
+        
+        .close:hover {
+            color: #34495e;
+        }
+        
+        .status-available { color: #27ae60; font-weight: 600; }
+        .status-in-use { color: #f39c12; font-weight: 600; }
+        .status-unavailable { color: #e74c3c; font-weight: 600; }
+        .status-standby { color: #3498db; font-weight: 600; }
+        
+        .in-out-in { color: #2ecc71; font-weight: 600; }
+        .in-out-out { color: #e74c3c; font-weight: 600; }
+        
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #3498db;
+        }
+        
+        .error {
+            background: #fadbd8;
+            color: #e74c3c;
+            padding: 10px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+        }
+        
+        .success {
+            background: #d4edda;
+            color: #155724;
+            padding: 10px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 5px;
+        }
+        
+        .action-btn {
+            padding: 5px 10px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .search-box {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .search-box input {
+            flex: 1;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 24px;
+            font-weight: bold;
+            color: #3498db;
+        }
+
+        .stat-label {
+            font-size: 14px;
+            color: #666;
+        }
+
+        .empty-cell {
+            color: #999;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>VIP卡和客户管理系统</h1>
+        
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('cards')">VIP卡管理</button>
+            <button class="tab" onclick="switchTab('customers')">客户管理</button>
+        </div>
+        
+        <!-- VIP卡管理 -->
+        <div id="cards-tab" class="tab-content active">
+            <div class="toolbar">
+                <h2>VIP卡管理</h2>
+                <button class="btn" onclick="showCardModal()">新增VIP卡</button>
+            </div>
+
+            <!-- 统计信息 -->
+            <div class="stats" id="cards-stats">
+                <div class="stat-card">
+                    <div class="stat-number" id="total-cards">0</div>
+                    <div class="stat-label">总卡数</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="available-cards">0</div>
+                    <div class="stat-label">可用卡数</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="in-use-cards">0</div>
+                    <div class="stat-label">使用中</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="standby-cards">0</div>
+                    <div class="stat-label">备用卡数</div>
+                </div>
+            </div>
+            
+            <div class="search-box">
+                <input type="text" id="card-search" placeholder="搜索卡号、站点或状态..." onkeyup="searchCards()">
+                <select id="card-status-filter" onchange="filterCards()">
+                    <option value="">所有状态</option>
+                    <option value="AVAILABLE">可用</option>
+                    <option value="IN_USE">使用中</option>
+                    <option value="UNAVAILABLE">不可用</option>
+                    <option value="STANDBY">备用</option>
+                </select>
+            </div>
+            
+            <div id="cards-message"></div>
+            
+            <div class="table-container">
+                <table id="cards-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>号码</th>
+                            <th>卡密</th>
+                            <th>状态</th>
+                            <th>首次使用时间</th>
+                            <th>失效时间</th>
+                            <th>进站时间</th>
+                            <th>进站站点</th>
+                            <th>出站时间</th>
+                            <th>出站站点</th>
+                            <th>进出站</th>
+                            <th>预估出站时间</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="cards-tbody">
+                        <!-- 动态加载数据 -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <!-- 客户管理 -->
+        <div id="customers-tab" class="tab-content">
+            <div class="toolbar">
+                <h2>VIP客户管理</h2>
+                <button class="btn" onclick="showCustomerModal()">新增客户</button>
+            </div>
+
+            <!-- 统计信息 -->
+            <div class="stats" id="customers-stats">
+                <div class="stat-card">
+                    <div class="stat-number" id="total-customers">0</div>
+                    <div class="stat-label">总客户数</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="active-customers">0</div>
+                    <div class="stat-label">有次数客户</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="zero-count-customers">0</div>
+                    <div class="stat-label">无次数客户</div>
+                </div>
+            </div>
+            
+            <div class="search-box">
+                <input type="text" id="customer-search" placeholder="搜索用户名或组名..." onkeyup="searchCustomers()">
+            </div>
+            
+            <div id="customers-message"></div>
+            
+            <table id="customers-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>用户名</th>
+                        <th>组ID</th>
+                        <th>组名</th>
+                        <th>次卡次数</th>
+                        <th>VIP链接</th>
+                        <th>创建时间</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody id="customers-tbody">
+                    <!-- 动态加载数据 -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <!-- VIP卡编辑模态框 -->
+    <div id="card-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="card-modal-title">新增VIP卡</h3>
+                <span class="close" onclick="closeCardModal()">&times;</span>
+            </div>
+            <form id="card-form">
+                <input type="hidden" id="card-id">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="card-number">卡号 *</label>
+                        <input type="text" id="card-number" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="card-password">密码 *</label>
+                        <input type="text" id="card-password" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="card-status">状态 *</label>
+                        <select id="card-status" required>
+                            <option value="AVAILABLE">可用</option>
+                            <option value="STANDBY">备用</option>
+                            <option value="UNAVAILABLE">不可用</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="card-expiry">失效时间</label>
+                        <input type="datetime-local" id="card-expiry">
+                    </div>
+                </div>
+                <div style="text-align: right; margin-top: 20px;">
+                    <button type="button" class="btn" onclick="closeCardModal()">取消</button>
+                    <button type="submit" class="btn btn-success">保存</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- 客户编辑模态框 -->
+    <div id="customer-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="customer-modal-title">新增客户</h3>
+                <span class="close" onclick="closeCustomerModal()">&times;</span>
+            </div>
+            <form id="customer-form">
+                <input type="hidden" id="customer-id">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="customer-username">用户名 *</label>
+                        <input type="text" id="customer-username" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="customer-ridecount">次卡次数 *</label>
+                        <input type="number" id="customer-ridecount" value="10" min="0" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="customer-groupid">组ID *</label>
+                        <input type="text" id="customer-groupid" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="customer-groupname">组名</label>
+                        <input type="text" id="customer-groupname">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="customer-remark">备注</label>
+                    <textarea id="customer-remark" rows="3"></textarea>
+                </div>
+                <div style="text-align: right; margin-top: 20px;">
+                    <button type="button" class="btn" onclick="closeCustomerModal()">取消</button>
+                    <button type="submit" class="btn btn-success">保存</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- 充值模态框 -->
+    <div id="recharge-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>次卡充值</h3>
+                <span class="close" onclick="closeRechargeModal()">&times;</span>
+            </div>
+            <input type="hidden" id="recharge-customer-id">
+            <div class="form-group">
+                <label>客户: <span id="recharge-customer-name"></span></label>
+            </div>
+            <div class="form-group">
+                <label for="recharge-count">充值次数 *</label>
+                <input type="number" id="recharge-count" value="10" min="1" required>
+            </div>
+            <div style="text-align: right; margin-top: 20px;">
+                <button type="button" class="btn" onclick="closeRechargeModal()">取消</button>
+                <button type="button" class="btn btn-success" onclick="rechargeCustomer()">充值</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // API客户端
+        const apiClient = {
+            // VIP卡相关API
+            async getCards() {
+                const response = await fetch('/api/admin/vip/cards');
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return await response.json();
+            },
+            
+            async getCard(id) {
+                const response = await fetch(`/api/admin/vip/cards/${id}`);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return await response.json();
+            },
+            
+            async createCard(cardData) {
+                const response = await fetch('/api/admin/vip/cards', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(cardData)
+                });
+                if (!response.ok) {
+                    const error = await response.text();
+                    throw new Error(error || `HTTP error! status: ${response.status}`);
+                }
+                return await response.json();
+            },
+            
+            async updateCard(id, cardData) {
+                const response = await fetch(`/api/admin/vip/cards/${id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(cardData)
+                });
+                if (!response.ok) {
+                    const error = await response.text();
+                    throw new Error(error || `HTTP error! status: ${response.status}`);
+                }
+                return await response.json();
+            },
+            
+            async deleteCard(id) {
+                const response = await fetch(`/api/admin/vip/cards/${id}`, {
+                    method: 'DELETE'
+                });
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return true;
+            },
+            
+            // 客户相关API
+            async getCustomers() {
+                const response = await fetch('/api/admin/vip/customers');
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return await response.json();
+            },
+            
+            async getCustomer(id) {
+                const response = await fetch(`/api/admin/vip/customers/${id}`);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return await response.json();
+            },
+            
+            async createCustomer(customerData) {
+                const response = await fetch('/api/admin/vip/customers', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(customerData)
+                });
+                if (!response.ok) {
+                    const error = await response.text();
+                    throw new Error(error || `HTTP error! status: ${response.status}`);
+                }
+                return await response.json();
+            },
+            
+            async updateCustomer(id, customerData) {
+                const response = await fetch(`/api/admin/vip/customers/${id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(customerData)
+                });
+                if (!response.ok) {
+                    const error = await response.text();
+                    throw new Error(error || `HTTP error! status: ${response.status}`);
+                }
+                return await response.json();
+            },
+            
+            async deleteCustomer(id) {
+                const response = await fetch(`/api/admin/vip/customers/${id}`, {
+                    method: 'DELETE'
+                });
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return true;
+            },
+            
+            async rechargeCustomer(id, rideCount) {
+                const response = await fetch(`/api/admin/vip/customers/${id}/recharge?rideCount=${rideCount}`, {
+                    method: 'POST'
+                });
+                if (!response.ok) {
+                    const error = await response.text();
+                    throw new Error(error || `HTTP error! status: ${response.status}`);
+                }
+                return await response.json();
+            }
+        };
+
+        // 全局变量
+        let allCards = [];
+        let allCustomers = [];
+        let currentEditingCard = null;
+        let currentEditingCustomer = null;
+
+        // 工具函数
+        function formatDateTime(datetimeStr) {
+            if (!datetimeStr) return '<span class="empty-cell">-</span>';
+            try {
+                return new Date(datetimeStr).toLocaleString('zh-CN');
+            } catch (e) {
+                return datetimeStr;
+            }
+        }
+
+        function formatShortDateTime(datetimeStr) {
+            if (!datetimeStr) return '<span class="empty-cell">-</span>';
+            try {
+                const date = new Date(datetimeStr);
+                return date.toLocaleDateString('zh-CN') + ' ' + date.toLocaleTimeString('zh-CN', {hour: '2-digit', minute:'2-digit'});
+            } catch (e) {
+                return datetimeStr;
+            }
+        }
+
+        function showMessage(elementId, message, type = 'error') {
+            const element = document.getElementById(elementId);
+            element.innerHTML = `<div class="${type}">${message}</div>`;
+            setTimeout(() => {
+                element.innerHTML = '';
+            }, 5000);
+        }
+
+        function getStatusText(status) {
+            const statusMap = {
+                'AVAILABLE': '可用',
+                'IN_USE': '使用中',
+                'UNAVAILABLE': '不可用',
+                'STANDBY': '备用'
+            };
+            return statusMap[status] || status;
+        }
+
+        function getInOutText(inOutStatus) {
+            const inOutMap = {
+                'IN': '进',
+                'OUT': '出'
+            };
+            return inOutMap[inOutStatus] || inOutStatus;
+        }
+
+        function getInOutClass(inOutStatus) {
+            const inOutClassMap = {
+                'IN': 'in-out-in',
+                'OUT': 'in-out-out'
+            };
+            return inOutClassMap[inOutStatus] || '';
+        }
+
+        // 标签切换
+        function switchTab(tabName) {
+            // 更新标签
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            event.target.classList.add('active');
+            document.getElementById(`${tabName}-tab`).classList.add('active');
+            
+            // 加载数据
+            if (tabName === 'cards') {
+                loadCards();
+            } else if (tabName === 'customers') {
+                loadCustomers();
+            }
+        }
+
+        // VIP卡管理功能
+        async function loadCards() {
+            try {
+                showMessage('cards-message', '正在加载VIP卡数据...', 'success');
+                allCards = await apiClient.getCards();
+                displayCards(allCards);
+                updateCardStats(allCards);
+            } catch (error) {
+                console.error('加载VIP卡失败:', error);
+                showMessage('cards-message', '加载VIP卡失败: ' + error.message);
+            }
+        }
+
+        function displayCards(cards) {
+            const tbody = document.getElementById('cards-tbody');
+            tbody.innerHTML = '';
+            
+            if (cards.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="13" style="text-align: center; color: #666;">暂无VIP卡数据</td></tr>';
+                return;
+            }
+            
+            cards.forEach(card => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${card.id}</td>
+                    <td><strong>${card.cardNumber}</strong></td>
+                    <td>${card.cardPassword}</td>
+                    <td class="status-${card.status.toLowerCase()}">${getStatusText(card.status)}</td>
+                    <td>${formatShortDateTime(card.firstUseTime)}</td>
+                    <td>${formatShortDateTime(card.expiryTime)}</td>
+                    <td>${formatShortDateTime(card.boardingTime)}</td>
+                    <td>${card.boardingStation || '<span class="empty-cell">-</span>'}</td>
+                    <td>${formatShortDateTime(card.alightingTime)}</td>
+                    <td>${card.alightingStation || '<span class="empty-cell">-</span>'}</td>
+                    <td class="${getInOutClass(card.inOutStatus)}">${getInOutText(card.inOutStatus) || '<span class="empty-cell">-</span>'}</td>
+                    <td>${formatShortDateTime(card.estimatedAlightingTime)}</td>
+                    <td class="action-buttons">
+                        <button class="action-btn btn-warning" onclick="editCard(${card.id})">编辑</button>
+                        <button class="action-btn btn-danger" onclick="deleteCard(${card.id})">删除</button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        function updateCardStats(cards) {
+            const total = cards.length;
+            const available = cards.filter(card => card.status === 'AVAILABLE').length;
+            const inUse = cards.filter(card => card.status === 'IN_USE').length;
+            const standby = cards.filter(card => card.status === 'STANDBY').length;
+            
+            document.getElementById('total-cards').textContent = total;
+            document.getElementById('available-cards').textContent = available;
+            document.getElementById('in-use-cards').textContent = inUse;
+            document.getElementById('standby-cards').textContent = standby;
+        }
+
+        function searchCards() {
+            const searchTerm = document.getElementById('card-search').value.toLowerCase();
+            const statusFilter = document.getElementById('card-status-filter').value;
+            
+            let filteredCards = allCards;
+            
+            if (searchTerm) {
+                filteredCards = filteredCards.filter(card => 
+                    card.cardNumber.toLowerCase().includes(searchTerm) ||
+                    (card.boardingStation && card.boardingStation.toLowerCase().includes(searchTerm)) ||
+                    (card.alightingStation && card.alightingStation.toLowerCase().includes(searchTerm)) ||
+                    getStatusText(card.status).toLowerCase().includes(searchTerm)
+                );
+            }
+            
+            if (statusFilter) {
+                filteredCards = filteredCards.filter(card => card.status === statusFilter);
+            }
+            
+            displayCards(filteredCards);
+        }
+
+        function filterCards() {
+            searchCards();
+        }
+
+        function showCardModal() {
+            currentEditingCard = null;
+            document.getElementById('card-modal-title').textContent = '新增VIP卡';
+            document.getElementById('card-form').reset();
+            document.getElementById('card-id').value = '';
+            document.getElementById('card-status').value = 'AVAILABLE';
+            document.getElementById('card-modal').style.display = 'block';
+        }
+
+        function closeCardModal() {
+            document.getElementById('card-modal').style.display = 'none';
+        }
+
+        async function editCard(id) {
+            try {
+                const card = await apiClient.getCard(id);
+                currentEditingCard = card;
+                
+                document.getElementById('card-modal-title').textContent = '编辑VIP卡';
+                document.getElementById('card-id').value = card.id;
+                document.getElementById('card-number').value = card.cardNumber;
+                document.getElementById('card-password').value = card.cardPassword;
+                document.getElementById('card-status').value = card.status;
+                
+                if (card.expiryTime) {
+                    const expiryDate = new Date(card.expiryTime);
+                    document.getElementById('card-expiry').value = expiryDate.toISOString().slice(0, 16);
+                } else {
+                    document.getElementById('card-expiry').value = '';
+                }
+                
+                document.getElementById('card-modal').style.display = 'block';
+            } catch (error) {
+                console.error('加载VIP卡详情失败:', error);
+                showMessage('cards-message', '加载VIP卡详情失败: ' + error.message);
+            }
+        }
+
+        async function deleteCard(id) {
+            if (!confirm('确定要删除这张VIP卡吗？此操作不可恢复！')) return;
+            
+            try {
+                const success = await apiClient.deleteCard(id);
+                if (success) {
+                    showMessage('cards-message', '删除成功', 'success');
+                    await loadCards();
+                } else {
+                    showMessage('cards-message', '删除失败');
+                }
+            } catch (error) {
+                console.error('删除VIP卡失败:', error);
+                showMessage('cards-message', '删除失败: ' + error.message);
+            }
+        }
+
+        document.getElementById('card-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const cardData = {
+                cardNumber: document.getElementById('card-number').value.trim(),
+                cardPassword: document.getElementById('card-password').value.trim(),
+                status: document.getElementById('card-status').value,
+                expiryTime: document.getElementById('card-expiry').value || null
+            };
+            
+            if (!cardData.cardNumber || !cardData.cardPassword) {
+                showMessage('cards-message', '请填写完整的卡号密码');
+                return;
+            }
+            
+            try {
+                if (currentEditingCard) {
+                    await apiClient.updateCard(currentEditingCard.id, cardData);
+                    showMessage('cards-message', '更新成功', 'success');
+                } else {
+                    await apiClient.createCard(cardData);
+                    showMessage('cards-message', '创建成功', 'success');
+                }
+                
+                closeCardModal();
+                await loadCards();
+            } catch (error) {
+                console.error('保存VIP卡失败:', error);
+                showMessage('cards-message', '操作失败: ' + error.message);
+            }
+        });
+
+        // 客户管理功能
+        async function loadCustomers() {
+            try {
+                showMessage('customers-message', '正在加载客户数据...', 'success');
+                allCustomers = await apiClient.getCustomers();
+                displayCustomers(allCustomers);
+                updateCustomerStats(allCustomers);
+            } catch (error) {
+                console.error('加载客户失败:', error);
+                showMessage('customers-message', '加载客户失败: ' + error.message);
+            }
+        }
+
+        function displayCustomers(customers) {
+            const tbody = document.getElementById('customers-tbody');
+            tbody.innerHTML = '';
+            
+            if (customers.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; color: #666;">暂无客户数据</td></tr>';
+                return;
+            }
+            
+            customers.forEach(customer => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${customer.id}</td>
+                    <td>${customer.userName}</td>
+                    <td>${customer.groupId}</td>
+                    <td>${customer.groupName || '-'}</td>
+                    <td>${customer.rideCount}</td>
+                    <td>
+                        ${customer.vipUrl ? 
+                            `<a href="${customer.vipUrl}" target="_blank" title="点击访问VIP页面" style="color: #3498db; text-decoration: none;">🔗 访问</a>` : 
+                            '-'
+                        }
+                    </td>
+                    <td>${formatDateTime(customer.createdTime)}</td>
+                    <td class="action-buttons">
+                        <button class="action-btn btn-warning" onclick="editCustomer(${customer.id})">编辑</button>
+                        <button class="action-btn btn-success" onclick="showRechargeModal(${customer.id}, '${customer.userName}')">充值</button>
+                        <button class="action-btn btn-danger" onclick="deleteCustomer(${customer.id})">删除</button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        function updateCustomerStats(customers) {
+            const total = customers.length;
+            const active = customers.filter(customer => customer.rideCount > 0).length;
+            const zeroCount = customers.filter(customer => customer.rideCount === 0).length;
+            
+            document.getElementById('total-customers').textContent = total;
+            document.getElementById('active-customers').textContent = active;
+            document.getElementById('zero-count-customers').textContent = zeroCount;
+        }
+
+        function searchCustomers() {
+            const searchTerm = document.getElementById('customer-search').value.toLowerCase();
+            
+            const filteredCustomers = allCustomers.filter(customer => 
+                customer.userName.toLowerCase().includes(searchTerm) ||
+                (customer.groupName && customer.groupName.toLowerCase().includes(searchTerm)) ||
+                customer.groupId.toString().includes(searchTerm)
+            );
+            
+            displayCustomers(filteredCustomers);
+        }
+
+        function showCustomerModal() {
+            currentEditingCustomer = null;
+            document.getElementById('customer-modal-title').textContent = '新增客户';
+            document.getElementById('customer-form').reset();
+            document.getElementById('customer-id').value = '';
+            document.getElementById('customer-ridecount').value = 10;
+            document.getElementById('customer-modal').style.display = 'block';
+        }
+
+        function closeCustomerModal() {
+            document.getElementById('customer-modal').style.display = 'none';
+        }
+
+        async function editCustomer(id) {
+            try {
+                const customer = await apiClient.getCustomer(id);
+                currentEditingCustomer = customer;
+                
+                document.getElementById('customer-modal-title').textContent = '编辑客户';
+                document.getElementById('customer-id').value = customer.id;
+                document.getElementById('customer-username').value = customer.userName;
+                document.getElementById('customer-ridecount').value = customer.rideCount;
+                document.getElementById('customer-groupid').value = customer.groupId;
+                document.getElementById('customer-groupname').value = customer.groupName || '';
+                document.getElementById('customer-remark').value = customer.remark || '';
+                
+                document.getElementById('customer-modal').style.display = 'block';
+            } catch (error) {
+                console.error('加载客户详情失败:', error);
+                showMessage('customers-message', '加载客户详情失败: ' + error.message);
+            }
+        }
+
+        async function deleteCustomer(id) {
+            if (!confirm('确定要删除这个客户吗？此操作不可恢复！')) return;
+            
+            try {
+                const success = await apiClient.deleteCustomer(id);
+                if (success) {
+                    showMessage('customers-message', '删除成功', 'success');
+                    await loadCustomers();
+                } else {
+                    showMessage('customers-message', '删除失败');
+                }
+            } catch (error) {
+                console.error('删除客户失败:', error);
+                showMessage('customers-message', '删除失败: ' + error.message);
+            }
+        }
+
+        document.getElementById('customer-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const customerData = {
+                userName: document.getElementById('customer-username').value.trim(),
+                rideCount: parseInt(document.getElementById('customer-ridecount').value),
+                groupId: document.getElementById('customer-groupid').value.trim(),
+                groupName: document.getElementById('customer-groupname').value.trim(),
+                remark: document.getElementById('customer-remark').value.trim()
+            };
+            
+            if (!customerData.userName || !customerData.groupId) {
+                showMessage('customers-message', '请填写用户名和组ID');
+                return;
+            }
+            
+            if (isNaN(customerData.rideCount) || customerData.rideCount < 0) {
+                showMessage('customers-message', '请输入有效的次卡次数');
+                return;
+            }
+            
+            try {
+                if (currentEditingCustomer) {
+                    await apiClient.updateCustomer(currentEditingCustomer.id, customerData);
+                    showMessage('customers-message', '更新成功', 'success');
+                } else {
+                    await apiClient.createCustomer(customerData);
+                    showMessage('customers-message', '创建成功', 'success');
+                }
+                
+                closeCustomerModal();
+                await loadCustomers();
+            } catch (error) {
+                console.error('保存客户失败:', error);
+                showMessage('customers-message', '操作失败: ' + error.message);
+            }
+        });
+
+        // 充值功能
+        function showRechargeModal(customerId, customerName) {
+            document.getElementById('recharge-customer-id').value = customerId;
+            document.getElementById('recharge-customer-name').textContent = customerName;
+            document.getElementById('recharge-count').value = 10;
+            document.getElementById('recharge-modal').style.display = 'block';
+        }
+
+        function closeRechargeModal() {
+            document.getElementById('recharge-modal').style.display = 'none';
+        }
+
+        async function rechargeCustomer() {
+            const customerId = document.getElementById('recharge-customer-id').value;
+            const rideCount = parseInt(document.getElementById('recharge-count').value);
+            
+            if (!rideCount || rideCount <= 0) {
+                alert('请输入有效的充值次数');
+                return;
+            }
+            
+            try {
+                await apiClient.rechargeCustomer(customerId, rideCount);
+                showMessage('customers-message', '充值成功', 'success');
+                closeRechargeModal();
+                await loadCustomers();
+            } catch (error) {
+                console.error('充值失败:', error);
+                showMessage('customers-message', '充值失败: ' + error.message);
+            }
+        }
+
+        // 初始化页面
+        document.addEventListener('DOMContentLoaded', function() {
+            loadCards();
+        });
+
+        // 点击模态框外部关闭
+        window.onclick = function(event) {
+            const modals = document.querySelectorAll('.modal');
+            modals.forEach(modal => {
+                if (event.target === modal) {
+                    modal.style.display = 'none';
+                }
+            });
+        };
+    </script>
+</body>
+</html>

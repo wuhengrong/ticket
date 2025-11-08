@@ -17,6 +17,7 @@ import org.springframework.stereotype.Component;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.grace.ticket.config.Constants;
 import com.grace.ticket.dto.TicketInfoDTO;
 
 @Component
@@ -50,6 +51,28 @@ public class MetroTripAllValidator {
         
         return validatedTickets;
     }
+    
+    
+    /**
+     * 验证票卡行程 - 主要业务方法
+     */
+    public List<TicketInfoDTO> validateTicketTripsForVIP(String boardingStation, LocalDateTime boardingTime, 
+                                                   List<TicketInfoDTO> tickets) {
+        List<TicketInfoDTO> validatedTickets = new ArrayList<>();
+        
+        for (TicketInfoDTO ticket : tickets) {
+            TicketInfoDTO validatedTicket = validateSingleTicketTrip(boardingStation, boardingTime, ticket);
+            
+            //获取到第一条就返回
+            if(Constants.GREE_LIGHT.equals(validatedTicket.getGreeLight())) {
+            	validatedTickets.add(validatedTicket);
+            	return validatedTickets;
+            }
+            
+        }
+        
+        return validatedTickets;
+    }
 
     /**
      * 验证单个票卡行程
@@ -58,7 +81,7 @@ public class MetroTripAllValidator {
                                                    TicketInfoDTO ticket) {
         String alightingStation = ticket.getAlightingStation();
         LocalDateTime alightingTime = ticket.getAlightingTime();
-        
+         
         // 计算行程时间
         TravelTimeResult timeResult = calculateTravelTimes(boardingStation, boardingTime, 
                                                           alightingStation, alightingTime);
@@ -73,6 +96,7 @@ public class MetroTripAllValidator {
         ticket.setTaxiTime(timeResult.getTaxiTime());
         ticket.setTimeInterval(Integer.valueOf(""+ duration.toMinutes()));
         ticket.setTravelSuggestion(timeResult.getSuggestion());
+        if(timeResult.isFeasible()) ticket.setGreeLight(Constants.GREE_LIGHT);
         
         return ticket;
     }
@@ -85,7 +109,7 @@ public class MetroTripAllValidator {
         TravelTimeResult result = new TravelTimeResult();
         
         try {
-            // 获取各种交通方式的路线规划
+            // 获取各种交通方式的路线规划 
             List<RouteResult> routes = calculateAllRoutes(boardingStation, alightingStation);
             
             // 提取地铁和打车路线
@@ -169,7 +193,7 @@ public class MetroTripAllValidator {
                     routes.add(taxiRoute);
                     System.out.println("打车路线: " + taxiRoute.getDuration() + "分钟, " + taxiRoute.getCost() + "元");
                 }
-
+                /*
                 // 4. 获取自驾路线
                 RouteResult drivingRoute = getDrivingRoute(fromLocation, toLocation);
                 if (drivingRoute != null) {
@@ -183,6 +207,7 @@ public class MetroTripAllValidator {
                     routes.add(busRoute);
                     System.out.println("公交路线: " + busRoute.getDuration() + "分钟, " + busRoute.getCost() + "元");
                 }
+                */
             } else {
                 System.out.println("无法获取站点坐标，使用降级方案");
                 routes.addAll(getFallbackRoutes(fromStation, toStation));
@@ -201,7 +226,7 @@ public class MetroTripAllValidator {
     /**
      * 获取地铁站的经纬度坐标
      */
-    private String getStationLocation(String stationName) throws Exception {
+    public String getStationLocation(String stationName) throws Exception {
         String url = String.format("%s/place/text?key=%s&keywords=%s&city=深圳&types=150700&offset=1", AMAP_BASE_URL,
                 AMAP_API_KEY, java.net.URLEncoder.encode(stationName + "地铁站", "UTF-8"));
 
@@ -263,7 +288,7 @@ public class MetroTripAllValidator {
         return null;
     }
     
-    private RouteResult getSubwayRoute(String fromLocation, String toLocation) throws Exception {
+    public RouteResult getSubwayRoute(String fromLocation, String toLocation) throws Exception {
         String url = String.format("%s/direction/transit/integrated?key=%s&origin=%s&destination=%s&city=深圳&strategy=0",
                 AMAP_BASE_URL, AMAP_API_KEY, fromLocation, toLocation);
 

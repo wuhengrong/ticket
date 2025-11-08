@@ -1,0 +1,278 @@
+package com.grace.ticket.service;
+
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Optional;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.grace.ticket.dto.TicketSearchRequest;
+import com.grace.ticket.dto.TicketSearchResponse;
+import com.grace.ticket.dto.UseTicketRequest;
+import com.grace.ticket.entity.VipCard;
+import com.grace.ticket.entity.VipCustomer;
+import com.grace.ticket.entity.VipRecord;
+import com.grace.ticket.repository.VipCardRepository;
+import com.grace.ticket.repository.VipCustomerRepository;
+import com.grace.ticket.repository.VipRecordRepository;
+import com.grace.ticket.risk.VipCardValidator;
+
+@Service
+public class VipCardService {
+    
+    @Autowired
+    private VipCardRepository vipCardRepository;
+    
+    @Autowired
+    private VipCustomerRepository vipCustomerRepository;
+    
+    @Autowired
+    private VipRecordRepository vipRecordRepository;
+    
+    @Autowired
+    private VipCardValidator vipCardValidator;
+    
+    /**
+     * 搜索最佳匹配票卡
+     */
+    @Transactional(readOnly = true)
+    public TicketSearchResponse searchBestMatchCard(TicketSearchRequest request) {
+        try {
+            // 验证VIP客户
+            Optional<VipCustomer> customerOpt = vipCustomerRepository.findById(request.getVipCustomerId());
+            if (customerOpt.isEmpty()) {
+                return TicketSearchResponse.failure("VIP客户不存在");
+            }
+            
+            VipCustomer customer = customerOpt.get();
+            if (customer.getRideCount() <= 0) {
+                return TicketSearchResponse.failure("次卡次数不足");
+            }
+            
+            // 获取可用票卡
+            List<VipCard> availableCards = vipCardRepository.findAvailableCards(LocalDateTime.now());
+            if (availableCards.isEmpty()) {
+                return TicketSearchResponse.failure("暂时无可用票");
+            }
+            
+            // 查找最佳匹配票卡
+            Optional<VipCard> bestMatch = vipCardValidator.findBestMatchCard(
+                availableCards, 
+                request.getBoardingStation(), 
+                request.getAlightingStation(), 
+                request.getBoardingTime()
+            );
+            
+            if (bestMatch.isEmpty()) {
+                return TicketSearchResponse.failure("无匹配票卡");
+            }
+            
+            VipCard matchedCard = bestMatch.get();
+            
+            // 计算预估出站时间
+            LocalDateTime estimatedTime = vipCardValidator.calculateEstimatedAlightingTime(
+                request.getBoardingStation(),
+                request.getAlightingStation(),
+                request.getBoardingTime()
+            );
+            
+            return TicketSearchResponse.success(
+                new com.grace.ticket.dto.VipCardDTO(matchedCard),
+                estimatedTime,
+                customer.getRideCount()
+            );
+            
+        } catch (Exception e) {
+            return TicketSearchResponse.failure("查询失败: " + e.getMessage());
+        }
+    }
+    
+    /**
+     * 使用票卡
+     */
+    @Transactional
+    public TicketSearchResponse useTicket(UseTicketRequest request) {
+        try {
+            // 验证VIP客户
+            Optional<VipCustomer> customerOpt = vipCustomerRepository.findById(request.getVipCustomerId());
+            if (customerOpt.isEmpty()) {
+                return TicketSearchResponse.failure("VIP客户不存在");
+            }
+            
+            VipCustomer customer = customerOpt.get();
+            if (customer.getRideCount() <= 0) {
+                return TicketSearchResponse.failure("次卡次数不足");
+            }
+            
+            // 验证票卡
+            Optional<VipCard> cardOpt = vipCardRepository.findById(request.getVipCardId());
+            if (cardOpt.isEmpty()) {
+                return TicketSearchResponse.failure("票卡不存在");
+            }
+            
+            VipCard card = cardOpt.get();
+            if (card.getStatus() != VipCard.CardStatus.AVAILABLE) {
+                return TicketSearchResponse.failure("票卡不可用");
+            }
+            
+            // 计算预估出站时间
+            LocalDateTime estimatedTime = vipCardValidator.calculateEstimatedAlightingTime(
+                request.getBoardingStation(),
+                request.getAlightingStation(),
+                LocalDateTime.now()
+            );
+            
+            // 更新票卡状态
+            card.setStatus(VipCard.CardStatus.IN_USE);
+            card.setInOutStatus(VipCard.InOutStatus.IN);
+            card.setBoardingStation(request.getBoardingStation());
+            card.setBoardingTime(LocalDateTime.now());
+            card.setEstimatedAlightingTime(estimatedTime);
+            
+            card.setAlightingStation(null);
+            card.setAlightingTime(null);
+            
+            // 首次使用时间
+            if (card.getFirstUseTime() == null) {
+                card.setFirstUseTime(LocalDateTime.now());
+            }
+            
+            vipCardRepository.save(card);
+            
+            // 扣除次卡次数
+            int updated = vipCustomerRepository.decrementRideCount(request.getVipCustomerId());
+            if (updated == 0) {
+                throw new RuntimeException("扣除次卡次数失败");
+            }
+            
+            // 记录使用日志
+            VipRecord record = new VipRecord(
+                request.getVipCustomerId(),
+                request.getVipCardId(),
+                request.getBoardingStation(),
+                LocalDateTime.now()
+            );
+            record.setEstimatedAlightingTime(estimatedTime);
+            vipRecordRepository.save(record);
+            
+            // 获取更新后的客户信息
+            customer = vipCustomerRepository.findById(request.getVipCustomerId()).get();
+            
+            return TicketSearchResponse.success(
+                new com.grace.ticket.dto.VipCardDTO(card),
+                estimatedTime,
+                customer.getRideCount()
+            );
+            
+        } catch (Exception e) {
+            return TicketSearchResponse.failure("使用票卡失败: " + e.getMessage());
+        }
+    }
+    
+    
+    @Transactional
+    public TicketSearchResponse returnTicket(Long vipCardId, Long vipCustomerId, String alightingStation) {
+        try {
+            // 验证票卡和客户
+            Optional<VipCard> cardOpt = vipCardRepository.findById(vipCardId);
+            Optional<VipCustomer> customerOpt = vipCustomerRepository.findById(vipCustomerId);
+            
+            if (cardOpt.isEmpty() || customerOpt.isEmpty()) {
+                return TicketSearchResponse.failure("票卡或客户不存在");
+            }
+            
+            VipCard card = cardOpt.get();
+            if (card.getStatus() != VipCard.CardStatus.IN_USE) {
+                return TicketSearchResponse.failure("票卡未在使用中");
+            }
+            
+            // 使用双重条件查询 - 选择其中一种方法
+            List<VipRecord> activeRecords = vipRecordRepository.findActiveRecordsByCardAndCustomer(vipCardId, vipCustomerId);
+            
+            // 或者使用@Query注解的方法
+            // List<VipRecord> activeRecords = vipRecordRepository.findActiveRecordsByCardAndCustomer(vipCardId, vipCustomerId);
+            
+            if (activeRecords.isEmpty()) {
+                return TicketSearchResponse.failure("未找到该客户使用此票卡的记录");
+            }
+            
+            // 更新票卡状态
+            card.setStatus(VipCard.CardStatus.AVAILABLE);
+            card.setInOutStatus(VipCard.InOutStatus.OUT);
+            card.setAlightingStation(alightingStation);
+            card.setAlightingTime(LocalDateTime.now());
+            vipCardRepository.save(card);
+            
+            // 更新使用记录
+            VipRecord record = activeRecords.get(0);
+            record.setAlightingStation(alightingStation);
+            record.setAlightingTime(LocalDateTime.now());
+            vipRecordRepository.save(record);
+            
+            return TicketSearchResponse.success(
+                    new com.grace.ticket.dto.VipCardDTO(card),
+                    null,
+                    null
+                );
+            
+        } catch (Exception e) {
+            return TicketSearchResponse.failure("归还票卡失败: " + e.getMessage());
+        }
+    }
+    
+ // Service层
+    @Transactional
+    public TicketSearchResponse returnTicket2(Long vipCardId, Long vipCustomerId, String alightingStation) {
+        try {
+            // 验证票卡和客户
+            Optional<VipCard> cardOpt = vipCardRepository.findById(vipCardId);
+            Optional<VipCustomer> customerOpt = vipCustomerRepository.findById(vipCustomerId);
+            
+            if (cardOpt.isEmpty() || customerOpt.isEmpty()) {
+                return TicketSearchResponse.failure("票卡或客户不存在");
+            }
+            
+            VipCard card = cardOpt.get();
+            if (card.getStatus() != VipCard.CardStatus.IN_USE) {
+                return TicketSearchResponse.failure("票卡未在使用中");
+            }
+            
+            // 使用双重条件查询
+            List<VipRecord> activeRecords = vipRecordRepository.findActiveRecordsByCardAndCustomer(vipCardId, vipCustomerId);
+            if (!activeRecords.isEmpty()) {
+                VipRecord record = activeRecords.get(0);
+                record.setAlightingStation(alightingStation);
+                record.setAlightingTime(LocalDateTime.now());
+                vipRecordRepository.save(record);
+            }
+            
+            return TicketSearchResponse.success(
+                new com.grace.ticket.dto.VipCardDTO(card),
+                null,
+                null
+            );
+            
+        } catch (Exception e) {
+            return TicketSearchResponse.failure("归还票卡失败: " + e.getMessage());
+        }
+    }
+    
+    
+    /**
+     * 获取客户历史记录
+     */
+    @Transactional(readOnly = true)
+    public List<VipRecord> getCustomerHistory(Long customerId) {
+        return vipRecordRepository.findByVipCustomerIdOrderByBoardingTimeDesc(customerId);
+    }
+    
+    /**
+     * 获取客户信息
+     */
+    @Transactional(readOnly = true)
+    public Optional<VipCustomer> getCustomerByVipUrl(String vipUrl) {
+        return vipCustomerRepository.findByVipUrl(vipUrl);
+    }
+}

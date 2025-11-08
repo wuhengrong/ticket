@@ -15,7 +15,18 @@ public class TicketInfoDTO {
     private Integer subwayTravelTime;
     private Integer timeInterval;
     private Integer subwayWalkTime;
-    public Integer getTimeInterval() {
+    
+    private String greeLight;
+    
+    public String getGreeLight() {
+		return greeLight;
+	}
+
+	public void setGreeLight(String greeLight) {
+		this.greeLight = greeLight;
+	}
+
+	public Integer getTimeInterval() {
 		return timeInterval;
 	}
 
