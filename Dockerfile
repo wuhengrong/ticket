@@ -3,11 +3,12 @@ WORKDIR /app
 COPY . .
 RUN mvn clean package -DskipTests
 
-FROM openjdk:17-slim
+# 使用 Eclipse Temurin 镜像
+FROM eclipse-temurin:17-jre-alpine
+# 或者
+# FROM eclipse-temurin:17-jre
+
 WORKDIR /app
-
-# 动态复制JAR文件（避免硬编码文件名）
 COPY --from=build /app/target/*.jar app.jar
-
 EXPOSE 8080
 ENTRYPOINT ["java", "-jar", "app.jar"]
