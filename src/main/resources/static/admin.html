@@ -202,7 +202,7 @@
             padding: 30px;
             border-radius: 12px;
             width: 90%;
-            max-width: 600px;
+            max-width: 800px;
             max-height: 80vh;
             overflow-y: auto;
         }
@@ -458,13 +458,54 @@
                         <label for="card-status">状态 *</label>
                         <select id="card-status" required>
                             <option value="AVAILABLE">可用</option>
-                            <option value="STANDBY">备用</option>
+                            <option value="IN_USE">使用中</option>
                             <option value="UNAVAILABLE">不可用</option>
+                            <option value="STANDBY">备用</option>
                         </select>
                     </div>
                     <div class="form-group">
                         <label for="card-expiry">失效时间</label>
                         <input type="datetime-local" id="card-expiry">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="card-first-use-time">首次使用时间</label>
+                        <input type="datetime-local" id="card-first-use-time">
+                    </div>
+                    <div class="form-group">
+                        <label for="card-boarding-time">进站时间</label>
+                        <input type="datetime-local" id="card-boarding-time">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="card-boarding-station">进站站点</label>
+                        <input type="text" id="card-boarding-station">
+                    </div>
+                    <div class="form-group">
+                        <label for="card-alighting-time">出站时间</label>
+                        <input type="datetime-local" id="card-alighting-time">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="card-alighting-station">出站站点</label>
+                        <input type="text" id="card-alighting-station">
+                    </div>
+                    <div class="form-group">
+                        <label for="card-in-out-status">进出站状态</label>
+                        <select id="card-in-out-status">
+                            <option value="">请选择</option>
+                            <option value="IN">进站</option>
+                            <option value="OUT">出站</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="card-estimated-alighting-time">预估出站时间</label>
+                        <input type="datetime-local" id="card-estimated-alighting-time">
                     </div>
                 </div>
                 <div style="text-align: right; margin-top: 20px;">
@@ -667,7 +708,7 @@
 
         // 工具函数
         function formatDateTime(datetimeStr) {
-            if (!datetimeStr) return '<span class="empty-cell">-</span>';
+            if (!datetimeStr) return '';
             try {
                 return new Date(datetimeStr).toLocaleString('zh-CN');
             } catch (e) {
@@ -682,6 +723,16 @@
                 return date.toLocaleDateString('zh-CN') + ' ' + date.toLocaleTimeString('zh-CN', {hour: '2-digit', minute:'2-digit'});
             } catch (e) {
                 return datetimeStr;
+            }
+        }
+
+        function formatDateTimeForInput(datetimeStr) {
+            if (!datetimeStr) return '';
+            try {
+                const date = new Date(datetimeStr);
+                return date.toISOString().slice(0, 16);
+            } catch (e) {
+                return '';
             }
         }
 
@@ -830,6 +881,7 @@
             document.getElementById('card-form').reset();
             document.getElementById('card-id').value = '';
             document.getElementById('card-status').value = 'AVAILABLE';
+            document.getElementById('card-in-out-status').value = '';
             document.getElementById('card-modal').style.display = 'block';
         }
 
@@ -847,13 +899,14 @@
                 document.getElementById('card-number').value = card.cardNumber;
                 document.getElementById('card-password').value = card.cardPassword;
                 document.getElementById('card-status').value = card.status;
-                
-                if (card.expiryTime) {
-                    const expiryDate = new Date(card.expiryTime);
-                    document.getElementById('card-expiry').value = expiryDate.toISOString().slice(0, 16);
-                } else {
-                    document.getElementById('card-expiry').value = '';
-                }
+                document.getElementById('card-expiry').value = formatDateTimeForInput(card.expiryTime);
+                document.getElementById('card-first-use-time').value = formatDateTimeForInput(card.firstUseTime);
+                document.getElementById('card-boarding-time').value = formatDateTimeForInput(card.boardingTime);
+                document.getElementById('card-boarding-station').value = card.boardingStation || '';
+                document.getElementById('card-alighting-time').value = formatDateTimeForInput(card.alightingTime);
+                document.getElementById('card-alighting-station').value = card.alightingStation || '';
+                document.getElementById('card-in-out-status').value = card.inOutStatus || '';
+                document.getElementById('card-estimated-alighting-time').value = formatDateTimeForInput(card.estimatedAlightingTime);
                 
                 document.getElementById('card-modal').style.display = 'block';
             } catch (error) {
@@ -886,7 +939,14 @@
                 cardNumber: document.getElementById('card-number').value.trim(),
                 cardPassword: document.getElementById('card-password').value.trim(),
                 status: document.getElementById('card-status').value,
-                expiryTime: document.getElementById('card-expiry').value || null
+                expiryTime: document.getElementById('card-expiry').value || null,
+                firstUseTime: document.getElementById('card-first-use-time').value || null,
+                boardingTime: document.getElementById('card-boarding-time').value || null,
+                boardingStation: document.getElementById('card-boarding-station').value.trim() || null,
+                alightingTime: document.getElementById('card-alighting-time').value || null,
+                alightingStation: document.getElementById('card-alighting-station').value.trim() || null,
+                inOutStatus: document.getElementById('card-in-out-status').value || null,
+                estimatedAlightingTime: document.getElementById('card-estimated-alighting-time').value || null
             };
             
             if (!cardData.cardNumber || !cardData.cardPassword) {
