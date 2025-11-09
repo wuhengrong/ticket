@@ -42,7 +42,7 @@ public class VipCardValidator {
         List<TicketInfoDTO> validatedTickets = new ArrayList<>();
         
       //如果ExpiryTime是空，则为新开卡，直接
-    	if(validCards.get(0).getExpiryTime()==null) {
+    	if(validCards.get(0).getExpiryTime()==null || validCards.get(0).getFirstUseTime()==null) {
     		return Optional.of(validCards.get(0)); 
     	}
     	
@@ -51,6 +51,8 @@ public class VipCardValidator {
         	ticket.setAlightingStation(card.getAlightingStation());
         	ticket.setAlightingTime(card.getAlightingTime());
         	ticket.setTicketNumber(card.getCardNumber());
+        	ticket.setBoardingStation(card.getBoardingStation());
+        	ticket.setBoardingTime(card.getBoardingTime());
         	validatedTickets.add(ticket); 
         }
         

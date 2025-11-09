@@ -72,20 +72,31 @@ import com.grace.ticket.dto.TicketInfoDTO;
 	        
 	        for (TicketInfoDTO ticket : tickets) {
 	        	 //相隔90分钟以上也返回
-	            if (ticket.getAlightingTime().isAfter(boardingTime.plusMinutes(Constants.INTERVAL_MINUTE))) {
+	            if (ticket.getAlightingTime()!=null && ticket.getAlightingTime().isBefore(boardingTime.minusMinutes(Constants.INTERVAL_MINUTE))) {
 	            	validatedTickets.add(ticket);
 	            	return validatedTickets;
 	            }
 	        }    
 	        
 	     // 1. 标记 subwayTravelTime 最小的 validatedTicket
-	        TicketInfoDTO minSubwayTicket = tickets.subList(0, tickets.size()/2).stream()
-	            .map(ticket -> validateSingleTicketTrip(boardingStation, boardingTime, ticket))
-	            .min(Comparator.comparing(TicketInfoDTO::getSubwayTravelTime))
-	            .orElse(null);
-	        validatedTickets.add(minSubwayTicket);
-	       
+	        List<TicketInfoDTO> sublist = tickets.subList(0, tickets.size()/2);
+	        TicketInfoDTO minSubwayDto = null;
+	        int minSubwayTime = Integer.MAX_VALUE;
 
+	        for(TicketInfoDTO ticket : sublist) {
+	            TicketInfoDTO dto = validateSingleTicketTrip(boardingStation, boardingTime, ticket);
+	            
+	            // 检查并更新最小值
+	            if(dto.getSubwayTravelTime() < minSubwayTime) {
+	                minSubwayTime = dto.getSubwayTravelTime();
+	                minSubwayDto = dto;
+	            }
+	        }
+	        if(minSubwayDto!=null) {
+	        	validatedTickets.add(minSubwayDto);
+	        }
+	        
+	        /*
 			// 2. 标记 subwayTravelTime + taxiTime 最小的 validatedTicket
 			if (validatedTickets.size() == 0) {
 				TicketInfoDTO minTotalTimeTicket = tickets.subList(tickets.size() / 2, tickets.size()).stream()
@@ -94,6 +105,7 @@ import com.grace.ticket.dto.TicketInfoDTO;
 						.orElse(null);
 				validatedTickets.add(minTotalTimeTicket);
 			}
+			*/
 	        
 	     // 3. 取第一条返回
 			if (validatedTickets.size() == 0) {
