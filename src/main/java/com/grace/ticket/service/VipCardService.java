@@ -138,7 +138,6 @@ public class VipCardService {
             	card.setExpiryTime( LocalDateTime.now().plusDays(1));
             }
             
-            card.setAlightingStation(null);
             card.setAlightingTime(null);
             
             // 首次使用时间
