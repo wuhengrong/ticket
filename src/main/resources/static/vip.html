@@ -414,6 +414,7 @@
         let currentTicket = null;
         let currentCustomer = null;
         let urlParams = {};
+        let activeTicketInfo = null; // 新增：存储当前进行中的票务信息
         
         // API调用函数
         const apiClient = {
@@ -471,44 +472,18 @@
                 }
             },
             
-            // 归还票卡 - 多种方案尝试
-            async returnTicket(returnData) {
+            // 归还票卡
+            async returnTicket(cardId, alightingStation, customerId) {
                 try {
-                    console.log('归还票卡请求数据:', returnData);
-                    
-                    // 方案1: 使用请求体方式
-                    const response = await fetch('/api/vip/tickets/return', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify(returnData)
+                    console.log('归还票卡请求参数:', {
+                        cardId: cardId,
+                        customerId: customerId,
+                        alightingStation: alightingStation
                     });
-                    
-                    if (!response.ok) {
-                        // 尝试获取更详细的错误信息
-                        let errorDetail = '';
-                        try {
-                            const errorResponse = await response.json();
-                            errorDetail = errorResponse.message || '';
-                        } catch (e) {
-                            errorDetail = '无法解析错误响应';
-                        }
-                        throw new Error(`HTTP error! status: ${response.status}, details: ${errorDetail}`);
-                    }
-                    return await response.json();
-                } catch (error) {
-                    console.error('归还票卡失败:', error);
-                    throw error;
-                }
-            },
 
-            // 备用方案：URL参数方式
-            async returnTicketUrlParams(cardId, customerId, alightingStation) {
-                try {
-                    const url = `/api/vip/tickets/return/${cardId}?vipCustomerId=${customerId}&alightingStation=${encodeURIComponent(alightingStation)}`;
-                    console.log('归还票卡URL:', url);
-                    
+                    const url = `/api/vip/tickets/return/${cardId}?alightingStation=${encodeURIComponent(alightingStation)}&customerId=${customerId}`;
+                    console.log('请求URL:', url);
+
                     const response = await fetch(url, {
                         method: 'POST',
                         headers: {
@@ -516,13 +491,44 @@
                         }
                     });
                     
+                    console.log('响应状态:', response.status);
+                    
                     if (!response.ok) {
+                        let errorMessage = `HTTP error! status: ${response.status}`;
+                        try {
+                            const errorResponse = await response.json();
+                            errorMessage = errorResponse.message || errorMessage;
+                        } catch (e) {
+                            // 忽略JSON解析错误
+                        }
+                        throw new Error(errorMessage);
+                    }
+                    
+                    const result = await response.json();
+                    console.log('响应结果:', result);
+                    return result;
+                    
+                } catch (error) {
+                    console.error('归还票卡失败:', error);
+                    throw error;
+                }
+            },
+
+            // 新增：获取客户当前进行中的票务
+            async getActiveTicket(customerId) {
+                try {
+                    const response = await fetch(`/api/vip/customer/${customerId}/active-ticket`);
+                    if (!response.ok) {
+                        // 如果没有进行中的票务，返回null而不是抛出错误
+                        if (response.status === 404) {
+                            return null;
+                        }
                         throw new Error(`HTTP error! status: ${response.status}`);
                     }
                     return await response.json();
                 } catch (error) {
-                    console.error('归还票卡失败(URL参数方式):', error);
-                    throw error;
+                    console.error('获取进行中票务失败:', error);
+                    return null;
                 }
             }
         };
@@ -695,51 +701,57 @@
             return `vip.html?uId=${uId}&gId=${gId}&code=${code}`;
         }
 
-        // 初始化页面
-        async function initializePage() {
-            try {
-                hideError();
-                hideDebugInfo();
-                
-                // 解析URL参数
-                urlParams = parseUrlParams();
-                
-                // 验证URL参数
-                if (!validateUrlParams(urlParams)) {
-                    showError('无效的访问链接，请检查URL参数是否正确');
-                    disableAllFeatures();
-                    return;
-                }
-                
-                // 构建VIP URL用于API调用
-                const vipUrl = buildVipUrl(urlParams.uId, urlParams.gId, urlParams.code);
-                
-                // 获取客户信息
-                const customerData = await apiClient.getCustomerInfo(vipUrl);
-                
-                if (customerData && customerData.customer) {
-                    currentCustomer = customerData.customer;
-                    displayCustomerInfo(currentCustomer);
-                    
-                    // 显示历史记录
-                    if (customerData.history) {
-                        displayHistory(customerData.history);
-                    }
-                    
-                    // 检查是否有正在使用的票卡
-                    checkActiveTicket();
-                    
-                } else {
-                    showError('无法获取客户信息，请检查URL参数');
-                    disableAllFeatures();
-                }
-                
-            } catch (error) {
-                console.error('初始化页面失败:', error);
-                showError('页面初始化失败: ' + error.message);
-                disableAllFeatures();
-            }
-        }
+		// 初始化页面
+		async function initializePage() {
+		    try {
+		        hideError();
+		        hideDebugInfo();
+		        
+		        // 解析URL参数
+		        urlParams = parseUrlParams();
+		        
+		        // 验证URL参数
+		        if (!validateUrlParams(urlParams)) {
+		            showError('无效的访问链接，请检查URL参数是否正确');
+		            disableAllFeatures();
+		            return;
+		        }
+		        
+		        // 构建VIP URL用于API调用
+		        const vipUrl = buildVipUrl(urlParams.uId, urlParams.gId, urlParams.code);
+		        
+		        // 获取客户信息
+		        const customerData = await apiClient.getCustomerInfo(vipUrl);
+		        
+		        if (customerData && customerData.customer) {
+		            currentCustomer = customerData.customer;
+		            displayCustomerInfo(currentCustomer);
+		            
+		            // 显示历史记录
+		            if (customerData.history) {
+		                displayHistory(customerData.history);
+		            }
+		            
+		            // 根据是否有进行中的票务显示对应界面
+		            if (customerData.activeTicket && customerData.activeTicket.hasActiveTicket) {
+		                // 有进行中的票务，显示归还界面
+		                showInUseSection(customerData.activeTicket);
+		            } else {
+		                // 没有进行中的票务，显示查询界面
+		                hideInUseSection();
+		            }
+		            
+		        } else {
+		            showError('无法获取客户信息，请检查URL参数');
+		            disableAllFeatures();
+		        }
+		        
+		    } catch (error) {
+		        console.error('初始化页面失败:', error);
+		        showError('页面初始化失败: ' + error.message);
+		        disableAllFeatures();
+		    }
+		}
 
         // 显示客户信息
         function displayCustomerInfo(customer) {
@@ -793,31 +805,65 @@
         }
 
         // 检查是否有正在使用的票卡
-        function checkActiveTicket() {
-            // 这里可以调用API检查是否有正在使用的票卡
-            // 暂时模拟逻辑
-            const hasActiveTicket = false; // 模拟值
+        async function checkActiveTicket() {
+            if (!currentCustomer) return;
             
-            if (hasActiveTicket) {
-                showInUseSection();
-            } else {
+            try {
+                // 调用API检查是否有正在使用的票卡
+                const activeTicket = await apiClient.getActiveTicket(currentCustomer.id);
+                
+                if (activeTicket && activeTicket.success && activeTicket.activeTicket) {
+                    activeTicketInfo = activeTicket.activeTicket;
+                    showInUseSection(activeTicketInfo);
+                } else {
+                    hideInUseSection();
+                }
+            } catch (error) {
+                console.error('检查进行中票务失败:', error);
+                // 如果检查失败，默认显示查询界面
                 hideInUseSection();
             }
         }
 
-        // 显示使用中界面
-        function showInUseSection() {
-            document.getElementById('ticketQueryContainer').style.display = 'none';
-            document.getElementById('inUseContainer').style.display = 'block';
-            document.getElementById('historyContainer').style.display = 'block';
-        }
+		// 显示使用中界面
+		function showInUseSection(ticketInfo) {
+		    // 隐藏查询界面
+		    document.getElementById('ticketQueryContainer').style.display = 'none';
+		    
+		    // 显示使用中界面
+		    document.getElementById('inUseContainer').style.display = 'block';
+		    document.getElementById('historyContainer').style.display = 'block';
+		    
+		    // 填充票务信息
+		    if (ticketInfo) {
+		        document.getElementById('currentCardNumber').textContent = ticketInfo.cardNumber || '-';
+		        document.getElementById('currentStart').textContent = ticketInfo.boardingStation || '-';
+		        document.getElementById('currentEnd').textContent = ticketInfo.alightingStation || '-';
+		        document.getElementById('currentTime').textContent = formatDateTime(ticketInfo.boardingTime) || '-';
+		        document.getElementById('currentEstimatedTime').textContent = formatDateTime(ticketInfo.estimatedAlightingTime) || '-';
+		        
+		        // 设置当前票卡信息
+		        currentTicket = {
+		            id: ticketInfo.cardId,
+		            cardNumber: ticketInfo.cardNumber,
+		            cardPassword: ticketInfo.cardPassword
+		        };
+		    }
+		}
 
-        // 隐藏使用中界面
-        function hideInUseSection() {
-            document.getElementById('ticketQueryContainer').style.display = 'block';
-            document.getElementById('inUseContainer').style.display = 'none';
-            document.getElementById('historyContainer').style.display = 'block';
-        }
+		// 隐藏使用中界面
+		function hideInUseSection() {
+		    document.getElementById('ticketQueryContainer').style.display = 'block';
+		    document.getElementById('inUseContainer').style.display = 'none';
+		    document.getElementById('historyContainer').style.display = 'block';
+		    
+		    // 重置当前票卡信息
+		    currentTicket = null;
+		    activeTicketInfo = null;
+		    
+		    // 重置查询结果
+		    hideSearchResult();
+		}
 
         // 禁用所有功能
         function disableAllFeatures() {
@@ -935,14 +981,16 @@
                     
                     // 隐藏查询结果，切换到使用中界面
                     hideSearchResult();
-                    showInUseSection();
                     
-                    // 更新当前使用信息
-                    document.getElementById('currentCardNumber').textContent = currentTicket.cardNumber;
-                    document.getElementById('currentStart').textContent = useData.boardingStation;
-                    document.getElementById('currentEnd').textContent = useData.alightingStation;
-                    document.getElementById('currentTime').textContent = formatDateTime(new Date().toISOString());
-                    document.getElementById('currentEstimatedTime').textContent = formatDateTime(response.estimatedAlightingTime);
+                    // 显示使用中界面
+                    showInUseSection({
+                        cardId: currentTicket.id,
+                        cardNumber: currentTicket.cardNumber,
+                        boardingStation: useData.boardingStation,
+                        alightingStation: useData.alightingStation,
+                        boardingTime: new Date().toISOString(),
+                        estimatedAlightingTime: response.estimatedAlightingTime
+                    });
                     
                 } else {
                     showError('使用票务失败: ' + response.message);
@@ -959,7 +1007,7 @@
             }
         }
 
-		// 归还票卡 - 最终修正版本
+		// 归还票卡
 		async function returnTicket() {
 		    if (!currentTicket || !currentCustomer) {
 		        showError('没有正在使用的票卡或客户信息');
@@ -974,7 +1022,7 @@
 		        returnBtn.disabled = true;
 		        returnBtn.textContent = '处理中...';
 		        
-		        // 使用起始站点作为出站点
+		        // 使用目的站点作为出站点
 		        const alightingStation = document.getElementById('currentEnd').textContent;
 		        if (!alightingStation || alightingStation === '-') {
 		            showError('出站点信息不完整');
@@ -983,38 +1031,7 @@
 		            return;
 		        }
 
-		        console.log('归还票卡请求参数:', {
-		            cardId: currentTicket.id,
-		            customerId: currentCustomer.id,
-		            alightingStation: alightingStation
-		        });
-
-		        // 构建URL - 确保参数正确编码
-		        const url = `/api/vip/tickets/return/${currentTicket.id}?alightingStation=${encodeURIComponent(alightingStation)}&customerId=${currentCustomer.id}`;
-		        console.log('请求URL:', url);
-
-		        const response = await fetch(url, {
-		            method: 'POST',
-		            headers: {
-		                'Content-Type': 'application/json',
-		            }
-		        });
-		        
-		        console.log('响应状态:', response.status);
-		        
-		        if (!response.ok) {
-		            let errorMessage = `HTTP error! status: ${response.status}`;
-		            try {
-		                const errorResponse = await response.json();
-		                errorMessage = errorResponse.message || errorMessage;
-		            } catch (e) {
-		                // 忽略JSON解析错误
-		            }
-		            throw new Error(errorMessage);
-		        }
-		        
-		        const result = await response.json();
-		        console.log('响应结果:', result);
+		        const result = await apiClient.returnTicket(currentTicket.id, alightingStation, currentCustomer.id);
 		        
 		        if (result.success) {
 		            showToast('票卡已成功归还！');

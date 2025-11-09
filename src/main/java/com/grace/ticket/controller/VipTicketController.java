@@ -62,14 +62,93 @@ public class VipTicketController {
             VipCustomer customer = customerOpt.get();
             List<VipRecord> history = vipCardService.getCustomerHistory(customer.getId());
             
+            // 新增：检查客户是否有进行中的票务
+            Map<String, Object> activeTicketInfo = getActiveTicketInfo(customer.getId()); 
+            
             Map<String, Object> response = new HashMap<>();
             response.put("customer", customer);
             response.put("history", history);
+            
+            if((boolean)activeTicketInfo.get("hasActiveTicket")) {
+            	response.put("activeTicket", activeTicketInfo); // 新增：返回进行中的票务信息
+            }
+            
+            
+            
             
             return ResponseEntity.ok(response);
             
         } catch (Exception e) {
             return ResponseEntity.badRequest().body("获取客户信息失败: " + e.getMessage());
+        }
+    }
+    
+    /**
+     * 获取客户当前进行中的票务信息
+     */
+    private Map<String, Object> getActiveTicketInfo(Long customerId) {
+        Map<String, Object> result = new HashMap<>();
+        
+        try {
+            // 查找客户当前进行中的使用记录
+            List<VipRecord> activeRecords = vipRecordRepository.findByVipCustomerIdAndAlightingTimeIsNull(customerId);
+            
+            if (activeRecords.isEmpty()) {
+                result.put("hasActiveTicket", false);
+                result.put("message", "没有进行中的票务");
+                return result;
+            }
+            
+            // 获取最新的进行中记录
+            VipRecord activeRecord = activeRecords.get(0);
+            Optional<VipCard> cardOpt = vipCardRepository.findById(activeRecord.getVipCardId());
+            
+            if (cardOpt.isEmpty()) {
+                result.put("hasActiveTicket", false);
+                result.put("message", "关联的票卡不存在");
+                return result;
+            }
+            
+            VipCard activeCard = cardOpt.get();
+            
+            // 构建进行中票务的详细信息
+            result.put("hasActiveTicket", true);
+            result.put("cardId", activeCard.getId());
+            result.put("cardNumber", activeCard.getCardNumber());
+            result.put("cardPassword", activeCard.getCardPassword());
+            result.put("boardingStation", activeRecord.getBoardingStation());
+            result.put("alightingStation", activeRecord.getAlightingStation());
+            result.put("boardingTime", activeRecord.getBoardingTime());
+            result.put("estimatedAlightingTime", activeCard.getEstimatedAlightingTime());
+            result.put("recordId", activeRecord.getId());
+            
+        } catch (Exception e) {
+            result.put("hasActiveTicket", false);
+            result.put("message", "获取进行中票务信息失败: " + e.getMessage());
+        }
+        
+        return result;
+    }
+    
+    /**
+     * 获取客户当前进行中的票务（单独接口，供前端直接调用）
+     */
+    @GetMapping("/customer/{customerId}/active-ticket")
+    public ResponseEntity<Map<String, Object>> getActiveTicket(@PathVariable Long customerId) {
+        try {
+            Map<String, Object> activeTicketInfo = getActiveTicketInfo(customerId);
+            
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("activeTicket", activeTicketInfo);
+            
+            return ResponseEntity.ok(response);
+            
+        } catch (Exception e) {
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", false);
+            response.put("message", "获取进行中票务失败: " + e.getMessage());
+            return ResponseEntity.badRequest().body(response);
         }
     }
     

@@ -128,8 +128,15 @@ public class VipCardService {
             card.setStatus(VipCard.CardStatus.IN_USE);
             card.setInOutStatus(VipCard.InOutStatus.IN);
             card.setBoardingStation(request.getBoardingStation());
+            card.setAlightingStation(request.getAlightingStation());
             card.setBoardingTime(LocalDateTime.now());
             card.setEstimatedAlightingTime(estimatedTime);
+            
+            //如果为空，判断为初次使用
+            if(card.getFirstUseTime()==null) {
+            	card.setFirstUseTime(LocalDateTime.now());
+            	card.setExpiryTime( LocalDateTime.now().plusDays(1));
+            }
             
             card.setAlightingStation(null);
             card.setAlightingTime(null);

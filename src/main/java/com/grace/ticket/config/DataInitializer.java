@@ -169,14 +169,24 @@ public class DataInitializer implements CommandLineRunner {
         if (vipCardRepository.count() == 0) {
             List<VipCard> vipCards = Arrays.asList(
             		  createVipCard("19002007047", "Aa112233", VipCard.CardStatus.AVAILABLE, 
-            				  LocalDateTime.parse("2025-11-09 08:00", DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")), //初次使用时间
-            				  LocalDateTime.parse("2025-11-10 08:00", DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")), //有效时间
-                              LocalDateTime.parse("2025-11-09 08:00", DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")), //进站时间
-                              "元芬", 
-                              LocalDateTime.parse("2025-11-09 17:06", DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")),//出站时间
-                              "龙井", 
+            				  LocalDateTime.parse("2025-11-09 12:48", DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")), //初次使用时间
+            				  LocalDateTime.parse("2025-11-10 12:48", DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")), //有效时间
+                              LocalDateTime.parse("2025-11-09 20:24", DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")), //进站时间
+                              "桥头", 
+                              LocalDateTime.parse("2025-11-09 22:00", DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")),//出站时间
+                              "南约", 
+                              VipCard.InOutStatus.OUT, null),
+               
+            		  createVipCard("19049649037", "Aa112233", VipCard.CardStatus.AVAILABLE, 
+            				  LocalDateTime.parse("2025-11-09 18:41", DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")), //初次使用时间
+            				  LocalDateTime.parse("2025-11-10 18:41", DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")), //有效时间
+                              LocalDateTime.parse("2025-11-09 18:41", DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")), //进站时间
+                              "南联", 
+                              LocalDateTime.parse("2025-11-09 20:12", DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")),//出站时间
+                              "长圳", 
                               VipCard.InOutStatus.OUT, null),
             		  
+             
                createVipCard("18127943910", "Aa112233", VipCard.CardStatus.STANDBY, 
                               LocalDateTime.now().minusMonths(1), LocalDateTime.now().minusDays(1),
                               null, null, null, null, null, null),
@@ -196,9 +206,6 @@ public class DataInitializer implements CommandLineRunner {
                     null, LocalDateTime.now().plusMonths(6), null, null, null, null, null, null),
                 
                 createVipCard("18027443667", "Aa112233", VipCard.CardStatus.STANDBY, 
-                    null, LocalDateTime.now().plusMonths(6), null, null, null, null, null, null),
-                
-                createVipCard("19049649037", "Aa112233", VipCard.CardStatus.STANDBY, 
                     null, LocalDateTime.now().plusMonths(6), null, null, null, null, null, null)
                 
                 

@@ -59,6 +59,11 @@ public class VipCardValidator {
         //获取到第一个符合的Ticket就返回，减少调用高德 api次数
         List<TicketInfoDTO> tickets = vipTripValidator.validateTicketTripsForVIP(boardingStation, boardingTime, validatedTickets);
         
+     // 如果tickets为空，直接返回空
+        if (tickets == null || tickets.isEmpty()) {
+            return Optional.empty();
+        }
+        
         TicketInfoDTO ticket =pickTicket(tickets);
         
         for(VipCard card:validCards ) {

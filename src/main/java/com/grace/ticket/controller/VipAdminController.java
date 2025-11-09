@@ -53,7 +53,12 @@ public class VipAdminController {
     @PostMapping("/cards")
     public ResponseEntity<VipCardDTO> createCard(@RequestBody VipCardDTO cardDTO) {
         try {
-            VipCardDTO createdCard = vipAdminService.createCard(cardDTO);
+        	 if(cardDTO.getFirstUseTime()!=null) {
+             	cardDTO.setExpiryTime(cardDTO.getFirstUseTime().plusDays(1));
+             } else {
+             	cardDTO.setExpiryTime(null);
+             }
+            VipCardDTO createdCard = vipAdminService.createCard(cardDTO); 
             return ResponseEntity.ok(createdCard);
         } catch (Exception e) {
             return ResponseEntity.badRequest().build();
@@ -67,6 +72,12 @@ public class VipAdminController {
     public ResponseEntity<VipCardDTO> updateCard(@PathVariable Long id, @RequestBody VipCardDTO cardDTO) {
         try {
             cardDTO.setId(id);
+            if(cardDTO.getFirstUseTime()!=null) {
+            	cardDTO.setExpiryTime(cardDTO.getFirstUseTime().plusDays(1));
+            } else {
+            	cardDTO.setExpiryTime(null);
+            }
+            
             VipCardDTO updatedCard = vipAdminService.updateCard(cardDTO);
             return ResponseEntity.ok(updatedCard);
         } catch (Exception e) {

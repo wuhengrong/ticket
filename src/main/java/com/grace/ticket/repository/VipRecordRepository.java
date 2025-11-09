@@ -22,4 +22,7 @@ public interface VipRecordRepository extends JpaRepository<VipRecord, Long> {
     // 方法1：使用@Query注解（推荐）
     @Query("SELECT vr FROM VipRecord vr WHERE vr.vipCardId = :cardId AND vr.vipCustomerId = :customerId AND vr.alightingTime IS NULL ORDER BY vr.boardingTime DESC")
     List<VipRecord> findActiveRecordsByCardAndCustomer(@Param("cardId") Long cardId, @Param("customerId") Long customerId);
+    
+    // 新增：查找客户进行中的使用记录（未出站的记录）
+    List<VipRecord> findByVipCustomerIdAndAlightingTimeIsNull(Long vipCustomerId);
 }
