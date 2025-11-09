@@ -169,30 +169,30 @@ public class DataInitializer implements CommandLineRunner {
         if (vipCardRepository.count() == 0) {
             List<VipCard> vipCards = Arrays.asList(
             		  createVipCard("19002009147", "Aa112233", VipCard.CardStatus.IN_USE, 
-            				  LocalDateTime.parse("2025-11-08 16:00", DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")), //初次使用时间
-            				  LocalDateTime.parse("2025-11-08 16:00", DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")), //有效时间
-                              LocalDateTime.parse("2025-11-08 16:00", DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")), //进站时间
+            				  LocalDateTime.parse("2025-11-09 08:00", DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")), //初次使用时间
+            				  LocalDateTime.parse("2025-11-10 08:00", DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")), //有效时间
+                              LocalDateTime.parse("2025-11-09 08:00", DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")), //进站时间
                               "元芬", 
-                              LocalDateTime.parse("2025-11-08 16:35", DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")),//出站时间
+                              LocalDateTime.parse("2025-11-09 08:35", DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")),//出站时间
                               "东门", 
                               VipCard.InOutStatus.IN, null),
             		  
             		  createVipCard("17701999040", "Aa112233", VipCard.CardStatus.AVAILABLE, 
-            				  LocalDateTime.parse("2025-11-08 07:50", DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")), //初次使用时间
-            				  LocalDateTime.parse("2025-11-09 07:00", DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")), //有效时间
-                              LocalDateTime.parse("2025-11-08 12:30", DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")), //进站时间
+            				  LocalDateTime.parse("2025-11-09 07:50", DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")), //初次使用时间
+            				  LocalDateTime.parse("2025-11-10 07:50", DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")), //有效时间
+                              LocalDateTime.parse("2025-11-09 07:50", DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")), //进站时间
                               "湾厦", 
-                              LocalDateTime.parse("2025-11-08 15:30", DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")),//出站时间
-                              "岗厦北", 
+                              LocalDateTime.parse("2025-11-09 09:30", DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")),//出站时间
+                              "桥头", 
                               VipCard.InOutStatus.OUT, null),
             		  
                 createVipCard("18027147763", "Aa112233", VipCard.CardStatus.AVAILABLE, 
-                		 LocalDateTime.parse("2025-11-08 12:50", DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")), //初次使用时间
-       				  	 LocalDateTime.parse("2025-11-09 12:50", DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")), //有效时间
-                         LocalDateTime.parse("2025-11-08 12:30", DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")), //进站时间
+                		 LocalDateTime.parse("2025-11-09 07:50", DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")), //初次使用时间
+       				  	 LocalDateTime.parse("2025-11-10 07:50", DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")), //有效时间
+                         LocalDateTime.parse("2025-11-09 08:10", DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")), //进站时间
                          "湾厦", 
-                         LocalDateTime.parse("2025-11-08 15:34", DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")),//出站时间
-                         "下水径", 
+                         LocalDateTime.parse("2025-11-09 09:10", DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")),//出站时间
+                         "沙田", 
                          VipCard.InOutStatus.OUT, null),
                 
                 createVipCard("18027240680", "Aa112233", VipCard.CardStatus.UNAVAILABLE, 

@@ -119,8 +119,26 @@
             <!-- 版本由 BOM 管理，不需要在这里指定 -->
         </dependency>
         
+         <dependency>
+        <groupId>org.apache.poi</groupId>
+        <artifactId>poi</artifactId>
+        <version>5.2.4</version>
+    </dependency>
+    
+    <!-- Apache POI for OOXML (Excel 2007+格式) -->
+    <dependency>
+        <groupId>org.apache.poi</groupId>
+        <artifactId>poi-ooxml</artifactId>
+        <version>5.2.4</version>
+    </dependency>
      
 		
+		<!-- Appium Java Client - 与 HelloWord 项目保持一致 -->
+<dependency>
+    <groupId>io.appium</groupId>
+    <artifactId>java-client</artifactId>
+    <version>8.6.0</version>
+</dependency>
 	</dependencies>
 
 	<build>

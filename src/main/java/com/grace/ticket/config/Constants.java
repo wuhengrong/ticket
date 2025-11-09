@@ -14,5 +14,6 @@ public class Constants {
     public static final int RESET_MIN=30;
     
     //行程是否运行
-    public static final String GREE_LIGHT = "1";
+    public static final String GREEN_LIGHT = "1";
+    public static final int INTERVAL_MINUTE = 90;
 }

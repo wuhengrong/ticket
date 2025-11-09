@@ -64,7 +64,7 @@ public class MetroTripAllValidator {
             TicketInfoDTO validatedTicket = validateSingleTicketTrip(boardingStation, boardingTime, ticket);
             
             //获取到第一条就返回
-            if(Constants.GREE_LIGHT.equals(validatedTicket.getGreeLight())) {
+            if(Constants.GREEN_LIGHT.equals(validatedTicket.getGreeLight())) {
             	validatedTickets.add(validatedTicket);
             	return validatedTickets;
             }
@@ -96,7 +96,7 @@ public class MetroTripAllValidator {
         ticket.setTaxiTime(timeResult.getTaxiTime());
         ticket.setTimeInterval(Integer.valueOf(""+ duration.toMinutes()));
         ticket.setTravelSuggestion(timeResult.getSuggestion());
-        if(timeResult.isFeasible()) ticket.setGreeLight(Constants.GREE_LIGHT);
+        if(timeResult.isFeasible()) ticket.setGreeLight(Constants.GREEN_LIGHT);
         
         return ticket;
     }

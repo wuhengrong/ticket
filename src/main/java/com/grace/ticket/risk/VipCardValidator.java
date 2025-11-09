@@ -20,7 +20,7 @@ public class VipCardValidator {
     private static final ObjectMapper objectMapper = new ObjectMapper();
 
     @Autowired
-    private MetroTripAllValidator metroTripAllValidator;
+    private VipTripValidator vipTripValidator;
     /**
      * 查找最佳匹配票卡
      */
@@ -55,12 +55,12 @@ public class VipCardValidator {
         }
         
         //获取到第一个符合的Ticket就返回，减少调用高德 api次数
-        List<TicketInfoDTO> tickets = metroTripAllValidator.validateTicketTripsForVIP(boardingStation, boardingTime, validatedTickets);
+        List<TicketInfoDTO> tickets = vipTripValidator.validateTicketTripsForVIP(boardingStation, boardingTime, validatedTickets);
         
         TicketInfoDTO ticket =pickTicket(tickets);
         
         for(VipCard card:validCards ) {
-        	if(ticket.getTicketNumber()== ticket.getTicketNumber()) {
+        	if(card.getCardNumber()== ticket.getTicketNumber()) {
         		return Optional.of(card); 
         	}
         }
@@ -154,9 +154,9 @@ public class VipCardValidator {
         int baseTime = 45;
         RouteResult route;
 		try {
-			 String fromLocation = metroTripAllValidator.getStationLocation(fromStation);
-	            String toLocation = metroTripAllValidator.getStationLocation(toStation);
-			route = metroTripAllValidator.getSubwayRoute(fromLocation, toLocation);
+			 String fromLocation = vipTripValidator.getStationLocation(fromStation);
+	            String toLocation = vipTripValidator.getStationLocation(toStation);
+			route = vipTripValidator.getSubwayRoute(fromLocation, toLocation);
 			return route.getDuration(); // 最多2小时
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
