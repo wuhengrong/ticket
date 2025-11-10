@@ -43,6 +43,36 @@
             text-align: center;
         }
         
+        .guide-section {
+            background: #fff8e1;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            border-left: 4px solid #ffc107;
+        }
+        
+        .guide-title {
+            font-size: 16px;
+            font-weight: bold;
+            color: #e65100;
+            margin-bottom: 10px;
+        }
+        
+        .guide-step {
+            margin-bottom: 8px;
+            padding-left: 15px;
+            position: relative;
+            font-size: 14px;
+        }
+        
+        .guide-step:before {
+            content: "•";
+            position: absolute;
+            left: 0;
+            color: #ff9800;
+            font-weight: bold;
+        }
+        
         .form-group {
             margin-bottom: 15px;
         }
@@ -303,6 +333,24 @@
             <div class="user-name" id="vipCustomerName">-</div>
             <p>剩余乘车次数: <span class="ride-count" id="rideCount">-</span> 次</p>
         </div>
+        
+        <!-- 添加的使用指南 -->
+        <div class="guide-section">
+            <div class="guide-title">使用指南</div>
+            
+            <div style="margin-bottom: 15px;">
+                <div style="font-weight: bold; color: #2c3e50; margin-bottom: 8px;">获取账号：</div>
+                <div class="guide-step">输入起始站点和目的站点，查询可用票</div>
+                <div class="guide-step">点击"使用此票卡"获取账号密码</div>
+                <div class="guide-step">乘车结束后点击"归还票卡"</div>
+            </div>
+            
+            <div>
+                <div style="font-weight: bold; color: #2c3e50; margin-bottom: 8px;">登录扫码：</div>
+                <div class="guide-step">打开'深圳地铁'app，点击'立即登录-切换账号-密码登录'</div>
+                <div class="guide-step">登录后选择'首页-虚拟票-我的票卡-使用'</div>
+            </div>
+        </div>
     </div>
 
     <!-- 票务查询 -->
@@ -312,24 +360,13 @@
         <form id="ticketForm">
             <div class="form-group">
                 <label for="startStation">起始站点</label>
-                <input type="text" id="startStation" placeholder="输入或选择起始站点" list="stations">
-                <datalist id="stations">
-                    <option value="北京南站">
-                    <option value="上海虹桥">
-                    <option value="广州南站">
-                    <option value="深圳北站">
-                    <option value="福田站">
-                    <option value="红山站">
-                    <option value="马安山站">
-                    <option value="科学馆站">
-                    <option value="沙田站">
-                    <option value="珠光站">
-                </datalist>
+                <input type="text" id="startStation" placeholder="输入起始站点">
+              
             </div>
             
             <div class="form-group">
                 <label for="endStation">目的站点</label>
-                <input type="text" id="endStation" placeholder="输入或选择目的站点" list="stations">
+                <input type="text" id="endStation" placeholder="输入目的站点" >
             </div>
             
             <div class="form-group">
