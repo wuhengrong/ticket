@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>次数信息</title>
     <style>
-        /* 样式保持不变 */
         * {
             margin: 0;
             padding: 0;
@@ -305,11 +304,6 @@
             font-size: 12px;
             color: #6c757d;
         }
-
-        .time-btn.active {
-            background: #3498db;
-            color: white;
-        }
     </style>
 </head>
 <body>
@@ -365,47 +359,50 @@
             <button type="button" class="btn" id="searchBtn" onclick="searchTickets()">查询可用票</button>
         </form>
 
-        <!-- 查询结果显示区域 -->
-        <div id="searchResult" style="display: none;">
-            <div class="card-display">
-                <div class="card-title">为您找到最佳匹配票卡</div>
-                
-                <!-- 票卡号码行 -->
-                <div class="info-row">
-                    <span class="info-label">登录号</span>
-                    <span class="info-value" id="displayCardNumber">-</span>
-                    <button class="copy-btn-small" onclick="copyCardNumber()">复制</button>
-                </div>
-                
-                <!-- 票卡密码行 -->
-                <div class="info-row">
-                    <span class="info-label">登录码</span>
-                    <span class="info-value" id="displayCardPassword">-</span>
-                    <button class="copy-btn-small" onclick="copyCardPassword()">复制</button>
-                </div>
-            </div>
+		<!-- 在票务查询容器中修改显示部分 -->
+		<div id="searchResult" style="display: none;">
+		    <div class="card-display">
+		        <div class="card-title">为您找到最佳匹配票卡</div>
+		        
+		        <!-- 票卡号码行 - 初始隐藏 -->
+		        <div class="info-row">
+		            <span class="info-label">登录号</span>
+		            <span class="info-value" id="displayCardNumber">***</span>
+		            <button class="copy-btn-small" onclick="revealCardInfo()">显示</button>
+		        </div>
+		        
+		        <!-- 票卡密码行 - 初始隐藏 -->
+		        <div class="info-row">
+		            <span class="info-label">登录码</span>
+		            <span class="info-value" id="displayCardPassword">***</span>
+		            <button class="copy-btn-small" onclick="revealCardInfo()">显示</button>
+		        </div>
+		    </div>
 
-            <button class="btn btn-success" id="useTicketBtn" onclick="useTicket()">使用此票卡</button>
-        </div>
+		    <button class="btn btn-success" id="useTicketBtn" onclick="useTicket()">使用此票卡</button>
+		</div>
+		
     </div>
     
     <!-- 当前使用中 -->
-    <div class="container" id="inUseContainer">
-        <h2>当前使用中</h2>
-        <div class="status status-in-use">票务使用中</div>
-        <div class="ticket-info">
-            <div class="card-details">
-                <p><strong>票卡号码：</strong><span id="currentCardNumber">-</span></p>
-            </div>
-            <p><strong>起始站：</strong><span id="currentStart">-</span></p>
-            <p><strong>目的站：</strong><span id="currentEnd">-</span></p>
-            <p><strong>乘车时间：</strong><span id="currentTime">-</span></p>
-            <p><strong>预估出站时间：</strong><span id="currentEstimatedTime">-</span></p>
-        </div>
-        
-        <button class="btn btn-danger" id="returnTicketBtn" onclick="returnTicket()">归还票卡</button>
-        <div class="debug-info" id="returnDebugInfo" style="display: none;"></div>
-    </div>
+	<div class="container" id="inUseContainer">
+	    <h2>当前使用中</h2>
+	    <div class="status status-in-use">票务使用中</div>
+	    <div class="ticket-info">
+	        <div class="card-details">
+	            <!-- 在使用中界面完整显示卡号和密码 -->
+	            <p><strong>票卡号码：</strong><span id="currentCardNumber">-</span></p>
+	            <p><strong>票卡密码：</strong><span id="currentCardPassword">-</span></p>
+	        </div>
+	        <p><strong>起始站：</strong><span id="currentStart">-</span></p>
+	        <p><strong>目的站：</strong><span id="currentEnd">-</span></p>
+	        <p><strong>乘车时间：</strong><span id="currentTime">-</span></p>
+	        <p><strong>预估出站时间：</strong><span id="currentEstimatedTime">-</span></p>
+	    </div>
+	    
+	    <button class="btn btn-danger" id="returnTicketBtn" onclick="returnTicket()">归还票卡</button>
+	    <div class="debug-info" id="returnDebugInfo" style="display: none;"></div>
+	</div>
     
     <!-- 乘车历史 -->
     <div class="container" id="historyContainer">
@@ -422,51 +419,6 @@
         let urlParams = {};
         let activeTicketInfo = null; // 新增：存储当前进行中的票务信息
         
-        // 时区相关工具函数
-		const timezoneUtils = {
-		    // 获取当前北京时间
-		    getBeijingTime() {
-		        const now = new Date();
-		        // 北京时间是 UTC+8
-		        const beijingOffset = 8 * 60 * 60 * 1000;
-		        // 获取本地时间与UTC的偏移（毫秒）
-		        const localOffset = now.getTimezoneOffset() * 60 * 1000;
-		        // 转换为北京时间：当前时间 + 本地偏移 + 8小时
-		        return new Date(now.getTime() + localOffset + beijingOffset);
-		    },
-		    
-		    // 将任意时间转换为北京时间
-		    toBeijingTime(date) {
-		        if (!date) return null;
-		        const inputDate = new Date(date);
-		        // 获取输入时间的时区偏移（分钟转毫秒）
-		        const inputOffset = inputDate.getTimezoneOffset() * 60 * 1000;
-		        // 北京时间偏移（UTC+8）
-		        const beijingOffset = 8 * 60 * 60 * 1000;
-		        // 转换为北京时间
-		        return new Date(inputDate.getTime() + inputOffset + beijingOffset);
-		    },
-		    
-		    // 将北京时间转换为本地时间（用于datetime-local输入）
-		    beijingToLocal(date) {
-		        if (!date) return null;
-		        const beijingDate = new Date(date);
-		        // 获取本地时区偏移（分钟转毫秒）
-		        const localOffset = beijingDate.getTimezoneOffset() * 60 * 1000;
-		        // 北京时间偏移（UTC+8）
-		        const beijingOffset = 8 * 60 * 60 * 1000;
-		        // 转换为本地时间：北京时间 - 8小时 + 本地偏移
-		        return new Date(beijingDate.getTime() - beijingOffset + localOffset);
-		    },
-		    
-		    // 格式化时间为datetime-local需要的格式 (YYYY-MM-DDTHH:mm)
-		    formatForDateTimeLocal(date) {
-		        if (!date) return '';
-		        const d = new Date(date);
-		        return `${d.getFullYear()}-${padZero(d.getMonth()+1)}-${padZero(d.getDate())}T${padZero(d.getHours())}:${padZero(d.getMinutes())}`;
-		    }
-		};
-
         // API调用函数
         const apiClient = {
             // 获取客户信息
@@ -486,13 +438,6 @@
             // 搜索票卡
             async searchTickets(searchData) {
                 try {
-                    // 确保发送的时间是北京时间
-                    if (searchData.boardingTime) {
-                        // 将北京时间字符串转换为Date对象，然后转换为ISO字符串
-                        const beijingTime = new Date(searchData.boardingTime);
-                        searchData.boardingTime = beijingTime.toISOString();
-                    }
-                    
                     const response = await fetch('/api/vip/tickets/search', {
                         method: 'POST',
                         headers: {
@@ -590,6 +535,36 @@
                 }
             }
         };
+		
+		// 显示票卡信息
+		function revealCardInfo() {
+		    if (!currentTicket) {
+		        showToast('暂无票卡信息');
+		        return;
+		    }
+		    
+		    // 显示完整的卡号和密码
+		    document.getElementById('displayCardNumber').textContent = currentTicket.cardNumber || '-';
+		    document.getElementById('displayCardPassword').textContent = currentTicket.cardPassword || '-';
+		    
+		    // 更新复制按钮文本
+		    document.querySelectorAll('.copy-btn-small').forEach(btn => {
+		        btn.textContent = '复制';
+		    });
+		    
+		    showToast('票卡信息已显示');
+		}
+
+		// 重置票卡显示为隐藏状态
+		function resetCardDisplay() {
+		    document.getElementById('displayCardNumber').textContent = '***';
+		    document.getElementById('displayCardPassword').textContent = '***';
+		    
+		    // 重置按钮文本
+		    document.querySelectorAll('.copy-btn-small').forEach(btn => {
+		        btn.textContent = '显示';
+		    });
+		}
 
         // 工具函数
         function showError(message) {
@@ -612,30 +587,29 @@
             document.getElementById('returnDebugInfo').style.display = 'none';
         }
 
-		// 修改 setTime 函数
 		function setTime(type) {
-		    let beijingTime;
+		    const now = new Date();
+		    let timeInput = document.getElementById('travelTime');
 		    
+		    // 获取当前北京时间（UTC+8）
+		    const beijingOffset = 8 * 60 * 60 * 1000; // 8小时的毫秒数
+		    const beijingTime = new Date(now.getTime() + beijingOffset);
+		    
+		    // 根据选择的时间类型调整
 		    if (type === 'now') {
-		        // 获取当前北京时间
-		        beijingTime = timezoneUtils.getBeijingTime();
 		        // 设置当前时间（增加5分钟缓冲）
 		        beijingTime.setMinutes(beijingTime.getMinutes() + 5);
 		    } else if (type === '15min') {
-		        // 设置15分钟后（北京时间）
-		        beijingTime = timezoneUtils.getBeijingTime();
+		        // 设置15分钟后
 		        beijingTime.setMinutes(beijingTime.getMinutes() + 15);
 		    } else if (type === '30min') {
-		        // 设置30分钟后（北京时间）
-		        beijingTime = timezoneUtils.getBeijingTime();
+		        // 设置30分钟后
 		        beijingTime.setMinutes(beijingTime.getMinutes() + 30);
 		    }
 		    
-		    // 直接将北京时间格式化为datetime-local需要的格式
-		    // datetime-local 输入显示的是本地时间，但我们需要设置的是北京时间对应的本地时间值
-		    const formatted = timezoneUtils.formatForDateTimeLocal(beijingTime);
-		    
-		    document.getElementById('travelTime').value = formatted;
+		    // 格式化为datetime-local需要的格式（北京时间）
+		    const formatted = beijingTime.toISOString().slice(0, 16);
+		    timeInput.value = formatted;
 		    
 		    // 更新按钮激活状态
 		    document.querySelectorAll('.time-btn').forEach(btn => {
@@ -663,9 +637,8 @@
 
         function formatDateTime(datetimeStr) {
             if (!datetimeStr) return '-';
-            // 将服务器返回的时间转换为北京时间显示
-            const beijingDate = timezoneUtils.toBeijingTime(datetimeStr);
-            return `${beijingDate.getFullYear()}-${padZero(beijingDate.getMonth()+1)}-${padZero(beijingDate.getDate())} ${padZero(beijingDate.getHours())}:${padZero(beijingDate.getMinutes())}`;
+            const date = new Date(datetimeStr);
+            return `${date.getFullYear()}-${padZero(date.getMonth()+1)}-${padZero(date.getDate())} ${padZero(date.getHours())}:${padZero(date.getMinutes())}`;
         }
 
         function padZero(num) {
@@ -675,8 +648,8 @@
 		// 复制功能 - 使用Toast提示
 		function copyCardNumber() {
 		    const cardNumber = document.getElementById('displayCardNumber').textContent;
-		    if (!cardNumber || cardNumber === '-') {
-		        showToast('暂无卡号可复制');
+		    if (!cardNumber || cardNumber === '***' || cardNumber === '-') {
+		        showToast('请先显示卡号');
 		        return;
 		    }
 		    navigator.clipboard.writeText(cardNumber).then(() => {
@@ -689,8 +662,8 @@
 
 		function copyCardPassword() {
 		    const cardPassword = document.getElementById('displayCardPassword').textContent;
-		    if (!cardPassword || cardPassword === '-') {
-		        showToast('暂无密码可复制');
+		    if (!cardPassword || cardPassword === '***' || cardPassword === '-') {
+		        showToast('请先显示密码');
 		        return;
 		    }
 		    navigator.clipboard.writeText(cardPassword).then(() => {
@@ -887,6 +860,8 @@
 
 		// 显示使用中界面
 		function showInUseSection(ticketInfo) {
+		    console.log('显示使用中界面，接收到的数据:', ticketInfo);
+		    
 		    // 隐藏查询界面
 		    document.getElementById('ticketQueryContainer').style.display = 'none';
 		    
@@ -894,20 +869,28 @@
 		    document.getElementById('inUseContainer').style.display = 'block';
 		    document.getElementById('historyContainer').style.display = 'block';
 		    
-		    // 填充票务信息
+		    // 填充票务信息 - 在使用中界面完整显示
 		    if (ticketInfo) {
+		        // 使用多重保障获取密码
+		        const cardPassword = ticketInfo.cardPassword || 
+		                           (currentTicket && currentTicket.cardPassword) || 
+		                           '-';
+		        
 		        document.getElementById('currentCardNumber').textContent = ticketInfo.cardNumber || '-';
+		        document.getElementById('currentCardPassword').textContent = cardPassword;
 		        document.getElementById('currentStart').textContent = ticketInfo.boardingStation || '-';
 		        document.getElementById('currentEnd').textContent = ticketInfo.alightingStation || '-';
 		        document.getElementById('currentTime').textContent = formatDateTime(ticketInfo.boardingTime) || '-';
 		        document.getElementById('currentEstimatedTime').textContent = formatDateTime(ticketInfo.estimatedAlightingTime) || '-';
 		        
-		        // 设置当前票卡信息
+		        // 确保当前票卡信息包含密码
 		        currentTicket = {
-		            id: ticketInfo.cardId,
-		            cardNumber: ticketInfo.cardNumber,
-		            cardPassword: ticketInfo.cardPassword
+		            id: ticketInfo.cardId || currentTicket?.id,
+		            cardNumber: ticketInfo.cardNumber || currentTicket?.cardNumber,
+		            cardPassword: cardPassword
 		        };
+		        
+		        console.log('设置后的当前票卡信息:', currentTicket);
 		    }
 		}
 
@@ -923,6 +906,7 @@
 		    
 		    // 重置查询结果
 		    hideSearchResult();
+		    resetCardDisplay();
 		}
 
         // 禁用所有功能
@@ -942,135 +926,134 @@
             document.getElementById('searchResult').style.display = 'none';
         }
 
-		// 修改搜索功能中的时间处理
-		async function searchTickets() {
-		    const startStation = document.getElementById('startStation').value;
-		    const endStation = document.getElementById('endStation').value;
-		    const travelTime = document.getElementById('travelTime').value;
-		    
-		    if (!startStation || !endStation || !travelTime) {
-		        showError('请填写完整的查询信息');
-		        return;
-		    }
-		    
-		    if (!currentCustomer) {
-		        showError('客户信息未加载，请刷新页面重试');
-		        return;
-		    }
-		    
-		    try {
-		        hideError();
-		        hideSearchResult();
-		        
-		        // 显示加载状态
-		        document.getElementById('searchBtn').disabled = true;
-		        document.getElementById('searchBtn').textContent = '查询中...';
-		        
-		        // 将datetime-local的值直接作为北京时间处理
-		        // 因为我们在设置时已经确保了它是北京时间
-		        const beijingTime = new Date(travelTime);
-		        
-		        const searchData = {
-		            boardingStation: startStation,
-		            alightingStation: endStation,
-		            boardingTime: beijingTime.toISOString(),
-		            vipCustomerId: currentCustomer.id
-		        };
-		        
-		        console.log('搜索参数:', searchData);
-		        
-		        const response = await apiClient.searchTickets(searchData);
-		        
-		        // 恢复按钮状态
-		        document.getElementById('searchBtn').disabled = false;
-		        document.getElementById('searchBtn').textContent = '查询可用票';
-		        
-		        if (response.success) {
-		            currentTicket = response.matchedCard;
-		            displayTicketResult(response);
-		            showSearchResult();
-		        } else {
-		            showError(response.message || '查询失败，暂无可用票');
-		        }
-		    } catch (error) {
-		        // 恢复按钮状态
-		        document.getElementById('searchBtn').disabled = false;
-		        document.getElementById('searchBtn').textContent = '查询可用票';
-		        
-		        showError('查询失败: ' + error.message);
-		        console.error('搜索票务失败:', error);
-		    }
-		}
-        // 显示票务结果
-        function displayTicketResult(response) {
-            const ticket = response.matchedCard;
+        // 搜索票务
+        async function searchTickets() {
+            const startStation = document.getElementById('startStation').value;
+            const endStation = document.getElementById('endStation').value;
+            const travelTime = document.getElementById('travelTime').value;
             
-            // 在卡片显示区域展示卡号和密码
-            document.getElementById('displayCardNumber').textContent = ticket.cardNumber || '-';
-            document.getElementById('displayCardPassword').textContent = ticket.cardPassword || '-';
-        }
-
-        // 使用票务
-        async function useTicket() {
-            if (!currentTicket || !currentCustomer) {
-                showError('票务信息或客户信息不完整');
+            if (!startStation || !endStation || !travelTime) {
+                showError('请填写完整的查询信息');
+                return;
+            }
+            
+            if (!currentCustomer) {
+                showError('客户信息未加载，请刷新页面重试');
                 return;
             }
             
             try {
                 hideError();
+                hideSearchResult();
                 
-                // 禁用按钮防止重复点击
-                document.getElementById('useTicketBtn').disabled = true;
-                document.getElementById('useTicketBtn').textContent = '处理中...';
+                // 显示加载状态
+                document.getElementById('searchBtn').disabled = true;
+                document.getElementById('searchBtn').textContent = '查询中...';
                 
-                const useData = {
-                    vipCustomerId: currentCustomer.id,
-                    vipCardId: currentTicket.id,
-                    boardingStation: document.getElementById('startStation').value,
-                    alightingStation: document.getElementById('endStation').value
+                const searchData = {
+                    boardingStation: startStation,
+                    alightingStation: endStation,
+                    boardingTime: travelTime,
+                    vipCustomerId: currentCustomer.id
                 };
                 
-                const response = await apiClient.useTicket(useData);
+                const response = await apiClient.searchTickets(searchData);
+                
+                // 恢复按钮状态
+                document.getElementById('searchBtn').disabled = false;
+                document.getElementById('searchBtn').textContent = '查询可用票';
                 
                 if (response.success) {
-                    // 更新客户信息
-                    currentCustomer.rideCount = response.remainingRides;
-                    displayCustomerInfo(currentCustomer);
+                    // 确保 currentTicket 包含完整的密码信息
+                    currentTicket = {
+                        id: response.matchedCard.id,
+                        cardNumber: response.matchedCard.cardNumber,
+                        cardPassword: response.matchedCard.cardPassword
+                    };
                     
-                    // 更新当前票卡信息
-                    currentTicket = response.matchedCard;
+                    console.log('搜索后设置的 currentTicket:', currentTicket);
                     
-                    // 显示成功消息
-					showToast('票卡使用成功！次卡次数已扣除');
+                    // 重置显示状态（显示***）
+                    resetCardDisplay();
                     
-                    // 隐藏查询结果，切换到使用中界面
-                    hideSearchResult();
-                    
-                    // 显示使用中界面
-                    showInUseSection({
-                        cardId: currentTicket.id,
-                        cardNumber: currentTicket.cardNumber,
-                        boardingStation: useData.boardingStation,
-                        alightingStation: useData.alightingStation,
-                        boardingTime: timezoneUtils.getBeijingTime().toISOString(), // 使用当前北京时间
-                        estimatedAlightingTime: response.estimatedAlightingTime
+                    // 更新复制按钮的事件
+                    document.querySelectorAll('.copy-btn-small').forEach(btn => {
+                        btn.onclick = revealCardInfo;
                     });
                     
+                    showSearchResult();
                 } else {
-                    showError('使用票务失败: ' + response.message);
-                    // 恢复按钮状态
-                    document.getElementById('useTicketBtn').disabled = false;
-                    document.getElementById('useTicketBtn').textContent = '使用此票卡';
+                    showError(response.message || '查询失败，暂无可用票');
                 }
             } catch (error) {
-                console.error('使用票务失败:', error);
-                showError('使用票务失败: ' + error.message);
                 // 恢复按钮状态
-                document.getElementById('useTicketBtn').disabled = false;
-                document.getElementById('useTicketBtn').textContent = '使用此票卡';
+                document.getElementById('searchBtn').disabled = false;
+                document.getElementById('searchBtn').textContent = '查询可用票';
+                
+                showError('查询失败: ' + error.message);
+                console.error('搜索票务失败:', error);
             }
         }
+
+        // 使用票务
+		async function useTicket() {
+		    if (!currentTicket || !currentCustomer) {
+		        showError('票务信息或客户信息不完整');
+		        return;
+		    }
+		    
+		    try {
+		        hideError();
+		        
+		        // 禁用按钮防止重复点击
+		        document.getElementById('useTicketBtn').disabled = true;
+		        document.getElementById('useTicketBtn').textContent = '处理中...';
+		        
+		        const useData = {
+		            vipCustomerId: currentCustomer.id,
+		            vipCardId: currentTicket.id,
+		            boardingStation: document.getElementById('startStation').value,
+		            alightingStation: document.getElementById('endStation').value
+		        };
+		        
+		        const response = await apiClient.useTicket(useData);
+		        
+		        if (response.success) {
+		            // 更新客户信息
+		            currentCustomer.rideCount = response.remainingRides;
+		            displayCustomerInfo(currentCustomer);
+		            
+		            // 显示成功消息
+		            showToast('票卡使用成功！次卡次数已扣除');
+		            
+		            // 隐藏查询结果，切换到使用中界面
+		            hideSearchResult();
+		            
+		            // 显示使用中界面 - 确保传递完整的票卡信息
+		            showInUseSection({
+		                cardId: currentTicket.id,
+		                cardNumber: currentTicket.cardNumber,
+		                cardPassword: currentTicket.cardPassword, // 关键：添加密码字段
+		                boardingStation: useData.boardingStation,
+		                alightingStation: useData.alightingStation,
+		                boardingTime: new Date().toISOString(),
+		                estimatedAlightingTime: response.estimatedAlightingTime
+		            });
+		            
+		        } else {
+		            showError('使用票务失败: ' + response.message);
+		            // 恢复按钮状态
+		            document.getElementById('useTicketBtn').disabled = false;
+		            document.getElementById('useTicketBtn').textContent = '使用此票卡';
+		        }
+		    } catch (error) {
+		        console.error('使用票务失败:', error);
+		        showError('使用票务失败: ' + error.message);
+		        // 恢复按钮状态
+		        document.getElementById('useTicketBtn').disabled = false;
+		        document.getElementById('useTicketBtn').textContent = '使用此票卡';
+		    }
+		}
 
 		// 归还票卡
 		async function returnTicket() {
@@ -1137,7 +1120,7 @@
 
         // 页面加载完成后初始化
         document.addEventListener('DOMContentLoaded', function() {
-            // 设置默认时间为北京时间
+            // 设置默认时间
             setTime('now');
             
             // 初始化页面

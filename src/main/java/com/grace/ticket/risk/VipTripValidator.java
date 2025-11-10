@@ -79,18 +79,21 @@ import com.grace.ticket.dto.TicketInfoDTO;
 	        }    
 	        
 	     // 1. 标记 subwayTravelTime 最小的 validatedTicket
-	        List<TicketInfoDTO> sublist = tickets.subList(0, tickets.size()/2);
+	        List<TicketInfoDTO> sublist = tickets.subList(0, tickets.size()/2+1);
 	        TicketInfoDTO minSubwayDto = null;
 	        int minSubwayTime = Integer.MAX_VALUE;
 
 	        for(TicketInfoDTO ticket : sublist) {
 	            TicketInfoDTO dto = validateSingleTicketTrip(boardingStation, boardingTime, ticket);
 	            
-	            // 检查并更新最小值
-	            if(dto.getSubwayTravelTime() < minSubwayTime) {
-	                minSubwayTime = dto.getSubwayTravelTime();
-	                minSubwayDto = dto;
-	            }
+	            // 行程符合，检查并更新最小值
+	            if (Constants.GREEN_LIGHT.equals(dto.getGreeLight())) {
+	            	if(dto.getSubwayTravelTime() < minSubwayTime) {
+		                minSubwayTime = dto.getSubwayTravelTime();
+		                minSubwayDto = dto;
+		            }
+				}
+	           
 	        }
 	        if(minSubwayDto!=null) {
 	        	validatedTickets.add(minSubwayDto);
@@ -105,9 +108,9 @@ import com.grace.ticket.dto.TicketInfoDTO;
 						.orElse(null);
 				validatedTickets.add(minTotalTimeTicket);
 			}
-			*/
+			
 	        
-	     // 3. 取第一条返回
+	     	// 3. 取第一条返回
 			if (validatedTickets.size() == 0) {
 				for (TicketInfoDTO ticket : tickets) {
 					TicketInfoDTO validatedTicket = validateSingleTicketTrip(boardingStation, boardingTime, ticket);
@@ -120,6 +123,7 @@ import com.grace.ticket.dto.TicketInfoDTO;
 
 				}
 			}
+			*/
 	        return validatedTickets;
 	    }
 
@@ -235,13 +239,14 @@ import com.grace.ticket.dto.TicketInfoDTO;
 	                    routes.add(subwayRoute);
 	                    System.out.println("地铁路线: " + subwayRoute.getDuration() + "分钟, " + subwayRoute.getCost() + "元");
 	                }
-	                
-	                // 2. 获取打车路线
+	                /*
+	                // 2. 打车路线时间与自驾相同
 	                RouteResult drivingRoute = getDrivingRoute(fromLocation, toLocation);
 	                if (drivingRoute != null) {
 	                    routes.add(drivingRoute);
 	                    System.out.println("自驾路线: " + drivingRoute.getDuration() + "分钟, " + drivingRoute.getCost() + "元");
 	                }
+	                */
 	                
 	                // 3. 获取打车路线
 	                RouteResult taxiRoute = getTaxiRoute(fromLocation, toLocation);

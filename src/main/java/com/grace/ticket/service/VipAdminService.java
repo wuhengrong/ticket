@@ -1,20 +1,19 @@
 package com.grace.ticket.service;
 
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.grace.ticket.dto.VipCardDTO;
 import com.grace.ticket.dto.VipCustomerDTO;
 import com.grace.ticket.entity.VipCard;
 import com.grace.ticket.entity.VipCustomer;
 import com.grace.ticket.repository.VipCardRepository;
 import com.grace.ticket.repository.VipCustomerRepository;
-import com.grace.ticket.service.SecureUrlService;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Service
 public class VipAdminService {

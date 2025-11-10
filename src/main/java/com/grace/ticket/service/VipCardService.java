@@ -53,7 +53,7 @@ public class VipCardService {
             }
             
             // 获取可用票卡
-            List<VipCard> availableCards = vipCardRepository.findAvailableCards(LocalDateTime.now());
+            List<VipCard> availableCards = vipCardRepository.findAvailableCards(DateTimeUtils.now());
             if (availableCards.isEmpty()) {
                 return TicketSearchResponse.failure("暂时无可用票");
             }
@@ -122,29 +122,28 @@ public class VipCardService {
             LocalDateTime estimatedTime = vipCardValidator.calculateEstimatedAlightingTime(
                 request.getBoardingStation(),
                 request.getAlightingStation(),
-                LocalDateTime.now()
+                DateTimeUtils.now()
             );
-            LocalDateTime beijingTime = DateTimeUtils.toBeijingTime(LocalDateTime.now());
             
             // 更新票卡状态
             card.setStatus(VipCard.CardStatus.IN_USE);
             card.setInOutStatus(VipCard.InOutStatus.IN);
             card.setBoardingStation(request.getBoardingStation());
             card.setAlightingStation(request.getAlightingStation());
-            card.setBoardingTime(LocalDateTime.now());
+            card.setBoardingTime(DateTimeUtils.now());
             card.setEstimatedAlightingTime(estimatedTime);
             
             //如果为空，判断为初次使用
             if(card.getFirstUseTime()==null) {
-            	card.setFirstUseTime(LocalDateTime.now());
-            	card.setExpiryTime( LocalDateTime.now().plusDays(1));
+            	card.setFirstUseTime(DateTimeUtils.now());
+            	card.setExpiryTime( DateTimeUtils.now().plusDays(1));
             }
             
             card.setAlightingTime(null);
             
             // 首次使用时间
             if (card.getFirstUseTime() == null) {
-                card.setFirstUseTime(LocalDateTime.now());
+                card.setFirstUseTime(DateTimeUtils.now()); 
             }
             
             vipCardRepository.save(card);
@@ -160,7 +159,7 @@ public class VipCardService {
                 request.getVipCustomerId(),
                 request.getVipCardId(),
                 request.getBoardingStation(),
-                LocalDateTime.now()
+                DateTimeUtils.now()
             );
             record.setEstimatedAlightingTime(estimatedTime);
             vipRecordRepository.save(record);
@@ -210,13 +209,13 @@ public class VipCardService {
             card.setStatus(VipCard.CardStatus.AVAILABLE);
             card.setInOutStatus(VipCard.InOutStatus.OUT);
             card.setAlightingStation(alightingStation);
-            card.setAlightingTime(LocalDateTime.now());
+            card.setAlightingTime(DateTimeUtils.now());
             vipCardRepository.save(card);
             
             // 更新使用记录
             VipRecord record = activeRecords.get(0);
             record.setAlightingStation(alightingStation);
-            record.setAlightingTime(LocalDateTime.now());
+            record.setAlightingTime(DateTimeUtils.now());
             vipRecordRepository.save(record);
             
             return TicketSearchResponse.success(
@@ -252,7 +251,7 @@ public class VipCardService {
             if (!activeRecords.isEmpty()) {
                 VipRecord record = activeRecords.get(0);
                 record.setAlightingStation(alightingStation);
-                record.setAlightingTime(LocalDateTime.now());
+                record.setAlightingTime(DateTimeUtils.now());
                 vipRecordRepository.save(record);
             }
             

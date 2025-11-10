@@ -1,6 +1,5 @@
 package com.grace.ticket.controller;
 
-import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -28,6 +27,7 @@ import com.grace.ticket.repository.VipCardRepository;
 import com.grace.ticket.repository.VipCustomerRepository;
 import com.grace.ticket.repository.VipRecordRepository;
 import com.grace.ticket.service.VipCardService;
+import com.grace.ticket.util.DateTimeUtils;
 
 import jakarta.transaction.Transactional;
 
@@ -86,6 +86,9 @@ public class VipTicketController {
     /**
      * 获取客户当前进行中的票务信息
      */
+    /**
+     * 获取客户当前进行中的票务信息
+     */
     private Map<String, Object> getActiveTicketInfo(Long customerId) {
         Map<String, Object> result = new HashMap<>();
         
@@ -111,11 +114,11 @@ public class VipTicketController {
             
             VipCard activeCard = cardOpt.get();
             
-            // 构建进行中票务的详细信息
+            // 构建进行中票务的详细信息 - 确保包含完整的卡号和密码
             result.put("hasActiveTicket", true);
             result.put("cardId", activeCard.getId());
-            result.put("cardNumber", activeCard.getCardNumber());
-            result.put("cardPassword", activeCard.getCardPassword());
+            result.put("cardNumber", activeCard.getCardNumber()); // 完整卡号
+            result.put("cardPassword", activeCard.getCardPassword()); // 完整密码
             result.put("boardingStation", activeRecord.getBoardingStation());
             result.put("alightingStation", activeRecord.getAlightingStation());
             result.put("boardingTime", activeRecord.getBoardingTime());
@@ -158,6 +161,9 @@ public class VipTicketController {
     @PostMapping("/tickets/search")
     public ResponseEntity<TicketSearchResponse> searchTickets(@RequestBody TicketSearchRequest request) {
         TicketSearchResponse response = vipCardService.searchBestMatchCard(request);
+        
+        //response.getMatchedCard().setCardNumber(StringMaskUtil.maskMiddle(response.getMatchedCard().getCardNumber()));
+        //response.getMatchedCard().setCardPassword(StringMaskUtil.maskMiddle(response.getMatchedCard().getCardPassword()));
         return ResponseEntity.ok(response);
     }
     
@@ -226,14 +232,14 @@ public class VipTicketController {
             card.setStatus(VipCard.CardStatus.AVAILABLE);
             card.setInOutStatus(VipCard.InOutStatus.OUT);
             card.setAlightingStation(alightingStation);
-            card.setAlightingTime(LocalDateTime.now());
+            card.setAlightingTime(DateTimeUtils.now()); 
             card.setEstimatedAlightingTime(null);
             vipCardRepository.save(card);
             
             // 更新使用记录
             VipRecord record = activeRecords.get(0);
             record.setAlightingStation(alightingStation);
-            record.setAlightingTime(LocalDateTime.now());
+            record.setAlightingTime(DateTimeUtils.now());
             vipRecordRepository.save(record);
             
             // 构建成功响应
