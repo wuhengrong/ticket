@@ -18,6 +18,7 @@ import com.grace.ticket.repository.VipCardRepository;
 import com.grace.ticket.repository.VipCustomerRepository;
 import com.grace.ticket.repository.VipRecordRepository;
 import com.grace.ticket.risk.VipCardValidator;
+import com.grace.ticket.util.DateTimeUtils;
 
 @Service
 public class VipCardService {
@@ -123,6 +124,7 @@ public class VipCardService {
                 request.getAlightingStation(),
                 LocalDateTime.now()
             );
+            LocalDateTime beijingTime = DateTimeUtils.toBeijingTime(LocalDateTime.now());
             
             // 更新票卡状态
             card.setStatus(VipCard.CardStatus.IN_USE);

@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>次数信息</title>
     <style>
+        /* 样式保持不变 */
         * {
             margin: 0;
             padding: 0;
@@ -304,6 +305,11 @@
             font-size: 12px;
             color: #6c757d;
         }
+
+        .time-btn.active {
+            background: #3498db;
+            color: white;
+        }
     </style>
 </head>
 <body>
@@ -416,6 +422,51 @@
         let urlParams = {};
         let activeTicketInfo = null; // 新增：存储当前进行中的票务信息
         
+        // 时区相关工具函数
+		const timezoneUtils = {
+		    // 获取当前北京时间
+		    getBeijingTime() {
+		        const now = new Date();
+		        // 北京时间是 UTC+8
+		        const beijingOffset = 8 * 60 * 60 * 1000;
+		        // 获取本地时间与UTC的偏移（毫秒）
+		        const localOffset = now.getTimezoneOffset() * 60 * 1000;
+		        // 转换为北京时间：当前时间 + 本地偏移 + 8小时
+		        return new Date(now.getTime() + localOffset + beijingOffset);
+		    },
+		    
+		    // 将任意时间转换为北京时间
+		    toBeijingTime(date) {
+		        if (!date) return null;
+		        const inputDate = new Date(date);
+		        // 获取输入时间的时区偏移（分钟转毫秒）
+		        const inputOffset = inputDate.getTimezoneOffset() * 60 * 1000;
+		        // 北京时间偏移（UTC+8）
+		        const beijingOffset = 8 * 60 * 60 * 1000;
+		        // 转换为北京时间
+		        return new Date(inputDate.getTime() + inputOffset + beijingOffset);
+		    },
+		    
+		    // 将北京时间转换为本地时间（用于datetime-local输入）
+		    beijingToLocal(date) {
+		        if (!date) return null;
+		        const beijingDate = new Date(date);
+		        // 获取本地时区偏移（分钟转毫秒）
+		        const localOffset = beijingDate.getTimezoneOffset() * 60 * 1000;
+		        // 北京时间偏移（UTC+8）
+		        const beijingOffset = 8 * 60 * 60 * 1000;
+		        // 转换为本地时间：北京时间 - 8小时 + 本地偏移
+		        return new Date(beijingDate.getTime() - beijingOffset + localOffset);
+		    },
+		    
+		    // 格式化时间为datetime-local需要的格式 (YYYY-MM-DDTHH:mm)
+		    formatForDateTimeLocal(date) {
+		        if (!date) return '';
+		        const d = new Date(date);
+		        return `${d.getFullYear()}-${padZero(d.getMonth()+1)}-${padZero(d.getDate())}T${padZero(d.getHours())}:${padZero(d.getMinutes())}`;
+		    }
+		};
+
         // API调用函数
         const apiClient = {
             // 获取客户信息
@@ -435,6 +486,13 @@
             // 搜索票卡
             async searchTickets(searchData) {
                 try {
+                    // 确保发送的时间是北京时间
+                    if (searchData.boardingTime) {
+                        // 将北京时间字符串转换为Date对象，然后转换为ISO字符串
+                        const beijingTime = new Date(searchData.boardingTime);
+                        searchData.boardingTime = beijingTime.toISOString();
+                    }
+                    
                     const response = await fetch('/api/vip/tickets/search', {
                         method: 'POST',
                         headers: {
@@ -554,29 +612,30 @@
             document.getElementById('returnDebugInfo').style.display = 'none';
         }
 
+		// 修改 setTime 函数
 		function setTime(type) {
-		    const now = new Date();
-		    let timeInput = document.getElementById('travelTime');
+		    let beijingTime;
 		    
-		    // 获取当前北京时间（UTC+8）
-		    const beijingOffset = 8 * 60 * 60 * 1000; // 8小时的毫秒数
-		    const beijingTime = new Date(now.getTime() + beijingOffset);
-		    
-		    // 根据选择的时间类型调整
 		    if (type === 'now') {
+		        // 获取当前北京时间
+		        beijingTime = timezoneUtils.getBeijingTime();
 		        // 设置当前时间（增加5分钟缓冲）
 		        beijingTime.setMinutes(beijingTime.getMinutes() + 5);
 		    } else if (type === '15min') {
-		        // 设置15分钟后
+		        // 设置15分钟后（北京时间）
+		        beijingTime = timezoneUtils.getBeijingTime();
 		        beijingTime.setMinutes(beijingTime.getMinutes() + 15);
 		    } else if (type === '30min') {
-		        // 设置30分钟后
+		        // 设置30分钟后（北京时间）
+		        beijingTime = timezoneUtils.getBeijingTime();
 		        beijingTime.setMinutes(beijingTime.getMinutes() + 30);
 		    }
 		    
-		    // 格式化为datetime-local需要的格式（北京时间）
-		    const formatted = beijingTime.toISOString().slice(0, 16);
-		    timeInput.value = formatted;
+		    // 直接将北京时间格式化为datetime-local需要的格式
+		    // datetime-local 输入显示的是本地时间，但我们需要设置的是北京时间对应的本地时间值
+		    const formatted = timezoneUtils.formatForDateTimeLocal(beijingTime);
+		    
+		    document.getElementById('travelTime').value = formatted;
 		    
 		    // 更新按钮激活状态
 		    document.querySelectorAll('.time-btn').forEach(btn => {
@@ -604,8 +663,9 @@
 
         function formatDateTime(datetimeStr) {
             if (!datetimeStr) return '-';
-            const date = new Date(datetimeStr);
-            return `${date.getFullYear()}-${padZero(date.getMonth()+1)}-${padZero(date.getDate())} ${padZero(date.getHours())}:${padZero(date.getMinutes())}`;
+            // 将服务器返回的时间转换为北京时间显示
+            const beijingDate = timezoneUtils.toBeijingTime(datetimeStr);
+            return `${beijingDate.getFullYear()}-${padZero(beijingDate.getMonth()+1)}-${padZero(beijingDate.getDate())} ${padZero(beijingDate.getHours())}:${padZero(beijingDate.getMinutes())}`;
         }
 
         function padZero(num) {
@@ -882,60 +942,65 @@
             document.getElementById('searchResult').style.display = 'none';
         }
 
-        // 搜索票务
-        async function searchTickets() {
-            const startStation = document.getElementById('startStation').value;
-            const endStation = document.getElementById('endStation').value;
-            const travelTime = document.getElementById('travelTime').value;
-            
-            if (!startStation || !endStation || !travelTime) {
-                showError('请填写完整的查询信息');
-                return;
-            }
-            
-            if (!currentCustomer) {
-                showError('客户信息未加载，请刷新页面重试');
-                return;
-            }
-            
-            try {
-                hideError();
-                hideSearchResult();
-                
-                // 显示加载状态
-                document.getElementById('searchBtn').disabled = true;
-                document.getElementById('searchBtn').textContent = '查询中...';
-                
-                const searchData = {
-                    boardingStation: startStation,
-                    alightingStation: endStation,
-                    boardingTime: travelTime,
-                    vipCustomerId: currentCustomer.id
-                };
-                
-                const response = await apiClient.searchTickets(searchData);
-                
-                // 恢复按钮状态
-                document.getElementById('searchBtn').disabled = false;
-                document.getElementById('searchBtn').textContent = '查询可用票';
-                
-                if (response.success) {
-                    currentTicket = response.matchedCard;
-                    displayTicketResult(response);
-                    showSearchResult();
-                } else {
-                    showError(response.message || '查询失败，暂无可用票');
-                }
-            } catch (error) {
-                // 恢复按钮状态
-                document.getElementById('searchBtn').disabled = false;
-                document.getElementById('searchBtn').textContent = '查询可用票';
-                
-                showError('查询失败: ' + error.message);
-                console.error('搜索票务失败:', error);
-            }
-        }
-
+		// 修改搜索功能中的时间处理
+		async function searchTickets() {
+		    const startStation = document.getElementById('startStation').value;
+		    const endStation = document.getElementById('endStation').value;
+		    const travelTime = document.getElementById('travelTime').value;
+		    
+		    if (!startStation || !endStation || !travelTime) {
+		        showError('请填写完整的查询信息');
+		        return;
+		    }
+		    
+		    if (!currentCustomer) {
+		        showError('客户信息未加载，请刷新页面重试');
+		        return;
+		    }
+		    
+		    try {
+		        hideError();
+		        hideSearchResult();
+		        
+		        // 显示加载状态
+		        document.getElementById('searchBtn').disabled = true;
+		        document.getElementById('searchBtn').textContent = '查询中...';
+		        
+		        // 将datetime-local的值直接作为北京时间处理
+		        // 因为我们在设置时已经确保了它是北京时间
+		        const beijingTime = new Date(travelTime);
+		        
+		        const searchData = {
+		            boardingStation: startStation,
+		            alightingStation: endStation,
+		            boardingTime: beijingTime.toISOString(),
+		            vipCustomerId: currentCustomer.id
+		        };
+		        
+		        console.log('搜索参数:', searchData);
+		        
+		        const response = await apiClient.searchTickets(searchData);
+		        
+		        // 恢复按钮状态
+		        document.getElementById('searchBtn').disabled = false;
+		        document.getElementById('searchBtn').textContent = '查询可用票';
+		        
+		        if (response.success) {
+		            currentTicket = response.matchedCard;
+		            displayTicketResult(response);
+		            showSearchResult();
+		        } else {
+		            showError(response.message || '查询失败，暂无可用票');
+		        }
+		    } catch (error) {
+		        // 恢复按钮状态
+		        document.getElementById('searchBtn').disabled = false;
+		        document.getElementById('searchBtn').textContent = '查询可用票';
+		        
+		        showError('查询失败: ' + error.message);
+		        console.error('搜索票务失败:', error);
+		    }
+		}
         // 显示票务结果
         function displayTicketResult(response) {
             const ticket = response.matchedCard;
@@ -988,7 +1053,7 @@
                         cardNumber: currentTicket.cardNumber,
                         boardingStation: useData.boardingStation,
                         alightingStation: useData.alightingStation,
-                        boardingTime: new Date().toISOString(),
+                        boardingTime: timezoneUtils.getBeijingTime().toISOString(), // 使用当前北京时间
                         estimatedAlightingTime: response.estimatedAlightingTime
                     });
                     
@@ -1072,7 +1137,7 @@
 
         // 页面加载完成后初始化
         document.addEventListener('DOMContentLoaded', function() {
-            // 设置默认时间
+            // 设置默认时间为北京时间
             setTime('now');
             
             // 初始化页面

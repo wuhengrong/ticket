@@ -168,7 +168,7 @@ public class DataInitializer implements CommandLineRunner {
     private void initializeVipCards() {
         if (vipCardRepository.count() == 0) {
             List<VipCard> vipCards = Arrays.asList(
-            		  createVipCard("19002007047", "Aa112233", VipCard.CardStatus.AVAILABLE, 
+            		  createVipCard("19002007047", "Aa112233", VipCard.CardStatus.IN_USE, 
             				  LocalDateTime.parse("2025-11-09 12:48", DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")), //初次使用时间
             				  LocalDateTime.parse("2025-11-10 12:48", DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")), //有效时间
                               LocalDateTime.parse("2025-11-09 20:24", DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")), //进站时间
@@ -186,27 +186,18 @@ public class DataInitializer implements CommandLineRunner {
                               "长圳", 
                               VipCard.InOutStatus.OUT, null),
             		  
-             
-               createVipCard("18127943910", "Aa112233", VipCard.CardStatus.STANDBY, 
-                              LocalDateTime.now().minusMonths(1), LocalDateTime.now().minusDays(1),
-                              null, null, null, null, null, null),
+                createVipCard("17702039644", "Aa112233", VipCard.CardStatus.STANDBY, null, null, null, null, null, null, null, null),
                 
-                createVipCard("17701999451", "Aa112233", VipCard.CardStatus.STANDBY, 
-                    LocalDateTime.now().minusMonths(1), LocalDateTime.now().minusDays(1),
-                    null, null, null, null, null, null),
+              
+                createVipCard("18027443667", "Aa112233", VipCard.CardStatus.STANDBY, null, null, null, null, null, null, null, null),
+                      
+                createVipCard("18127943910", "Aa112233", VipCard.CardStatus.STANDBY, null, null, null, null, null, null, null, null),
                 
-                createVipCard("18027337452", "Aa112233", VipCard.CardStatus.STANDBY, 
-                        LocalDateTime.now().minusMonths(1), LocalDateTime.now().minusDays(1),
-                        null, null, null, null, null, null),
+                createVipCard("17701999451", "Aa112233", VipCard.CardStatus.STANDBY, null, null, null, null, null, null, null, null),
                 
-                createVipCard("19002009435", "Aa112233", VipCard.CardStatus.STANDBY, 
-                    null, LocalDateTime.now().plusMonths(6), null, null, null, null, null, null),
+                createVipCard("18027337452", "Aa112233", VipCard.CardStatus.STANDBY,null, null, null, null, null, null, null, null),
                 
-                createVipCard("17702039644", "Aa112233", VipCard.CardStatus.STANDBY, 
-                    null, LocalDateTime.now().plusMonths(6), null, null, null, null, null, null),
-                
-                createVipCard("18027443667", "Aa112233", VipCard.CardStatus.STANDBY, 
-                    null, LocalDateTime.now().plusMonths(6), null, null, null, null, null, null)
+                createVipCard("19002009435", "Aa112233", VipCard.CardStatus.STANDBY, null, null, null, null, null, null, null, null)
                 
                 
             );
@@ -247,9 +238,9 @@ public class DataInitializer implements CommandLineRunner {
     private void initializeVipCustomers() {
         if (vipCustomerRepository.count() == 0) {
             List<VipCustomer> vipCustomers = Arrays.asList(
-                createVipCustomer("U1005", 1001L, "初始组", 5, "技术部高级会员"),
-                createVipCustomer("U1006", 1001L, "初始组", 5, "技术部普通会员"),
-                createVipCustomer("U1007", 1001L, "初始组", 10, "销售部VIP"),
+                createVipCustomer("U1005", 1001L, "初始组", 4, "技术部高级会员"),//地铁-闲鱼-柳硫
+                createVipCustomer("U1006", 1001L, "初始组", 8, "技术部普通会员"),//地铁-闲鱼-龙之友
+                createVipCustomer("U1007", 1001L, "初始组", 10, "销售部VIP"),//地铁-闲鱼-第一次卖货
                 createVipCustomer("U1008", 1001L, "初始组", 10, "市场部新会员"),
                 createVipCustomer("U1009", 1001L, "初始组", 10, "市场部新会员"),
                 createVipCustomer("U1010", 1001L, "初始组", 10, "市场部新会员"),
