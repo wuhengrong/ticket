@@ -176,13 +176,12 @@ public class DataInitializer implements CommandLineRunner {
                               "南约", 
                               VipCard.InOutStatus.OUT, null),
                
-                createVipCard("17701999451", "Aa112233", VipCard.CardStatus.STANDBY, null,  null, null, null, null, null, null),
+                createVipCard("17701999451", "Aa112233", VipCard.CardStatus.AVAILABLE, null,  null, null, null, null, null, null),
                 
-                createVipCard("18027337452", "Aa112233", VipCard.CardStatus.STANDBY,null, null, null, null, null, null, null),
+                createVipCard("18027337452", "Aa112233", VipCard.CardStatus.AVAILABLE,null, null, null, null, null, null, null),
                 
-                createVipCard("19002009435", "Aa112233", VipCard.CardStatus.STANDBY, null, null, null, null, null, null, null),
-                
-                createVipCard("17702039644", "Aa112233", VipCard.CardStatus.STANDBY, null, null, null, null, null, null, null),
+                createVipCard("19002009435", "Aa112233", VipCard.CardStatus.AVAILABLE, null, null, null, null, null, null, null),
+               
                 
                 createVipCard("18027443667", "Aa112233", VipCard.CardStatus.STANDBY, null, null, null, null, null, null, null),
                 
@@ -234,7 +233,7 @@ public class DataInitializer implements CommandLineRunner {
                 createVipCustomer("U1009", 1001L, "初始组", 10, "市场部新会员"),//tbNick_g0ura
                 createVipCustomer("U1010", 1001L, "初始组", 9, "市场部新会员"),//风和日丽
                 createVipCustomer("U1011", 1001L, "初始组", 10, "市场部新会员"),//糖醋小丸子
-                createVipCustomer("U1012", 1001L, "初始组", 10, "销售部高级会员"),//tbNick_8xpo7
+                createVipCustomer("U1012", 1001L, "初始组", 9, "销售部高级会员"),//tbNick_8xpo7
                 createVipCustomer("U1013", 1001L, "初始组", 10, "销售部高级会员"),
                 createVipCustomer("U1014", 1001L, "初始组", 10, "销售部高级会员"),
                 createVipCustomer("U1015", 1001L, "初始组", 10, "销售部高级会员"),
