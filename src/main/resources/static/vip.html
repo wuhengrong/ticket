@@ -221,46 +221,32 @@
             opacity: 0.9;
         }
 
-        .info-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin: 12px 0;
-            padding: 10px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 8px;
-        }
+		.info-row {
+		    display: flex;
+		    justify-content: space-between;
+		    align-items: center;
+		    margin: 12px 0;
+		    padding: 10px;
+		    background: rgba(255, 255, 255, 0.1);
+		    border-radius: 8px;
+		}
 
-        .info-label {
-            font-size: 14px;
-            opacity: 0.9;
-            min-width: 80px;
-            text-align: left;
-        }
+		.info-label {
+		    font-size: 14px;
+		    opacity: 0.9;
+		    min-width: 80px;
+		    text-align: left;
+		}
 
-        .info-value {
-            font-size: 16px;
-            font-weight: bold;
-            font-family: monospace;
-            flex: 1;
-            text-align: center;
-            margin: 0 10px;
-        }
+		.info-value {
+		    font-size: 16px;
+		    font-weight: bold;
+		    font-family: monospace;
+		    flex: 1;
+		    text-align: center;
+		    margin: 0 10px;
+		}
 
-        .copy-btn-small {
-            background: #9b59b6;
-            color: white;
-            border: none;
-            padding: 6px 12px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 12px;
-            min-width: 60px;
-        }
-
-        .copy-btn-small:hover {
-            background: #8e44ad;
-        }
 
         .user-name {
             font-size: 20px;
@@ -359,23 +345,21 @@
             <button type="button" class="btn" id="searchBtn" onclick="searchTickets()">查询可用票</button>
         </form>
 
-		<!-- 在票务查询容器中修改显示部分 -->
+		<!-- 修改后的票务查询结果显示 -->
 		<div id="searchResult" style="display: none;">
 		    <div class="card-display">
 		        <div class="card-title">为您找到最佳匹配票卡</div>
 		        
-		        <!-- 票卡号码行 - 初始隐藏 -->
+		        <!-- 票卡号码行 - 默认显示带掩码的信息 -->
 		        <div class="info-row">
 		            <span class="info-label">登录号</span>
-		            <span class="info-value" id="displayCardNumber">***</span>
-		            <button class="copy-btn-small" onclick="revealCardInfo()">显示</button>
+		            <span class="info-value" id="displayCardNumber">-</span>
 		        </div>
 		        
-		        <!-- 票卡密码行 - 初始隐藏 -->
+		        <!-- 票卡密码行 - 默认显示带掩码的信息 -->
 		        <div class="info-row">
 		            <span class="info-label">登录码</span>
-		            <span class="info-value" id="displayCardPassword">***</span>
-		            <button class="copy-btn-small" onclick="revealCardInfo()">显示</button>
+		            <span class="info-value" id="displayCardPassword">-</span>
 		        </div>
 		    </div>
 
@@ -417,7 +401,23 @@
         let currentTicket = null;
         let currentCustomer = null;
         let urlParams = {};
-        let activeTicketInfo = null; // 新增：存储当前进行中的票务信息
+        let activeTicketInfo = null;
+
+        // 字符串掩码函数 - 中间3位替换为***
+        function maskString(str) {
+            if (!str || str.length < 6) return str;
+            
+            const length = str.length;
+            const maskCount = 3; // 固定替换3位
+            const startIndex = Math.floor((length - maskCount) / 2);
+            const endIndex = startIndex + maskCount;
+            
+            const prefix = str.substring(0, startIndex);
+            const suffix = str.substring(endIndex);
+            const stars = '*'.repeat(maskCount);
+            
+            return prefix + stars + suffix;
+        }
         
         // API调用函数
         const apiClient = {
@@ -517,12 +517,11 @@
                 }
             },
 
-            // 新增：获取客户当前进行中的票务
+            // 获取客户当前进行中的票务
             async getActiveTicket(customerId) {
                 try {
                     const response = await fetch(`/api/vip/customer/${customerId}/active-ticket`);
                     if (!response.ok) {
-                        // 如果没有进行中的票务，返回null而不是抛出错误
                         if (response.status === 404) {
                             return null;
                         }
@@ -535,36 +534,6 @@
                 }
             }
         };
-		
-		// 显示票卡信息
-		function revealCardInfo() {
-		    if (!currentTicket) {
-		        showToast('暂无票卡信息');
-		        return;
-		    }
-		    
-		    // 显示完整的卡号和密码
-		    document.getElementById('displayCardNumber').textContent = currentTicket.cardNumber || '-';
-		    document.getElementById('displayCardPassword').textContent = currentTicket.cardPassword || '-';
-		    
-		    // 更新复制按钮文本
-		    document.querySelectorAll('.copy-btn-small').forEach(btn => {
-		        btn.textContent = '复制';
-		    });
-		    
-		    showToast('票卡信息已显示');
-		}
-
-		// 重置票卡显示为隐藏状态
-		function resetCardDisplay() {
-		    document.getElementById('displayCardNumber').textContent = '***';
-		    document.getElementById('displayCardPassword').textContent = '***';
-		    
-		    // 重置按钮文本
-		    document.querySelectorAll('.copy-btn-small').forEach(btn => {
-		        btn.textContent = '显示';
-		    });
-		}
 
         // 工具函数
         function showError(message) {
@@ -591,32 +560,24 @@
 		    const now = new Date();
 		    let timeInput = document.getElementById('travelTime');
 		    
-		    // 获取当前北京时间（UTC+8）
-		    const beijingOffset = 8 * 60 * 60 * 1000; // 8小时的毫秒数
+		    const beijingOffset = 8 * 60 * 60 * 1000;
 		    const beijingTime = new Date(now.getTime() + beijingOffset);
 		    
-		    // 根据选择的时间类型调整
 		    if (type === 'now') {
-		        // 设置当前时间（增加5分钟缓冲）
 		        beijingTime.setMinutes(beijingTime.getMinutes() + 5);
 		    } else if (type === '15min') {
-		        // 设置15分钟后
 		        beijingTime.setMinutes(beijingTime.getMinutes() + 15);
 		    } else if (type === '30min') {
-		        // 设置30分钟后
 		        beijingTime.setMinutes(beijingTime.getMinutes() + 30);
 		    }
 		    
-		    // 格式化为datetime-local需要的格式（北京时间）
 		    const formatted = beijingTime.toISOString().slice(0, 16);
 		    timeInput.value = formatted;
 		    
-		    // 更新按钮激活状态
 		    document.querySelectorAll('.time-btn').forEach(btn => {
 		        btn.classList.remove('active');
 		    });
 		    
-		    // 找到对应的按钮并激活
 		    const buttons = document.querySelectorAll('.time-btn');
 		    buttons.forEach(btn => {
 		        if (btn.textContent === getButtonText(type)) {
@@ -625,7 +586,6 @@
 		    });
 		}
 
-		// 辅助函数：根据类型获取按钮文本
 		function getButtonText(type) {
 		    const textMap = {
 		        'now': '现在',
@@ -645,38 +605,9 @@
             return num < 10 ? '0' + num : num;
         }
 
-		// 复制功能 - 使用Toast提示
-		function copyCardNumber() {
-		    const cardNumber = document.getElementById('displayCardNumber').textContent;
-		    if (!cardNumber || cardNumber === '***' || cardNumber === '-') {
-		        showToast('请先显示卡号');
-		        return;
-		    }
-		    navigator.clipboard.writeText(cardNumber).then(() => {
-		        showToast('卡号已复制到剪贴板');
-		    }).catch(err => {
-		        console.error('复制失败:', err);
-		        showToast('复制失败，请重试');
-		    });
-		}
-
-		function copyCardPassword() {
-		    const cardPassword = document.getElementById('displayCardPassword').textContent;
-		    if (!cardPassword || cardPassword === '***' || cardPassword === '-') {
-		        showToast('请先显示密码');
-		        return;
-		    }
-		    navigator.clipboard.writeText(cardPassword).then(() => {
-		        showToast('密码已复制到剪贴板');
-		    }).catch(err => {
-		        console.error('复制失败:', err);
-		        showToast('复制失败，请重试');
-		    });
-		}
 
 		// Toast提示函数
 		function showToast(message) {
-		    // 创建或获取Toast元素
 		    let toast = document.getElementById('toast');
 		    if (!toast) {
 		        toast = document.createElement('div');
@@ -702,7 +633,6 @@
 		    toast.textContent = message;
 		    toast.style.opacity = '1';
 		    
-		    // 2秒后自动隐藏
 		    setTimeout(() => {
 		        toast.style.opacity = '0';
 		    }, 2000);
@@ -723,9 +653,6 @@
             if (!params.uId || !params.gId || !params.code) {
                 return false;
             }
-            
-            // 这里可以添加更复杂的验证逻辑，比如验证code是否有效
-            // 暂时只做基础验证
             return params.uId.length > 0 && params.gId.length > 0 && params.code.length > 0;
         }
 
@@ -740,37 +667,28 @@
 		        hideError();
 		        hideDebugInfo();
 		        
-		        // 解析URL参数
 		        urlParams = parseUrlParams();
 		        
-		        // 验证URL参数
 		        if (!validateUrlParams(urlParams)) {
 		            showError('无效的访问链接，请检查URL参数是否正确');
 		            disableAllFeatures();
 		            return;
 		        }
 		        
-		        // 构建VIP URL用于API调用
 		        const vipUrl = buildVipUrl(urlParams.uId, urlParams.gId, urlParams.code);
-		        
-		        // 获取客户信息
 		        const customerData = await apiClient.getCustomerInfo(vipUrl);
 		        
 		        if (customerData && customerData.customer) {
 		            currentCustomer = customerData.customer;
 		            displayCustomerInfo(currentCustomer);
 		            
-		            // 显示历史记录
 		            if (customerData.history) {
 		                displayHistory(customerData.history);
 		            }
 		            
-		            // 根据是否有进行中的票务显示对应界面
 		            if (customerData.activeTicket && customerData.activeTicket.hasActiveTicket) {
-		                // 有进行中的票务，显示归还界面
 		                showInUseSection(customerData.activeTicket);
 		            } else {
-		                // 没有进行中的票务，显示查询界面
 		                hideInUseSection();
 		            }
 		            
@@ -790,15 +708,12 @@
         function displayCustomerInfo(customer) {
             document.getElementById('vipCustomerName').textContent = customer.userName || '-';
             document.getElementById('rideCount').textContent = customer.rideCount || 0;
-            
-            // 根据次卡次数更新界面状态
             updateUIByRideCount(customer.rideCount);
         }
 
         // 根据次卡次数更新界面
         function updateUIByRideCount(rideCount) {
             const searchBtn = document.getElementById('searchBtn');
-            
             if (rideCount <= 0) {
                 searchBtn.disabled = true;
                 searchBtn.textContent = '次卡次数不足';
@@ -837,45 +752,20 @@
             historyList.innerHTML = html;
         }
 
-        // 检查是否有正在使用的票卡
-        async function checkActiveTicket() {
-            if (!currentCustomer) return;
-            
-            try {
-                // 调用API检查是否有正在使用的票卡
-                const activeTicket = await apiClient.getActiveTicket(currentCustomer.id);
-                
-                if (activeTicket && activeTicket.success && activeTicket.activeTicket) {
-                    activeTicketInfo = activeTicket.activeTicket;
-                    showInUseSection(activeTicketInfo);
-                } else {
-                    hideInUseSection();
-                }
-            } catch (error) {
-                console.error('检查进行中票务失败:', error);
-                // 如果检查失败，默认显示查询界面
-                hideInUseSection();
-            }
-        }
-
 		// 显示使用中界面
 		function showInUseSection(ticketInfo) {
 		    console.log('显示使用中界面，接收到的数据:', ticketInfo);
 		    
-		    // 隐藏查询界面
 		    document.getElementById('ticketQueryContainer').style.display = 'none';
-		    
-		    // 显示使用中界面
 		    document.getElementById('inUseContainer').style.display = 'block';
 		    document.getElementById('historyContainer').style.display = 'block';
 		    
-		    // 填充票务信息 - 在使用中界面完整显示
 		    if (ticketInfo) {
-		        // 使用多重保障获取密码
 		        const cardPassword = ticketInfo.cardPassword || 
 		                           (currentTicket && currentTicket.cardPassword) || 
 		                           '-';
 		        
+		        // 在使用中界面显示完整信息
 		        document.getElementById('currentCardNumber').textContent = ticketInfo.cardNumber || '-';
 		        document.getElementById('currentCardPassword').textContent = cardPassword;
 		        document.getElementById('currentStart').textContent = ticketInfo.boardingStation || '-';
@@ -883,14 +773,11 @@
 		        document.getElementById('currentTime').textContent = formatDateTime(ticketInfo.boardingTime) || '-';
 		        document.getElementById('currentEstimatedTime').textContent = formatDateTime(ticketInfo.estimatedAlightingTime) || '-';
 		        
-		        // 确保当前票卡信息包含密码
 		        currentTicket = {
 		            id: ticketInfo.cardId || currentTicket?.id,
 		            cardNumber: ticketInfo.cardNumber || currentTicket?.cardNumber,
 		            cardPassword: cardPassword
 		        };
-		        
-		        console.log('设置后的当前票卡信息:', currentTicket);
 		    }
 		}
 
@@ -900,13 +787,9 @@
 		    document.getElementById('inUseContainer').style.display = 'none';
 		    document.getElementById('historyContainer').style.display = 'block';
 		    
-		    // 重置当前票卡信息
 		    currentTicket = null;
 		    activeTicketInfo = null;
-		    
-		    // 重置查询结果
 		    hideSearchResult();
-		    resetCardDisplay();
 		}
 
         // 禁用所有功能
@@ -946,7 +829,6 @@
                 hideError();
                 hideSearchResult();
                 
-                // 显示加载状态
                 document.getElementById('searchBtn').disabled = true;
                 document.getElementById('searchBtn').textContent = '查询中...';
                 
@@ -959,12 +841,10 @@
                 
                 const response = await apiClient.searchTickets(searchData);
                 
-                // 恢复按钮状态
                 document.getElementById('searchBtn').disabled = false;
                 document.getElementById('searchBtn').textContent = '查询可用票';
                 
                 if (response.success) {
-                    // 确保 currentTicket 包含完整的密码信息
                     currentTicket = {
                         id: response.matchedCard.id,
                         cardNumber: response.matchedCard.cardNumber,
@@ -973,26 +853,30 @@
                     
                     console.log('搜索后设置的 currentTicket:', currentTicket);
                     
-                    // 重置显示状态（显示***）
-                    resetCardDisplay();
-                    
-                    // 更新复制按钮的事件
-                    document.querySelectorAll('.copy-btn-small').forEach(btn => {
-                        btn.onclick = revealCardInfo;
-                    });
-                    
+                    // 显示带掩码的卡号和密码
+                    displayTicketResult(response);
                     showSearchResult();
                 } else {
                     showError(response.message || '查询失败，暂无可用票');
                 }
             } catch (error) {
-                // 恢复按钮状态
                 document.getElementById('searchBtn').disabled = false;
                 document.getElementById('searchBtn').textContent = '查询可用票';
-                
                 showError('查询失败: ' + error.message);
                 console.error('搜索票务失败:', error);
             }
+        }
+
+        // 显示票务结果 - 修改为默认显示带掩码的信息
+        function displayTicketResult(response) {
+            const ticket = response.matchedCard;
+            
+            // 显示带掩码的卡号和密码
+            const maskedCardNumber = maskString(ticket.cardNumber);
+            const maskedCardPassword = maskString(ticket.cardPassword);
+            
+            document.getElementById('displayCardNumber').textContent = maskedCardNumber || '-';
+            document.getElementById('displayCardPassword').textContent = maskedCardPassword || '-';
         }
 
         // 使用票务
@@ -1004,8 +888,6 @@
 		    
 		    try {
 		        hideError();
-		        
-		        // 禁用按钮防止重复点击
 		        document.getElementById('useTicketBtn').disabled = true;
 		        document.getElementById('useTicketBtn').textContent = '处理中...';
 		        
@@ -1019,21 +901,15 @@
 		        const response = await apiClient.useTicket(useData);
 		        
 		        if (response.success) {
-		            // 更新客户信息
 		            currentCustomer.rideCount = response.remainingRides;
 		            displayCustomerInfo(currentCustomer);
-		            
-		            // 显示成功消息
-		            showToast('票卡使用成功！次卡次数已扣除');
-		            
-		            // 隐藏查询结果，切换到使用中界面
+		            showToast('票卡信息获取成功！次卡次数将在行程结束后扣除');
 		            hideSearchResult();
 		            
-		            // 显示使用中界面 - 确保传递完整的票卡信息
 		            showInUseSection({
 		                cardId: currentTicket.id,
 		                cardNumber: currentTicket.cardNumber,
-		                cardPassword: currentTicket.cardPassword, // 关键：添加密码字段
+		                cardPassword: currentTicket.cardPassword,
 		                boardingStation: useData.boardingStation,
 		                alightingStation: useData.alightingStation,
 		                boardingTime: new Date().toISOString(),
@@ -1042,14 +918,12 @@
 		            
 		        } else {
 		            showError('使用票务失败: ' + response.message);
-		            // 恢复按钮状态
 		            document.getElementById('useTicketBtn').disabled = false;
 		            document.getElementById('useTicketBtn').textContent = '使用此票卡';
 		        }
 		    } catch (error) {
 		        console.error('使用票务失败:', error);
 		        showError('使用票务失败: ' + error.message);
-		        // 恢复按钮状态
 		        document.getElementById('useTicketBtn').disabled = false;
 		        document.getElementById('useTicketBtn').textContent = '使用此票卡';
 		    }
@@ -1064,13 +938,10 @@
 		    
 		    try {
 		        hideError();
-		        
-		        // 禁用按钮防止重复点击
 		        const returnBtn = document.getElementById('returnTicketBtn');
 		        returnBtn.disabled = true;
 		        returnBtn.textContent = '处理中...';
 		        
-		        // 使用目的站点作为出站点
 		        const alightingStation = document.getElementById('currentEnd').textContent;
 		        if (!alightingStation || alightingStation === '-') {
 		            showError('出站点信息不完整');
@@ -1083,36 +954,25 @@
 		        
 		        if (result.success) {
 		            showToast('票卡已成功归还！');
-		            
-		            // 隐藏使用中界面，显示查询界面
 		            hideInUseSection();
 		            hideSearchResult();
-		            
-		            // 重置表单
 		            document.getElementById('ticketForm').reset();
 		            setTime('now');
-		            
-		            // 刷新页面数据
 		            await initializePage();
 		            
 		        } else {
 		            showError('归还票卡失败: ' + result.message);
-		            // 恢复按钮状态
 		            returnBtn.disabled = false;
 		            returnBtn.textContent = '归还票卡';
 		        }
 		    } catch (error) {
 		        console.error('归还票卡失败:', error);
-		        
-		        // 显示详细的调试信息
 		        const debugInfo = `请求详情:
-		URL: /api/vip/tickets/return/${currentTicket?.id}
-		参数: alightingStation=${document.getElementById('currentEnd').textContent}&customerId=${currentCustomer?.id}
-		错误: ${error.message}`;
+URL: /api/vip/tickets/return/${currentTicket?.id}
+参数: alightingStation=${document.getElementById('currentEnd').textContent}&customerId=${currentCustomer?.id}
+错误: ${error.message}`;
 		        showDebugInfo(debugInfo);
-		        
 		        showError('归还票卡失败: ' + error.message);
-		        // 恢复按钮状态
 		        document.getElementById('returnTicketBtn').disabled = false;
 		        document.getElementById('returnTicketBtn').textContent = '归还票卡';
 		    }
@@ -1120,10 +980,7 @@
 
         // 页面加载完成后初始化
         document.addEventListener('DOMContentLoaded', function() {
-            // 设置默认时间
             setTime('now');
-            
-            // 初始化页面
             initializePage();
         });
     </script>

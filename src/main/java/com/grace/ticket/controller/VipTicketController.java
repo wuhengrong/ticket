@@ -72,7 +72,7 @@ public class VipTicketController {
             if((boolean)activeTicketInfo.get("hasActiveTicket")) {
             	response.put("activeTicket", activeTicketInfo); // 新增：返回进行中的票务信息
             }
-            
+             
             
             
             

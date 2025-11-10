@@ -158,8 +158,9 @@ public class VipCardService {
             VipRecord record = new VipRecord(
                 request.getVipCustomerId(),
                 request.getVipCardId(),
-                request.getBoardingStation(),
-                DateTimeUtils.now()
+                request.getBoardingStation(), 
+                DateTimeUtils.now(),
+                request.getAlightingStation()
             );
             record.setEstimatedAlightingTime(estimatedTime);
             vipRecordRepository.save(record);
