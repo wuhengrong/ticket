@@ -183,9 +183,7 @@ public class DataInitializer implements CommandLineRunner {
                 createVipCard("19002009435", "Aa112233", VipCard.CardStatus.AVAILABLE, null, null, null, null, null, null, null),
                
                 
-                createVipCard("18027443667", "Aa112233", VipCard.CardStatus.STANDBY, null, null, null, null, null, null, null),
-                
-                createVipCard("19049649037", "Aa112233", VipCard.CardStatus.STANDBY, null, null, null, null, null, null, null)
+                createVipCard("18027443667", "Aa112233", VipCard.CardStatus.STANDBY, null, null, null, null, null, null, null)
                 
                 
             );
@@ -227,13 +225,13 @@ public class DataInitializer implements CommandLineRunner {
         if (vipCustomerRepository.count() == 0) {
             List<VipCustomer> vipCustomers = Arrays.asList(
                 createVipCustomer("U1005", 1001L, "初始组", 4, "技术部高级会员"),//地铁-闲鱼-柳硫
-                createVipCustomer("U1006", 1001L, "初始组", 6, "技术部普通会员"),//地铁-闲鱼-龙之友
+                createVipCustomer("U1006", 1001L, "初始组", 5, "技术部普通会员"),//地铁-闲鱼-龙之友
                 createVipCustomer("U1007", 1001L, "初始组", 1, "销售部VIP"),//地铁-闲鱼-第一次卖货
                 createVipCustomer("U1008", 1001L, "初始组", 4, "市场部新会员"),//哈萨克
                 createVipCustomer("U1009", 1001L, "初始组", 10, "市场部新会员"),//tbNick_g0ura
                 createVipCustomer("U1010", 1001L, "初始组", 9, "市场部新会员"),//风和日丽
                 createVipCustomer("U1011", 1001L, "初始组", 10, "市场部新会员"),//糖醋小丸子
-                createVipCustomer("U1012", 1001L, "初始组", 9, "销售部高级会员"),//tbNick_8xpo7
+                createVipCustomer("U1012", 1001L, "初始组", 8, "销售部高级会员"),//tbNick_8xpo7
                 createVipCustomer("U1013", 1001L, "初始组", 10, "销售部高级会员"),
                 createVipCustomer("U1014", 1001L, "初始组", 10, "销售部高级会员"),
                 createVipCustomer("U1015", 1001L, "初始组", 10, "销售部高级会员"),
