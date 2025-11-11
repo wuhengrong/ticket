@@ -35,6 +35,20 @@ public class VipCardDTO {
         this.alightingStation = vipCard.getAlightingStation();
         this.inOutStatus = vipCard.getInOutStatus();
         this.estimatedAlightingTime = vipCard.getEstimatedAlightingTime();
+        this.reservedUser = vipCard.getReservedUser();
+    }
+    
+    // 新增预约用户字段
+    private String reservedUser;
+    
+    // 构造方法、getter、setter...
+    
+    public String getReservedUser() {
+        return reservedUser;
+    }
+    
+    public void setReservedUser(String reservedUser) {
+        this.reservedUser = reservedUser;
     }
     
     // Getters and Setters

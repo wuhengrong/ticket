@@ -15,6 +15,20 @@ public class VipCustomerDTO {
     private LocalDateTime createdTime;
     private LocalDateTime updatedTime;
     
+    
+    // 新增昵称字段
+    private String nickName;
+    
+    // 构造方法、getter、setter...
+    
+    public String getNickName() {
+        return nickName;
+    }
+    
+    public void setNickName(String nickName) {
+        this.nickName = nickName;
+    }
+    
     // Constructors
     public VipCustomerDTO() {}
     
@@ -28,6 +42,7 @@ public class VipCustomerDTO {
         this.remark = customer.getRemark();
         this.createdTime = customer.getCreatedTime();
         this.updatedTime = customer.getUpdatedTime();
+        this.nickName = customer.getNickName();
     }
     
     // Getters and Setters

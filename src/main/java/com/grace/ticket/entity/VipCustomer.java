@@ -41,6 +41,20 @@ public class VipCustomer {
     @Column(name = "updated_time")
     private LocalDateTime updatedTime;
     
+    // 新增昵称字段
+    @Column(name = "nick_name")
+    private String nickName;
+    
+    // 构造方法、getter、setter...
+    
+    public String getNickName() {
+        return nickName;
+    }
+    
+    public void setNickName(String nickName) {
+        this.nickName = nickName;
+    }
+    
     @PrePersist
     protected void onCreate() {
         createdTime = LocalDateTime.now();

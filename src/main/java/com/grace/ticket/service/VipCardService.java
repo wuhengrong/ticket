@@ -52,6 +52,27 @@ public class VipCardService {
                 return TicketSearchResponse.failure("次卡次数不足");
             }
             
+            
+         // 首先检查用户是否有预定的VIP卡（状态为RESERVED）
+            List<VipCard> reservedCards = vipCardRepository.findReservedCardsByUserName(customer.getUserName());
+            if (!reservedCards.isEmpty()) {
+                // 找到用户预定的卡片，直接返回第一个
+                VipCard reservedCard = reservedCards.get(0);
+                
+                // 计算预估出站时间
+                LocalDateTime estimatedTime = vipCardValidator.calculateEstimatedAlightingTime(
+                    request.getBoardingStation(),
+                    request.getAlightingStation(),
+                    request.getBoardingTime()
+                );
+                
+                return TicketSearchResponse.success(
+                    new com.grace.ticket.dto.VipCardDTO(reservedCard),
+                    estimatedTime,
+                    customer.getRideCount()
+                );
+            }
+            
             // 获取可用票卡
             List<VipCard> availableCards = vipCardRepository.findAvailableCards(DateTimeUtils.now());
             if (availableCards.isEmpty()) {

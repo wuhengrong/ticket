@@ -1,12 +1,14 @@
 package com.grace.ticket.repository;
 
-import com.grace.ticket.entity.VipRecord;
+import java.util.List;
+import java.util.Optional;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
+import com.grace.ticket.entity.VipRecord;
 
 @Repository
 public interface VipRecordRepository extends JpaRepository<VipRecord, Long> {
@@ -25,4 +27,17 @@ public interface VipRecordRepository extends JpaRepository<VipRecord, Long> {
     
     // 新增：查找客户进行中的使用记录（未出站的记录）
     List<VipRecord> findByVipCustomerIdAndAlightingTimeIsNull(Long vipCustomerId);
+    
+
+
+ List<VipRecord> findAllByOrderByBoardingTimeDesc();
+    
+    
+    
+    @Query("SELECT vr FROM VipRecord vr WHERE " +
+           "vr.boardingStation LIKE %:keyword% OR " +
+           "vr.alightingStation LIKE %:keyword%")
+    List<VipRecord> findByStationContaining(@Param("keyword") String keyword);
+    
+    Optional<VipRecord> findFirstByVipCardIdAndAlightingTimeIsNullOrderByBoardingTimeDesc(Long vipCardId);
 }

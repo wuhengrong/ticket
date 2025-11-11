@@ -61,6 +61,18 @@ public class VipCard {
     @Column(name = "updated_time")
     private LocalDateTime updatedTime;
     
+    // 新增预约用户字段
+    @Column(name = "reserved_user")
+    private String reservedUser;
+    
+    public String getReservedUser() {
+        return reservedUser;
+    }
+    
+    public void setReservedUser(String reservedUser) {
+        this.reservedUser = reservedUser;
+    }
+    
     @PrePersist
     protected void onCreate() {
         createdTime = LocalDateTime.now();
@@ -72,8 +84,8 @@ public class VipCard {
         updatedTime = LocalDateTime.now();
     }
     
-    public enum CardStatus {
-        AVAILABLE, IN_USE, UNAVAILABLE, STANDBY
+    public enum CardStatus { 
+        AVAILABLE, IN_USE, RESERVED,UNAVAILABLE, STANDBY
     }
     
     public enum InOutStatus {

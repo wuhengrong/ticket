@@ -77,6 +77,9 @@ public class VipAdminService {
         card.setBoardingStation(cardDTO.getBoardingStation());
         card.setAlightingStation(cardDTO.getAlightingStation());
         card.setEstimatedAlightingTime(cardDTO.getEstimatedAlightingTime());
+        card.setAlightingTime(cardDTO.getAlightingTime());
+        card.setBoardingTime(cardDTO.getBoardingTime());
+        card.setReservedUser(cardDTO.getReservedUser());
         
         VipCard updatedCard = vipCardRepository.save(card);
         return new VipCardDTO(updatedCard);
@@ -163,6 +166,7 @@ public class VipAdminService {
         customer.setGroupName(customerDTO.getGroupName());
         customer.setRideCount(customerDTO.getRideCount());
         customer.setRemark(customerDTO.getRemark());
+        customer.setNickName(customerDTO.getNickName());
         
         VipCustomer updatedCustomer = vipCustomerRepository.save(customer);
         return new VipCustomerDTO(updatedCustomer);

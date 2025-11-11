@@ -23,4 +23,35 @@ public interface VipCardRepository extends JpaRepository<VipCard, Long> {
     
     @Query("SELECT vc FROM VipCard vc WHERE vc.status = 'IN_USE' AND vc.boardingStation = :boardingStation")
     List<VipCard> findInUseCardsByStation(@Param("boardingStation") String boardingStation);
+    
+    
+    /**
+     * 查找包含指定用户名的预定卡片
+     * 支持逗号分隔的多个用户名
+     */
+    @Query("SELECT vc FROM VipCard vc WHERE vc.reservedUser LIKE %:userName%")
+    List<VipCard> findByReservedUserContaining(@Param("userName") String userName);
+    
+    /**
+     * 更精确的查询：检查用户名是否在逗号分隔的列表中
+     */
+    @Query("SELECT vc FROM VipCard vc WHERE " +
+           "vc.reservedUser IS NOT NULL AND " +
+           "(vc.reservedUser = :userName OR " +
+           "vc.reservedUser LIKE CONCAT(:userName, ',%') OR " +
+           "vc.reservedUser LIKE CONCAT('%,', :userName, ',%') OR " +
+           "vc.reservedUser LIKE CONCAT('%,', :userName))")
+    List<VipCard> findByReservedUserInList(@Param("userName") String userName);
+    
+    /**
+     * 查找状态为RESERVED且包含指定用户名的预定卡片
+     */
+    @Query("SELECT vc FROM VipCard vc WHERE " +
+           "vc.status = 'RESERVED' AND " +
+           "vc.reservedUser IS NOT NULL AND " +
+           "(vc.reservedUser = :userName OR " +
+           "vc.reservedUser LIKE CONCAT(:userName, ',%') OR " +
+           "vc.reservedUser LIKE CONCAT('%,', :userName, ',%') OR " +
+           "vc.reservedUser LIKE CONCAT('%,', :userName))")
+    List<VipCard> findReservedCardsByUserName(@Param("userName") String userName);
 }

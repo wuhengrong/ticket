@@ -168,7 +168,7 @@ public class DataInitializer implements CommandLineRunner {
     private void initializeVipCards() {
         if (vipCardRepository.count() == 0) {
             List<VipCard> vipCards = Arrays.asList(
-            		  createVipCard("18127943910", "Aa112233", VipCard.CardStatus.AVAILABLE, 
+            		  createVipCard("17701999452", "Aa112233", VipCard.CardStatus.STANDBY, 
             				  LocalDateTime.parse("2025-11-10 19:17", DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")), //初次使用时间
                               LocalDateTime.parse("2025-11-10 19:17", DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")), //进站时间
                               "桥头", 
@@ -176,11 +176,11 @@ public class DataInitializer implements CommandLineRunner {
                               "南约", 
                               VipCard.InOutStatus.OUT, null),
                
-                createVipCard("17701999451", "Aa112233", VipCard.CardStatus.AVAILABLE, null,  null, null, null, null, null, null),
+                createVipCard("17701999451", "Aa112233", VipCard.CardStatus.STANDBY, null,  null, null, null, null, null, null),
                 
-                createVipCard("18027337452", "Aa112233", VipCard.CardStatus.AVAILABLE,null, null, null, null, null, null, null),
+                createVipCard("18027337452", "Aa112233", VipCard.CardStatus.STANDBY,null, null, null, null, null, null, null),//use
                 
-                createVipCard("19002009435", "Aa112233", VipCard.CardStatus.AVAILABLE, null, null, null, null, null, null, null),
+                createVipCard("19002009435", "Aa112233", VipCard.CardStatus.STANDBY, null, null, null, null, null, null, null),//use
                
                 
                 createVipCard("18027443667", "Aa112233", VipCard.CardStatus.STANDBY, null, null, null, null, null, null, null)
@@ -224,18 +224,18 @@ public class DataInitializer implements CommandLineRunner {
     private void initializeVipCustomers() {
         if (vipCustomerRepository.count() == 0) {
             List<VipCustomer> vipCustomers = Arrays.asList(
-                createVipCustomer("U1005", 1001L, "初始组", 4, "技术部高级会员"),//地铁-闲鱼-柳硫
-                createVipCustomer("U1006", 1001L, "初始组", 5, "技术部普通会员"),//地铁-闲鱼-龙之友
-                createVipCustomer("U1007", 1001L, "初始组", 1, "销售部VIP"),//地铁-闲鱼-第一次卖货
-                createVipCustomer("U1008", 1001L, "初始组", 4, "市场部新会员"),//哈萨克
-                createVipCustomer("U1009", 1001L, "初始组", 10, "市场部新会员"),//tbNick_g0ura
-                createVipCustomer("U1010", 1001L, "初始组", 9, "市场部新会员"),//风和日丽
-                createVipCustomer("U1011", 1001L, "初始组", 10, "市场部新会员"),//糖醋小丸子
-                createVipCustomer("U1012", 1001L, "初始组", 8, "销售部高级会员"),//tbNick_8xpo7
-                createVipCustomer("U1013", 1001L, "初始组", 10, "销售部高级会员"),
-                createVipCustomer("U1014", 1001L, "初始组", 10, "销售部高级会员"),
-                createVipCustomer("U1015", 1001L, "初始组", 10, "销售部高级会员"),
-                createVipCustomer("U1016", 1001L, "初始组", 10, "销售部高级会员")
+                createVipCustomer("U1005","地铁-闲鱼-柳硫", 1001L, "初始组", 4, "技术部高级会员"),//地铁-闲鱼-柳硫
+                createVipCustomer("U1006", "地铁-闲鱼-龙之友",1001L, "初始组", 4, "技术部普通会员"),//地铁-闲鱼-龙之友
+                createVipCustomer("U1007", "地铁-闲鱼-第一次卖货",1001L, "初始组", 1, "销售部VIP"),//地铁-闲鱼-第一次卖货
+                createVipCustomer("U1008", "哈萨克",1001L, "初始组", 2, "市场部新会员"),//哈萨克
+                createVipCustomer("U1009", "tbNick_g0ura",1001L, "初始组", 9, "市场部新会员"),//tbNick_g0ura
+                createVipCustomer("U1010", "风和日丽",1001L, "初始组", 9, "市场部新会员"),//风和日丽
+                createVipCustomer("U1011", "糖醋小丸子",1001L, "初始组", 10, "市场部新会员"),//糖醋小丸子
+                createVipCustomer("U1012", "tbNick_8xpo7",1001L, "初始组", 8, "销售部高级会员"),//tbNick_8xpo7
+                createVipCustomer("U1013", "小白白899",1001L, "初始组", 10, "销售部高级会员"),
+                createVipCustomer("U1014", "U1005",1001L, "初始组", 10, "销售部高级会员"),
+                createVipCustomer("U1015", "U1005",1001L, "初始组", 10, "销售部高级会员"),
+                createVipCustomer("U1016", "U1005",1001L, "初始组", 10, "销售部高级会员")
             );
 
             vipCustomerRepository.saveAll(vipCustomers);
@@ -248,10 +248,11 @@ public class DataInitializer implements CommandLineRunner {
     /**
      * 创建VIP客户对象
      */
-    private VipCustomer createVipCustomer(String userName, Long groupId, String groupName, 
+    private VipCustomer createVipCustomer(String userName,String nickName, Long groupId, String groupName, 
                                         Integer rideCount, String remark) {
         VipCustomer customer = new VipCustomer();
         customer.setUserName(userName);
+        customer.setNickName(nickName);
         customer.setGroupId(groupId);
         customer.setGroupName(groupName);
         customer.setRideCount(rideCount);
