@@ -1,15 +1,27 @@
 package com.grace.ticket.controller;
 
-import com.grace.ticket.dto.VipCardDTO;
-import com.grace.ticket.dto.VipCustomerDTO;
-import com.grace.ticket.entity.VipCard;
-import com.grace.ticket.entity.VipCustomer;
-import com.grace.ticket.service.VipAdminService;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
-import java.util.List;
+import com.grace.ticket.config.Constants;
+import com.grace.ticket.dto.VipCardDTO;
+import com.grace.ticket.dto.VipCustomerDTO;
+import com.grace.ticket.service.VipAdminService;
 
 @RestController
 @RequestMapping("/api/admin/vip")
@@ -20,6 +32,38 @@ public class VipAdminController {
     private VipAdminService vipAdminService;
     
     // VipCard 管理接口
+    
+    
+    @PostMapping("/login")
+    public ResponseEntity<Map<String, Object>> login(@RequestBody LoginRequest request) {
+        Map<String, Object> response = new HashMap<>();
+        
+        if (Constants.MANAGEMENT_ACCESS_PASSWORD.equals(request.getPassword())) {
+            // 生成简单的token（实际项目中应该使用JWT等更安全的方式）
+            String token = generateSimpleToken();
+            response.put("success", true);
+            response.put("token", token);
+            response.put("message", "登录成功");
+            return ResponseEntity.ok(response);
+        } else {
+            response.put("success", false);
+            response.put("message", "密码错误");
+            return ResponseEntity.status(401).body(response);
+        }
+    }
+    
+    private String generateSimpleToken() {
+        // 生成一个简单的token，实际项目中应该使用更安全的方式
+        return "admin_" + System.currentTimeMillis() + "_" + UUID.randomUUID().toString().substring(0, 8);
+    }
+    
+    public static class LoginRequest {
+        private String password;
+        
+        // getter和setter
+        public String getPassword() { return password; }
+        public void setPassword(String password) { this.password = password; }
+    }
     
     /**
      * 获取所有VIP卡

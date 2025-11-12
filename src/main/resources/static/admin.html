@@ -5,6 +5,74 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>VIP管理系统</title>
     <style>
+        /* 登录页面样式 */
+        .login-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+        
+        .login-box {
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            width: 90%;
+            max-width: 400px;
+        }
+        
+        .login-title {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #2c3e50;
+            font-size: 24px;
+            font-weight: 600;
+        }
+        
+        .login-form .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .login-btn {
+            width: 100%;
+            padding: 12px;
+            background: #3498db;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        
+        .login-btn:hover {
+            background: #2980b9;
+        }
+        
+        .login-btn:disabled {
+            background: #bdc3c7;
+            cursor: not-allowed;
+        }
+        
+        .login-error {
+            background: #fadbd8;
+            color: #e74c3c;
+            padding: 10px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            text-align: center;
+            display: none;
+        }
+
+        /* 原有样式 */
         * {
             margin: 0;
             padding: 0;
@@ -311,399 +379,543 @@
 
         .record-status-in-progress { color: #f39c12; font-weight: 600; }
         .record-status-completed { color: #27ae60; font-weight: 600; }
+        
+        .station-section {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+        
+        .station-section h4 {
+            margin-bottom: 10px;
+            color: #2c3e50;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 5px;
+        }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>VIP卡和客户管理系统</h1>
-        
-        <div class="tabs">
-            <button class="tab active" onclick="switchTab('cards')">VIP卡管理</button>
-            <button class="tab" onclick="switchTab('customers')">客户管理</button>
-            <button class="tab" onclick="switchTab('records')">乘车记录</button>
+    <!-- 登录页面 -->
+    <div id="login-page" class="login-container">
+        <div class="login-box">
+            <h2 class="login-title">VIP管理系统</h2>
+            <div id="login-error" class="login-error"></div>
+            <form id="login-form" class="login-form">
+                <div class="form-group">
+                    <label for="admin-password">管理员密码</label>
+                    <input type="password" id="admin-password" required placeholder="请输入管理员密码">
+                </div>
+                <button type="submit" class="login-btn" id="login-btn">登录</button>
+            </form>
         </div>
-        
-        <!-- VIP卡管理 -->
-        <div id="cards-tab" class="tab-content active">
-            <div class="toolbar">
-                <h2>VIP卡管理</h2>
-                <button class="btn" onclick="showCardModal()">新增VIP卡</button>
-            </div>
+    </div>
 
-            <!-- 统计信息 -->
-            <div class="stats" id="cards-stats">
-                <div class="stat-card">
-                    <div class="stat-number" id="total-cards">0</div>
-                    <div class="stat-label">总卡数</div>
+    <!-- 主页面内容 -->
+    <div id="main-content" style="display: none;">
+        <div class="container">
+            <h1>VIP卡和客户管理系统</h1>
+            
+            <div class="tabs">
+                <button class="tab active" onclick="switchTab('cards')">VIP卡管理</button>
+                <button class="tab" onclick="switchTab('customers')">客户管理</button>
+                <button class="tab" onclick="switchTab('records')">乘车记录</button>
+                <button class="tab" style="margin-left: auto; background: #95a5a6;" onclick="logout()">退出登录</button>
+            </div>
+            
+            <!-- VIP卡管理 -->
+            <div id="cards-tab" class="tab-content active">
+                <div class="toolbar">
+                    <h2>VIP卡管理</h2>
+                    <button class="btn" onclick="showCardModal()">新增VIP卡</button>
                 </div>
-                <div class="stat-card">
-                    <div class="stat-number" id="available-cards">0</div>
-                    <div class="stat-label">可用卡数</div>
+
+                <!-- 统计信息 -->
+                <div class="stats" id="cards-stats">
+                    <div class="stat-card">
+                        <div class="stat-number" id="total-cards">0</div>
+                        <div class="stat-label">总卡数</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="available-cards">0</div>
+                        <div class="stat-label">可用卡数</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="in-use-cards">0</div>
+                        <div class="stat-label">使用中</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="standby-cards">0</div>
+                        <div class="stat-label">备用卡数</div>
+                    </div>
                 </div>
-                <div class="stat-card">
-                    <div class="stat-number" id="in-use-cards">0</div>
-                    <div class="stat-label">使用中</div>
+                
+                <div class="search-box">
+                    <input type="text" id="card-search" placeholder="搜索卡号、站点或状态..." onkeyup="searchCards()">
+                    <select id="card-status-filter" onchange="filterCards()">
+                        <option value="">所有状态</option>
+                        <option value="AVAILABLE">可用</option>
+                        <option value="IN_USE">使用中</option>
+                        <option value="UNAVAILABLE">不可用</option>
+                        <option value="STANDBY">备用</option>
+                    </select>
                 </div>
-                <div class="stat-card">
-                    <div class="stat-number" id="standby-cards">0</div>
-                    <div class="stat-label">备用卡数</div>
+                
+                <div id="cards-message"></div>
+                
+                <div class="table-container">
+                    <table id="cards-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>号码</th>
+                                <th>卡密</th>
+                                <th>状态</th>
+                                <th>预约用户</th>
+                                <th>首次使用时间</th>
+                                <th>失效时间</th>
+                                <th>进站时间</th>
+                                <th>进站站点</th>
+                                <th>出站时间</th>
+                                <th>出站站点</th>
+                                <th>进出站</th>
+                                <th>预估出站时间</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="cards-tbody">
+                            <!-- 动态加载数据 -->
+                        </tbody>
+                    </table>
                 </div>
             </div>
             
-            <div class="search-box">
-                <input type="text" id="card-search" placeholder="搜索卡号、站点或状态..." onkeyup="searchCards()">
-                <select id="card-status-filter" onchange="filterCards()">
-                    <option value="">所有状态</option>
-                    <option value="AVAILABLE">可用</option>
-                    <option value="IN_USE">使用中</option>
-                    <option value="UNAVAILABLE">不可用</option>
-                    <option value="STANDBY">备用</option>
-                </select>
-            </div>
-            
-            <div id="cards-message"></div>
-            
-            <div class="table-container">
-                <table id="cards-table">
+            <!-- 客户管理 -->
+            <div id="customers-tab" class="tab-content">
+                <div class="toolbar">
+                    <h2>VIP客户管理</h2>
+                    <button class="btn" onclick="showCustomerModal()">新增客户</button>
+                </div>
+
+                <!-- 统计信息 -->
+                <div class="stats" id="customers-stats">
+                    <div class="stat-card">
+                        <div class="stat-number" id="total-customers">0</div>
+                        <div class="stat-label">总客户数</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="active-customers">0</div>
+                        <div class="stat-label">有次数客户</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="zero-count-customers">0</div>
+                        <div class="stat-label">无次数客户</div>
+                    </div>
+                </div>
+                
+                <div class="search-box">
+                    <input type="text" id="customer-search" placeholder="搜索用户名或组名..." onkeyup="searchCustomers()">
+                </div>
+                
+                <div id="customers-message"></div>
+                
+                <table id="customers-table">
                     <thead>
                         <tr>
                             <th>ID</th>
-                            <th>号码</th>
-                            <th>卡密</th>
-                            <th>状态</th>
-                            <th>首次使用时间</th>
-                            <th>失效时间</th>
-                            <th>进站时间</th>
-                            <th>进站站点</th>
-                            <th>出站时间</th>
-                            <th>出站站点</th>
-                            <th>进出站</th>
-                            <th>预估出站时间</th>
-                            <th>操作</th>
-                        </tr>
-                    </thead>
-                    <tbody id="cards-tbody">
-                        <!-- 动态加载数据 -->
-                    </tbody>
-                </table>
-            </div>
-        </div>
-        
-        <!-- 客户管理 -->
-        <div id="customers-tab" class="tab-content">
-            <div class="toolbar">
-                <h2>VIP客户管理</h2>
-                <button class="btn" onclick="showCustomerModal()">新增客户</button>
-            </div>
-
-            <!-- 统计信息 -->
-            <div class="stats" id="customers-stats">
-                <div class="stat-card">
-                    <div class="stat-number" id="total-customers">0</div>
-                    <div class="stat-label">总客户数</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-number" id="active-customers">0</div>
-                    <div class="stat-label">有次数客户</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-number" id="zero-count-customers">0</div>
-                    <div class="stat-label">无次数客户</div>
-                </div>
-            </div>
-            
-            <div class="search-box">
-                <input type="text" id="customer-search" placeholder="搜索用户名或组名..." onkeyup="searchCustomers()">
-            </div>
-            
-            <div id="customers-message"></div>
-            
-            <table id="customers-table">
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>用户名</th>
-						<th>昵称</th>
-                        <th>组ID</th>
-                        <th>组名</th>
-                        <th>次卡次数</th>
-                        <th>VIP链接</th>
-                        <th>创建时间</th>
-                        <th>操作</th>
-                    </tr>
-                </thead>
-                <tbody id="customers-tbody">
-                    <!-- 动态加载数据 -->
-                </tbody>
-            </table>
-        </div>
-
-        <!-- VIP记录管理 -->
-        <div id="records-tab" class="tab-content">
-            <div class="toolbar">
-                <h2>VIP乘车记录管理</h2>
-                <button class="btn" onclick="showRecordModal()">新增记录</button>
-            </div>
-
-            <!-- 统计信息 -->
-            <div class="stats" id="records-stats">
-                <div class="stat-card">
-                    <div class="stat-number" id="total-records">0</div>
-                    <div class="stat-label">总记录数</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-number" id="in-progress-records">0</div>
-                    <div class="stat-label">进行中</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-number" id="completed-records">0</div>
-                    <div class="stat-label">已完成</div>
-                </div>
-            </div>
-            
-            <div class="search-box">
-                <input type="text" id="record-search" placeholder="搜索站点..." onkeyup="searchRecords()">
-            </div>
-            
-            <div id="records-message"></div>
-            
-            <div class="table-container">
-                <table id="records-table">
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>客户ID</th>
-                            <th>客户名</th>
+                            <th>用户名</th>
                             <th>昵称</th>
-                            <th>卡ID</th>
-                            <th>卡号</th>
-                            <th>进站站点</th>
-                            <th>出站站点</th>
-                            <th>进站时间</th>
-                            <th>出站时间</th>
-                            <th>预估出站时间</th>
-                            <th>状态</th>
+                            <th>组ID</th>
+                            <th>组名</th>
+                            <th>次卡次数</th>
+                            <th>VIP链接</th>
                             <th>创建时间</th>
                             <th>操作</th>
                         </tr>
                     </thead>
-                    <tbody id="records-tbody">
+                    <tbody id="customers-tbody">
                         <!-- 动态加载数据 -->
                     </tbody>
                 </table>
             </div>
-        </div>
-    </div>
-    
-    <!-- VIP卡编辑模态框 -->
-    <div id="card-modal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3 id="card-modal-title">新增VIP卡</h3>
-                <span class="close" onclick="closeCardModal()">&times;</span>
-            </div>
-            <form id="card-form">
-                <input type="hidden" id="card-id">
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="card-number">卡号 *</label>
-                        <input type="text" id="card-number" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="card-password">密码 *</label>
-                        <input type="text" id="card-password" required>
-                    </div>
-                </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="card-status">状态 *</label>
-                        <select id="card-status" required>
-                            <option value="AVAILABLE">可用</option>
-                            <option value="IN_USE">使用中</option>
-                            <option value="UNAVAILABLE">不可用</option>
-                            <option value="STANDBY">备用</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="card-expiry">失效时间</label>
-                        <input type="datetime-local" id="card-expiry">
-                    </div>
-                </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="card-first-use-time">首次使用时间</label>
-                        <input type="datetime-local" id="card-first-use-time">
-                    </div>
-                    <div class="form-group">
-                        <label for="card-boarding-time">进站时间</label>
-                        <input type="datetime-local" id="card-boarding-time">
-                    </div>
-                </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="card-boarding-station">进站站点</label>
-                        <input type="text" id="card-boarding-station">
-                    </div>
-                    <div class="form-group">
-                        <label for="card-alighting-time">出站时间</label>
-                        <input type="datetime-local" id="card-alighting-time">
-                    </div>
-                </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="card-alighting-station">出站站点</label>
-                        <input type="text" id="card-alighting-station">
-                    </div>
-                    <div class="form-group">
-                        <label for="card-in-out-status">进出站状态</label>
-                        <select id="card-in-out-status">
-                            <option value="">请选择</option>
-                            <option value="IN">进站</option>
-                            <option value="OUT">出站</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="card-estimated-alighting-time">预估出站时间</label>
-                        <input type="datetime-local" id="card-estimated-alighting-time">
-                    </div>
-                </div>
-                <div style="text-align: right; margin-top: 20px;">
-                    <button type="button" class="btn" onclick="closeCardModal()">取消</button>
-                    <button type="submit" class="btn btn-success">保存</button>
-                </div>
-            </form>
-        </div>
-    </div>
-    
-    <!-- 客户编辑模态框 -->
-	<div id="customer-modal" class="modal">
-	    <div class="modal-content">
-	        <div class="modal-header">
-	            <h3 id="customer-modal-title">新增客户</h3>
-	            <span class="close" onclick="closeCustomerModal()">&times;</span>
-	        </div>
-	        <form id="customer-form">
-	            <input type="hidden" id="customer-id">
-	            <div class="form-row">
-	                <div class="form-group">
-	                    <label for="customer-username">用户名 *</label>
-	                    <input type="text" id="customer-username" required>
-	                </div>
-	                <div class="form-group">
-	                    <label for="customer-nickname">昵称</label>
-	                    <input type="text" id="customer-nickname">
-	                </div>
-	            </div>
-	            <div class="form-row">
-	                <div class="form-group">
-	                    <label for="customer-ridecount">次卡次数 *</label>
-	                    <input type="number" id="customer-ridecount" value="10" min="0" required>
-	                </div>
-	                <div class="form-group">
-	                    <label for="customer-groupid">组ID *</label>
-	                    <input type="text" id="customer-groupid" required>
-	                </div>
-	            </div>
-	            <div class="form-row">
-	                <div class="form-group">
-	                    <label for="customer-groupname">组名</label>
-	                    <input type="text" id="customer-groupname">
-	                </div>
-	            </div>
-	            <div class="form-group">
-	                <label for="customer-remark">备注</label>
-	                <textarea id="customer-remark" rows="3"></textarea>
-	            </div>
-	            <div style="text-align: right; margin-top: 20px;">
-	                <button type="submit" class="btn btn-success">保存</button>
-	            </div>
-	        </form>
-	    </div>
-	</div>
-    
-    <!-- 充值模态框 -->
-    <div id="recharge-modal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>次卡充值</h3>
-                <span class="close" onclick="closeRechargeModal()">&times;</span>
-            </div>
-            <input type="hidden" id="recharge-customer-id">
-            <div class="form-group">
-                <label>客户: <span id="recharge-customer-name"></span></label>
-            </div>
-            <div class="form-group">
-                <label for="recharge-count">充值次数 *</label>
-                <input type="number" id="recharge-count" value="10" min="1" required>
-            </div>
-            <div style="text-align: right; margin-top: 20px;">
-                <button type="button" class="btn" onclick="closeRechargeModal()">取消</button>
-                <button type="button" class="btn btn-success" onclick="rechargeCustomer()">充值</button>
-            </div>
-        </div>
-    </div>
 
-    <!-- VIP记录编辑模态框 -->
-    <div id="record-modal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3 id="record-modal-title">新增乘车记录</h3>
-                <span class="close" onclick="closeRecordModal()">&times;</span>
+            <!-- VIP记录管理 -->
+            <div id="records-tab" class="tab-content">
+                <div class="toolbar">
+                    <h2>VIP乘车记录管理</h2>
+                    <button class="btn" onclick="showRecordModal()">新增记录</button>
+                </div>
+
+                <!-- 统计信息 -->
+                <div class="stats" id="records-stats">
+                    <div class="stat-card">
+                        <div class="stat-number" id="total-records">0</div>
+                        <div class="stat-label">总记录数</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="in-progress-records">0</div>
+                        <div class="stat-label">进行中</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="completed-records">0</div>
+                        <div class="stat-label">已完成</div>
+                    </div>
+                </div>
+                
+                <div class="search-box">
+                    <input type="text" id="record-search" placeholder="搜索站点..." onkeyup="searchRecords()">
+                </div>
+                
+                <div id="records-message"></div>
+                
+                <div class="table-container">
+                    <table id="records-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>客户ID</th>
+                                <th>客户名</th>
+                                <th>昵称</th>
+                                <th>卡ID</th>
+                                <th>卡号</th>
+                                <th>进站站点</th>
+                                <th>出站站点</th>
+                                <th>进站时间</th>
+                                <th>出站时间</th>
+                                <th>预估出站时间</th>
+                                <th>状态</th>
+                                <th>创建时间</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="records-tbody">
+                            <!-- 动态加载数据 -->
+                        </tbody>
+                    </table>
+                </div>
             </div>
-            <form id="record-form">
-                <input type="hidden" id="record-id">
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="record-vip-customer-id">客户ID *</label>
-                        <input type="number" id="record-vip-customer-id" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="record-vip-card-id">卡ID *</label>
-                        <input type="number" id="record-vip-card-id" required>
-                    </div>
+        </div>
+        
+        <!-- VIP卡编辑模态框 -->
+        <div id="card-modal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 id="card-modal-title">新增VIP卡</h3>
+                    <span class="close" onclick="closeCardModal()">&times;</span>
                 </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="record-boarding-station">进站站点 *</label>
-                        <input type="text" id="record-boarding-station" required>
+                <form id="card-form">
+                    <input type="hidden" id="card-id">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="card-number">卡号 *</label>
+                            <input type="text" id="card-number" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="card-password">密码 *</label>
+                            <input type="text" id="card-password" required>
+                        </div>
                     </div>
-                    <div class="form-group">
-                        <label for="record-alighting-station">出站站点</label>
-                        <input type="text" id="record-alighting-station">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="card-status">状态 *</label>
+                            <select id="card-status" required>
+                                <option value="AVAILABLE">可用</option>
+                                <option value="IN_USE">使用中</option>
+                                <option value="UNAVAILABLE">不可用</option>
+                                <option value="STANDBY">备用</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="card-reserved-user">预约用户</label>
+                            <input type="text" id="card-reserved-user" placeholder="输入预约用户名称">
+                        </div>
                     </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="card-first-use-time">首次使用时间</label>
+                            <input type="datetime-local" id="card-first-use-time">
+                        </div>
+                        <div class="form-group">
+                            <label for="card-expiry">失效时间</label>
+                            <input type="datetime-local" id="card-expiry">
+                        </div>
+                    </div>
+                    
+                    <!-- 进站信息 -->
+                    <div class="station-section">
+                        <h4>进站信息</h4>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="card-boarding-time">进站时间</label>
+                                <input type="datetime-local" id="card-boarding-time">
+                            </div>
+                            <div class="form-group">
+                                <label for="card-boarding-station">进站站点</label>
+                                <input type="text" id="card-boarding-station">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 出站信息 -->
+                    <div class="station-section">
+                        <h4>出站信息</h4>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="card-alighting-time">出站时间</label>
+                                <input type="datetime-local" id="card-alighting-time">
+                            </div>
+                            <div class="form-group">
+                                <label for="card-alighting-station">出站站点</label>
+                                <input type="text" id="card-alighting-station">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="card-in-out-status">进出站状态</label>
+                            <select id="card-in-out-status">
+                                <option value="">请选择</option>
+                                <option value="IN">进站</option>
+                                <option value="OUT">出站</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="card-estimated-alighting-time">预估出站时间</label>
+                            <input type="datetime-local" id="card-estimated-alighting-time">
+                        </div>
+                    </div>
+                    <div style="text-align: right; margin-top: 20px;">
+                        <button type="button" class="btn" onclick="closeCardModal()">取消</button>
+                        <button type="submit" class="btn btn-success">保存</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- 客户编辑模态框 -->
+        <div id="customer-modal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 id="customer-modal-title">新增客户</h3>
+                    <span class="close" onclick="closeCustomerModal()">&times;</span>
                 </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="record-boarding-time">进站时间 *</label>
-                        <input type="datetime-local" id="record-boarding-time" required>
+                <form id="customer-form">
+                    <input type="hidden" id="customer-id">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="customer-username">用户名 *</label>
+                            <input type="text" id="customer-username" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="customer-nickname">昵称</label>
+                            <input type="text" id="customer-nickname">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="customer-ridecount">次卡次数 *</label>
+                            <input type="number" id="customer-ridecount" value="10" min="0" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="customer-groupid">组ID *</label>
+                            <input type="text" id="customer-groupid" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="customer-groupname">组名</label>
+                            <input type="text" id="customer-groupname">
+                        </div>
                     </div>
                     <div class="form-group">
-                        <label for="record-alighting-time">出站时间</label>
-                        <input type="datetime-local" id="record-alighting-time">
+                        <label for="customer-remark">备注</label>
+                        <textarea id="customer-remark" rows="3"></textarea>
                     </div>
+                    <div style="text-align: right; margin-top: 20px;">
+                        <button type="submit" class="btn btn-success">保存</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- 充值模态框 -->
+        <div id="recharge-modal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>次卡充值</h3>
+                    <span class="close" onclick="closeRechargeModal()">&times;</span>
                 </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="record-estimated-alighting-time">预估出站时间</label>
-                        <input type="datetime-local" id="record-estimated-alighting-time">
-                    </div>
+                <input type="hidden" id="recharge-customer-id">
+                <div class="form-group">
+                    <label>客户: <span id="recharge-customer-name"></span></label>
+                </div>
+                <div class="form-group">
+                    <label for="recharge-count">充值次数 *</label>
+                    <input type="number" id="recharge-count" value="10" min="1" required>
                 </div>
                 <div style="text-align: right; margin-top: 20px;">
-                    <button type="button" class="btn" onclick="closeRecordModal()">取消</button>
-                    <button type="submit" class="btn btn-success">保存</button>
+                    <button type="button" class="btn" onclick="closeRechargeModal()">取消</button>
+                    <button type="button" class="btn btn-success" onclick="rechargeCustomer()">充值</button>
                 </div>
-            </form>
+            </div>
+        </div>
+
+        <!-- VIP记录编辑模态框 -->
+        <div id="record-modal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 id="record-modal-title">新增乘车记录</h3>
+                    <span class="close" onclick="closeRecordModal()">&times;</span>
+                </div>
+                <form id="record-form">
+                    <input type="hidden" id="record-id">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="record-vip-customer-id">客户ID *</label>
+                            <input type="number" id="record-vip-customer-id" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="record-vip-card-id">卡ID *</label>
+                            <input type="number" id="record-vip-card-id" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="record-boarding-station">进站站点 *</label>
+                            <input type="text" id="record-boarding-station" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="record-alighting-station">出站站点</label>
+                            <input type="text" id="record-alighting-station">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="record-boarding-time">进站时间 *</label>
+                            <input type="datetime-local" id="record-boarding-time" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="record-alighting-time">出站时间</label>
+                            <input type="datetime-local" id="record-alighting-time">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="record-estimated-alighting-time">预估出站时间</label>
+                            <input type="datetime-local" id="record-estimated-alighting-time">
+                        </div>
+                    </div>
+                    <div style="text-align: right; margin-top: 20px;">
+                        <button type="button" class="btn" onclick="closeRecordModal()">取消</button>
+                        <button type="submit" class="btn btn-success">保存</button>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
 
     <script>
+        // 认证管理
+        const auth = {
+            isAuthenticated: false,
+            token: null,
+            
+            // 检查是否已登录
+            checkAuth() {
+                const token = localStorage.getItem('admin_token');
+                const expiry = localStorage.getItem('admin_token_expiry');
+                
+                if (token && expiry && new Date().getTime() < parseInt(expiry)) {
+                    this.isAuthenticated = true;
+                    this.token = token;
+                    return true;
+                } else {
+                    // 清除过期的token
+                    this.clearAuth();
+                    return false;
+                }
+            },
+            
+            // 登录
+            async login(password) {
+                try {
+                    const response = await fetch('/api/admin/login', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ password })
+                    });
+                    
+                    if (response.ok) {
+                        const result = await response.json();
+                        if (result.success) {
+                            // 保存token和过期时间（24小时）
+                            const expiry = new Date().getTime() + (24 * 60 * 60 * 1000);
+                            localStorage.setItem('admin_token', result.token);
+                            localStorage.setItem('admin_token_expiry', expiry.toString());
+                            this.isAuthenticated = true;
+                            this.token = result.token;
+                            return true;
+                        }
+                    }
+                    return false;
+                } catch (error) {
+                    console.error('登录失败:', error);
+                    return false;
+                }
+            },
+            
+            // 登出
+            logout() {
+                this.clearAuth();
+                window.location.reload();
+            },
+            
+            // 清除认证信息
+            clearAuth() {
+                localStorage.removeItem('admin_token');
+                localStorage.removeItem('admin_token_expiry');
+                this.isAuthenticated = false;
+                this.token = null;
+            },
+            
+            // 获取认证头
+            getAuthHeader() {
+                return this.token ? { 'Authorization': `Bearer ${this.token}` } : {};
+            }
+        };
+
         // API客户端
         const apiClient = {
+            // 为所有API请求添加认证头
+            async makeAuthenticatedRequest(url, options = {}) {
+                if (!auth.isAuthenticated && !auth.checkAuth()) {
+                    throw new Error('未认证');
+                }
+                
+                const authHeader = auth.getAuthHeader();
+                options.headers = {
+                    ...options.headers,
+                    ...authHeader
+                };
+                
+                const response = await fetch(url, options);
+                
+                // 如果认证失败，清除认证信息
+                if (response.status === 401) {
+                    auth.clearAuth();
+                    showLoginPage();
+                    throw new Error('认证已过期，请重新登录');
+                }
+                
+                return response;
+            },
+            
             // VIP卡相关API
             async getCards() {
-                const response = await fetch('/api/admin/vip/cards');
+                const response = await this.makeAuthenticatedRequest('/api/admin/vip/cards');
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
@@ -711,7 +923,7 @@
             },
             
             async getCard(id) {
-                const response = await fetch(`/api/admin/vip/cards/${id}`);
+                const response = await this.makeAuthenticatedRequest(`/api/admin/vip/cards/${id}`);
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
@@ -719,7 +931,7 @@
             },
             
             async createCard(cardData) {
-                const response = await fetch('/api/admin/vip/cards', {
+                const response = await this.makeAuthenticatedRequest('/api/admin/vip/cards', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(cardData)
@@ -732,7 +944,7 @@
             },
             
             async updateCard(id, cardData) {
-                const response = await fetch(`/api/admin/vip/cards/${id}`, {
+                const response = await this.makeAuthenticatedRequest(`/api/admin/vip/cards/${id}`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(cardData)
@@ -745,7 +957,7 @@
             },
             
             async deleteCard(id) {
-                const response = await fetch(`/api/admin/vip/cards/${id}`, {
+                const response = await this.makeAuthenticatedRequest(`/api/admin/vip/cards/${id}`, {
                     method: 'DELETE'
                 });
                 if (!response.ok) {
@@ -756,7 +968,7 @@
             
             // 客户相关API
             async getCustomers() {
-                const response = await fetch('/api/admin/vip/customers');
+                const response = await this.makeAuthenticatedRequest('/api/admin/vip/customers');
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
@@ -764,7 +976,7 @@
             },
             
             async getCustomer(id) {
-                const response = await fetch(`/api/admin/vip/customers/${id}`);
+                const response = await this.makeAuthenticatedRequest(`/api/admin/vip/customers/${id}`);
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
@@ -772,7 +984,7 @@
             },
             
             async createCustomer(customerData) {
-                const response = await fetch('/api/admin/vip/customers', {
+                const response = await this.makeAuthenticatedRequest('/api/admin/vip/customers', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(customerData)
@@ -785,7 +997,7 @@
             },
             
             async updateCustomer(id, customerData) {
-                const response = await fetch(`/api/admin/vip/customers/${id}`, {
+                const response = await this.makeAuthenticatedRequest(`/api/admin/vip/customers/${id}`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(customerData)
@@ -798,7 +1010,7 @@
             },
             
             async deleteCustomer(id) {
-                const response = await fetch(`/api/admin/vip/customers/${id}`, {
+                const response = await this.makeAuthenticatedRequest(`/api/admin/vip/customers/${id}`, {
                     method: 'DELETE'
                 });
                 if (!response.ok) {
@@ -808,7 +1020,7 @@
             },
             
             async rechargeCustomer(id, rideCount) {
-                const response = await fetch(`/api/admin/vip/customers/${id}/recharge?rideCount=${rideCount}`, {
+                const response = await this.makeAuthenticatedRequest(`/api/admin/vip/customers/${id}/recharge?rideCount=${rideCount}`, {
                     method: 'POST'
                 });
                 if (!response.ok) {
@@ -820,7 +1032,7 @@
 
             // VIP记录相关API
             async getRecords() {
-                const response = await fetch('/api/admin/vip/records');
+                const response = await this.makeAuthenticatedRequest('/api/admin/vip/records');
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
@@ -828,7 +1040,7 @@
             },
             
             async getRecord(id) {
-                const response = await fetch(`/api/admin/vip/records/${id}`);
+                const response = await this.makeAuthenticatedRequest(`/api/admin/vip/records/${id}`);
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
@@ -836,7 +1048,7 @@
             },
             
             async createRecord(recordData) {
-                const response = await fetch('/api/admin/vip/records', {
+                const response = await this.makeAuthenticatedRequest('/api/admin/vip/records', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(recordData)
@@ -849,7 +1061,7 @@
             },
             
             async updateRecord(id, recordData) {
-                const response = await fetch(`/api/admin/vip/records/${id}`, {
+                const response = await this.makeAuthenticatedRequest(`/api/admin/vip/records/${id}`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(recordData)
@@ -862,7 +1074,7 @@
             },
             
             async deleteRecord(id) {
-                const response = await fetch(`/api/admin/vip/records/${id}`, {
+                const response = await this.makeAuthenticatedRequest(`/api/admin/vip/records/${id}`, {
                     method: 'DELETE'
                 });
                 if (!response.ok) {
@@ -872,13 +1084,70 @@
             },
             
             async searchRecords(keyword) {
-                const response = await fetch(`/api/admin/vip/records/search?keyword=${encodeURIComponent(keyword)}`);
+                const response = await this.makeAuthenticatedRequest(`/api/admin/vip/records/search?keyword=${encodeURIComponent(keyword)}`);
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
                 return await response.json();
             }
         };
+
+        // 页面显示控制
+        function showLoginPage() {
+            document.getElementById('login-page').style.display = 'flex';
+            document.getElementById('main-content').style.display = 'none';
+        }
+        
+        function showMainPage() {
+            document.getElementById('login-page').style.display = 'none';
+            document.getElementById('main-content').style.display = 'block';
+        }
+        
+        // 登录功能
+        document.getElementById('login-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const password = document.getElementById('admin-password').value;
+            const loginBtn = document.getElementById('login-btn');
+            const errorDiv = document.getElementById('login-error');
+            
+            if (!password) {
+                errorDiv.textContent = '请输入密码';
+                errorDiv.style.display = 'block';
+                return;
+            }
+            
+            // 禁用登录按钮
+            loginBtn.disabled = true;
+            loginBtn.textContent = '登录中...';
+            errorDiv.style.display = 'none';
+            
+            try {
+                const success = await auth.login(password);
+                if (success) {
+                    showMainPage();
+                    // 加载默认标签页数据
+                    loadCards();
+                } else {
+                    errorDiv.textContent = '密码错误';
+                    errorDiv.style.display = 'block';
+                }
+            } catch (error) {
+                errorDiv.textContent = '登录失败: ' + error.message;
+                errorDiv.style.display = 'block';
+            } finally {
+                // 恢复登录按钮
+                loginBtn.disabled = false;
+                loginBtn.textContent = '登录';
+            }
+        });
+        
+        // 退出登录
+        function logout() {
+            if (confirm('确定要退出登录吗？')) {
+                auth.logout();
+            }
+        }
 
         // 全局变量
         let allCards = [];
@@ -1005,7 +1274,7 @@
             tbody.innerHTML = '';
             
             if (cards.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="13" style="text-align: center; color: #666;">暂无VIP卡数据</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="14" style="text-align: center; color: #666;">暂无VIP卡数据</td></tr>';
                 return;
             }
             
@@ -1016,6 +1285,7 @@
                     <td><strong>${card.cardNumber}</strong></td>
                     <td>${card.cardPassword}</td>
                     <td class="status-${card.status.toLowerCase()}">${getStatusText(card.status)}</td>
+                    <td>${card.reservedUser || '<span class="empty-cell">-</span>'}</td>
                     <td>${formatShortDateTime(card.firstUseTime)}</td>
                     <td>${formatShortDateTime(card.expiryTime)}</td>
                     <td>${formatShortDateTime(card.boardingTime)}</td>
@@ -1056,6 +1326,7 @@
                     card.cardNumber.toLowerCase().includes(searchTerm) ||
                     (card.boardingStation && card.boardingStation.toLowerCase().includes(searchTerm)) ||
                     (card.alightingStation && card.alightingStation.toLowerCase().includes(searchTerm)) ||
+                    (card.reservedUser && card.reservedUser.toLowerCase().includes(searchTerm)) ||
                     getStatusText(card.status).toLowerCase().includes(searchTerm)
                 );
             }
@@ -1078,6 +1349,7 @@
             document.getElementById('card-id').value = '';
             document.getElementById('card-status').value = 'AVAILABLE';
             document.getElementById('card-in-out-status').value = '';
+            document.getElementById('card-reserved-user').value = '';
             document.getElementById('card-modal').style.display = 'block';
         }
 
@@ -1095,6 +1367,7 @@
                 document.getElementById('card-number').value = card.cardNumber;
                 document.getElementById('card-password').value = card.cardPassword;
                 document.getElementById('card-status').value = card.status;
+                document.getElementById('card-reserved-user').value = card.reservedUser || '';
                 document.getElementById('card-expiry').value = formatDateTimeForInput(card.expiryTime);
                 document.getElementById('card-first-use-time').value = formatDateTimeForInput(card.firstUseTime);
                 document.getElementById('card-boarding-time').value = formatDateTimeForInput(card.boardingTime);
@@ -1135,6 +1408,7 @@
                 cardNumber: document.getElementById('card-number').value.trim(),
                 cardPassword: document.getElementById('card-password').value.trim(),
                 status: document.getElementById('card-status').value,
+                reservedUser: document.getElementById('card-reserved-user').value.trim() || null,
                 expiryTime: document.getElementById('card-expiry').value || null,
                 firstUseTime: document.getElementById('card-first-use-time').value || null,
                 boardingTime: document.getElementById('card-boarding-time').value || null,
@@ -1180,40 +1454,40 @@
             }
         }
 
-		// 修改后的displayCustomers函数
-		function displayCustomers(customers) {
-		    const tbody = document.getElementById('customers-tbody');
-		    tbody.innerHTML = '';
-		    
-		    if (customers.length === 0) {
-		        tbody.innerHTML = '<tr><td colspan="9" style="text-align: center; color: #666;">暂无客户数据</td></tr>';
-		        return;
-		    }
-		    
-		    customers.forEach(customer => {
-		        const row = document.createElement('tr');
-		        row.innerHTML = `
-		            <td>${customer.id}</td>
-		            <td>${customer.userName}</td>
-		            <td>${customer.nickName || '<span class="empty-cell">-</span>'}</td>
-		            <td>${customer.groupId}</td>
-		            <td>${customer.groupName || '-'}</td>
-		            <td>${customer.rideCount}</td>
-		            <td>
-		                ${customer.vipUrl ? 
-		                    `<a href="${customer.vipUrl}" target="_blank" title="点击访问VIP页面" style="color: #3498db; text-decoration: none;">🔗 访问</a>` : 
-		                    '-'
-		                }
-		            </td>
-		            <td>${formatDateTime(customer.createdTime)}</td>
-		            <td class="action-buttons">
-		                <button class="action-btn btn-warning" onclick="editCustomer(${customer.id})">编辑</button>
-		                <button class="action-btn btn-success" onclick="showRechargeModal(${customer.id}, '${customer.userName}')">充值</button>
-		            </td>
-		        `;
-		        tbody.appendChild(row);
-		    });
-		}
+        // 修改后的displayCustomers函数
+        function displayCustomers(customers) {
+            const tbody = document.getElementById('customers-tbody');
+            tbody.innerHTML = '';
+            
+            if (customers.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="9" style="text-align: center; color: #666;">暂无客户数据</td></tr>';
+                return;
+            }
+            
+            customers.forEach(customer => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${customer.id}</td>
+                    <td>${customer.userName}</td>
+                    <td>${customer.nickName || '<span class="empty-cell">-</span>'}</td>
+                    <td>${customer.groupId}</td>
+                    <td>${customer.groupName || '-'}</td>
+                    <td>${customer.rideCount}</td>
+                    <td>
+                        ${customer.vipUrl ? 
+                            `<a href="${customer.vipUrl}" target="_blank" title="点击访问VIP页面" style="color: #3498db; text-decoration: none;">🔗 访问</a>` : 
+                            '-'
+                        }
+                    </td>
+                    <td>${formatDateTime(customer.createdTime)}</td>
+                    <td class="action-buttons">
+                        <button class="action-btn btn-warning" onclick="editCustomer(${customer.id})">编辑</button>
+                        <button class="action-btn btn-success" onclick="showRechargeModal(${customer.id}, '${customer.userName}')">充值</button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
 
         function updateCustomerStats(customers) {
             const total = customers.length;
@@ -1258,7 +1532,7 @@
                 document.getElementById('customer-modal-title').textContent = '编辑客户';
                 document.getElementById('customer-id').value = customer.id;
                 document.getElementById('customer-username').value = customer.userName;
-				document.getElementById('customer-nickname').value = customer.nickName || '';
+                document.getElementById('customer-nickname').value = customer.nickName || '';
                 document.getElementById('customer-ridecount').value = customer.rideCount;
                 document.getElementById('customer-groupid').value = customer.groupId;
                 document.getElementById('customer-groupname').value = customer.groupName || '';
@@ -1293,7 +1567,7 @@
             
             const customerData = {
                 userName: document.getElementById('customer-username').value.trim(),
-				nickName: document.getElementById('customer-nickname').value.trim(),
+                nickName: document.getElementById('customer-nickname').value.trim(),
                 rideCount: parseInt(document.getElementById('customer-ridecount').value),
                 groupId: document.getElementById('customer-groupid').value.trim(),
                 groupName: document.getElementById('customer-groupname').value.trim(),
@@ -1522,7 +1796,13 @@
 
         // 初始化页面
         document.addEventListener('DOMContentLoaded', function() {
-            loadCards();
+            // 检查认证状态
+            if (auth.checkAuth()) {
+                showMainPage();
+                loadCards();
+            } else {
+                showLoginPage();
+            }
         });
 
         // 点击模态框外部关闭
