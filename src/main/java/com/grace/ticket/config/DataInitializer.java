@@ -231,10 +231,10 @@ public class DataInitializer implements CommandLineRunner {
                 createVipCustomer("U1009", "tbNick_g0ura",1001L, "初始组", 9, "市场部新会员"),//tbNick_g0ura
                 createVipCustomer("U1010", "风和日丽",1001L, "初始组", 9, "市场部新会员"),//风和日丽
                 createVipCustomer("U1011", "糖醋小丸子",1001L, "初始组", 10, "市场部新会员"),//糖醋小丸子
-                createVipCustomer("U1012", "tbNick_8xpo7",1001L, "初始组", 8, "销售部高级会员"),//tbNick_8xpo7
+                createVipCustomer("U1012", "tbNick_8xpo7",1001L, "初始组", 7, "销售部高级会员"),//tbNick_8xpo7
                 createVipCustomer("U1013", "小白白899",1001L, "初始组", 10, "销售部高级会员"),
-                createVipCustomer("U1014", "U1005",1001L, "初始组", 10, "销售部高级会员"),
-                createVipCustomer("U1015", "U1005",1001L, "初始组", 10, "销售部高级会员"),
+                createVipCustomer("U1014", "100糖果",1001L, "初始组", 5, "销售部高级会员"),
+                createVipCustomer("U1015", "地铁-闲鱼-x6大屏机",1001L, "初始组", 5, "销售部高级会员"),
                 createVipCustomer("U1016", "U1005",1001L, "初始组", 10, "销售部高级会员")
             );
 

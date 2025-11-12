@@ -228,8 +228,13 @@ public class VipTicketController {
                 return ResponseEntity.badRequest().body(TicketSearchResponse.failure("未找到该客户使用此票卡的记录"));
             }
             
-            // 更新票卡状态
-            card.setStatus(VipCard.CardStatus.AVAILABLE);
+            // 更新票卡状态,判断是否预约客户，恢复预约状态
+            if(card.getReservedUser()!=null && card.getReservedUser().contains(customer.getUserName())) {
+            	card.setStatus(VipCard.CardStatus.RESERVED);
+            } else {
+            	card.setStatus(VipCard.CardStatus.AVAILABLE);
+            }
+           
             card.setInOutStatus(VipCard.InOutStatus.OUT);
             card.setAlightingStation(alightingStation);
             card.setAlightingTime(DateTimeUtils.now()); 

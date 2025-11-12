@@ -135,7 +135,7 @@ public class VipCardService {
             }
             
             VipCard card = cardOpt.get();
-            if (card.getStatus() != VipCard.CardStatus.AVAILABLE) {
+            if (card.getStatus() != VipCard.CardStatus.AVAILABLE && card.getStatus() != VipCard.CardStatus.RESERVED) {
                 return TicketSearchResponse.failure("票卡不可用");
             }
             

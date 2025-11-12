@@ -261,20 +261,37 @@
             z-index: 1000;
         }
         
-        .modal-content {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: white;
-            padding: 30px;
-            border-radius: 12px;
-            width: 90%;
-            max-width: 800px;
-            max-height: 80vh;
-            overflow-y: auto;
-        }
+		/* 修改模态框样式 */
+		.modal-content {
+		    position: absolute;
+		    top: 50%;
+		    left: 50%;
+		    transform: translate(-50%, -50%);
+		    background: white;
+		    padding: 30px;
+		    border-radius: 12px;
+		    width: 90%;
+		    max-width: 800px;
+		    /* 移除最大高度限制，去掉滚动条 */
+		    max-height: 90vh;
+		    /* 添加自动高度 */
+		    height: auto;
+		    /* 移除垂直滚动 */
+		    overflow-y: visible;
+		}
         
+		/* 确保模态框内容可以完全显示 */
+		#card-modal .modal-content {
+		    max-height: 95vh;
+		    overflow-y: auto; /* 只在内容确实超出时显示滚动条 */
+		}
+
+		/* 调整表单容器，确保所有内容可见 */
+		#card-form {
+		    max-height: none;
+		    overflow: visible;
+		}
+		
         .modal-header {
             display: flex;
             justify-content: space-between;
@@ -621,6 +638,7 @@
                             <select id="card-status" required>
                                 <option value="AVAILABLE">可用</option>
                                 <option value="IN_USE">使用中</option>
+								<option value="RESERVED">预约</option>
                                 <option value="UNAVAILABLE">不可用</option>
                                 <option value="STANDBY">备用</option>
                             </select>
@@ -838,34 +856,43 @@
             },
             
             // 登录
-            async login(password) {
-                try {
-                    const response = await fetch('/api/admin/login', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({ password })
-                    });
-                    
-                    if (response.ok) {
-                        const result = await response.json();
-                        if (result.success) {
-                            // 保存token和过期时间（24小时）
-                            const expiry = new Date().getTime() + (24 * 60 * 60 * 1000);
-                            localStorage.setItem('admin_token', result.token);
-                            localStorage.setItem('admin_token_expiry', expiry.toString());
-                            this.isAuthenticated = true;
-                            this.token = result.token;
-                            return true;
-                        }
-                    }
-                    return false;
-                } catch (error) {
-                    console.error('登录失败:', error);
-                    return false;
-                }
-            },
+			// 在 auth.login 方法中修改
+			async login(password) {
+			    try {
+			        const response = await fetch('/api/admin/vip/login', {
+			            method: 'POST',
+			            headers: {
+			                'Content-Type': 'application/json'
+			            },
+			            body: JSON.stringify({ password: password })
+			        });
+			        
+			        console.log('Response status:', response.status);
+			        
+			        if (response.ok) {
+			            const result = await response.json();
+			            console.log('Login result:', result);
+			            
+			            if (result.success) {
+			                // 保存token和过期时间（24小时）
+			                const expiry = new Date().getTime() + (24 * 60 * 60 * 1000);
+			                localStorage.setItem('admin_token', result.token);
+			                localStorage.setItem('admin_token_expiry', expiry.toString());
+			                this.isAuthenticated = true;
+			                this.token = result.token;
+			                return true;
+			            }
+			        } else {
+			            // 尝试读取错误信息
+			            const errorText = await response.text();
+			            console.error('Login failed with status:', response.status, 'Error:', errorText);
+			        }
+			        return false;
+			    } catch (error) {
+			        console.error('登录失败:', error);
+			        return false;
+			    }
+			},
             
             // 登出
             logout() {
@@ -1203,6 +1230,7 @@
             const statusMap = {
                 'AVAILABLE': '可用',
                 'IN_USE': '使用中',
+				'RESERVED': '预留',
                 'UNAVAILABLE': '不可用',
                 'STANDBY': '备用'
             };
