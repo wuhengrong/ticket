@@ -135,8 +135,8 @@ public class DataInitializer implements CommandLineRunner {
     private LocalDate getBeijingDate() {
         return LocalDate.now(ZoneId.of("Asia/Shanghai"));
     }
-    
-    @Override
+  
+    //@Override
     public void run(String... args) throws Exception {
         // 初始化虚拟卡数据
         initializeVirtualCards();
@@ -156,9 +156,7 @@ public class DataInitializer implements CommandLineRunner {
         initializeVipCards();
         initializeVipCustomers();
         
-        System.out.println("测试数据初始化完成 - 共生成" + virtualCardRepository.count() + "张虚拟卡，" 
-                         + groupRepository.count() + "个分组，" 
-                         + groupMemberRepository.count() + "个组成员");
+        System.out.println("数据初始化完成...");
     }
     
     
@@ -166,25 +164,22 @@ public class DataInitializer implements CommandLineRunner {
      * 初始化VIP卡数据
      */
     private void initializeVipCards() {
+    	 long count = vipCardRepository.count();
+    	    System.out.println("VIP卡表当前记录数: " + count);
+    	    
         if (vipCardRepository.count() == 0) {
             List<VipCard> vipCards = Arrays.asList(
-            		  createVipCard("17701999452", "Aa112233", VipCard.CardStatus.STANDBY, 
-            				  LocalDateTime.parse("2025-11-10 19:17", DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")), //初次使用时间
-                              LocalDateTime.parse("2025-11-10 19:17", DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")), //进站时间
+            		  createVipCard("18027337452", "Aa112233", VipCard.CardStatus.IN_USE, 
+            				  LocalDateTime.parse("2025-11-11 20:35", DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")), //初次使用时间
+                              LocalDateTime.parse("2025-11-12 07:17", DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")), //进站时间
                               "桥头", 
-                              LocalDateTime.parse("2025-11-09 20:30", DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")),//出站时间
+                              LocalDateTime.parse("2025-11-12 14:30", DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")),//出站时间
                               "南约", 
                               VipCard.InOutStatus.OUT, null),
                
-                createVipCard("17701999451", "Aa112233", VipCard.CardStatus.STANDBY, null,  null, null, null, null, null, null),
+                createVipCard("19002009435", "Aa112233", VipCard.CardStatus.IN_USE, null,  null, null, null, null, null, null),
                 
-                createVipCard("18027337452", "Aa112233", VipCard.CardStatus.STANDBY,null, null, null, null, null, null, null),//use
-                
-                createVipCard("19002009435", "Aa112233", VipCard.CardStatus.STANDBY, null, null, null, null, null, null, null),//use
-               
-                
-                createVipCard("18027443667", "Aa112233", VipCard.CardStatus.STANDBY, null, null, null, null, null, null, null)
-                
+                createVipCard("18127943910", "Aa112233", VipCard.CardStatus.IN_USE,null, null, null, null, null, null, null)
                 
             );
 
@@ -235,7 +230,17 @@ public class DataInitializer implements CommandLineRunner {
                 createVipCustomer("U1013", "小白白899",1001L, "初始组", 10, "销售部高级会员"),
                 createVipCustomer("U1014", "100糖果",1001L, "初始组", 5, "销售部高级会员"),
                 createVipCustomer("U1015", "地铁-闲鱼-x6大屏机",1001L, "初始组", 5, "销售部高级会员"),
-                createVipCustomer("U1016", "U1005",1001L, "初始组", 10, "销售部高级会员")
+                createVipCustomer("U1016", "地铁-闲鱼-华仔爱你",1001L, "初始组", 5, "销售部高级会员"),
+                createVipCustomer("U1017", "地铁-闲鱼-祥龙",1001L, "初始组", 10, "销售部高级会员"),
+                createVipCustomer("U1018", "地铁-闲鱼-Andy",1001L, "初始组", 10, "销售部高级会员"),
+                createVipCustomer("U1019", "地铁-闲鱼-龙龙",1001L, "初始组", 10, "销售部高级会员"),
+                createVipCustomer("U1020", "U1020",1001L, "初始组", 10, "销售部高级会员"),
+                createVipCustomer("U1021", "U1020",1001L, "初始组", 10, "销售部高级会员"),
+                createVipCustomer("U1022", "U1020",1001L, "初始组", 10, "销售部高级会员"),
+                createVipCustomer("U1023", "U1020",1001L, "初始组", 10, "销售部高级会员"),
+                createVipCustomer("U1024", "U1020",1001L, "初始组", 10, "销售部高级会员"),
+                createVipCustomer("U1025", "U1020",1001L, "初始组", 10, "销售部高级会员")
+                
             );
 
             vipCustomerRepository.saveAll(vipCustomers);
@@ -375,6 +380,12 @@ public class DataInitializer implements CommandLineRunner {
     }
     
     private void initializeGroupMembers() {
+    	  // 检查是否已有数据，避免重复初始化
+        if (groupMemberRepository.count() > 0) {
+            System.out.println("组成员数据已存在，跳过初始化");
+            return;
+        }
+        
         List<GroupMember> groupMembers = Arrays.asList(
             // GRP001 组成员
             createGroupMember("GRP001", "USER001", "地铁客户-微信-Belle", 14, 60, "06:00", "23:00", "ACTIVE"),

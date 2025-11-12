@@ -64,6 +64,15 @@
             position: relative;
             font-size: 14px;
         }
+		
+		.guide-step-red {
+		    margin-bottom: 8px;
+		    padding-left: 15px;
+		    position: relative;
+		    font-size: 14px;
+		    color: #ff0000; /* 添加红色字体 */
+		    font-weight: bold; /* 可选：加粗字体更醒目 */
+		}
         
         .guide-step:before {
             content: "•";
@@ -342,7 +351,7 @@
                 <div style="font-weight: bold; color: #2c3e50; margin-bottom: 8px;">获取账号：</div>
                 <div class="guide-step">输入起始站点和目的站点，查询可用票</div>
                 <div class="guide-step">点击"使用此票卡"获取账号密码</div>
-                <div class="guide-step">乘车结束后点击"归还票卡"</div>
+                <div class="guide-step-red">乘车结束后点击"归还票卡",否则超时将导致次数异常</div>
             </div>
             
             <div>
@@ -355,7 +364,7 @@
 
     <!-- 票务查询 -->
     <div class="container" id="ticketQueryContainer">
-        <h2>乘车票务查询</h2>
+        <h2>乘车查询</h2>
         
         <form id="ticketForm">
             <div class="form-group">
