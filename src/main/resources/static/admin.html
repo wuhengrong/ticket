@@ -88,7 +88,7 @@
         }
         
         .container {
-            max-width: 1400px;
+            max-width: 1600px;
             margin: 0 auto;
             background: white;
             border-radius: 12px;
@@ -271,7 +271,7 @@
 		    padding: 30px;
 		    border-radius: 12px;
 		    width: 90%;
-		    max-width: 800px;
+		    max-width: 1000px;  /* 从 800px 改为 1000px */
 		    /* 移除最大高度限制，去掉滚动条 */
 		    max-height: 90vh;
 		    /* 添加自动高度 */
@@ -282,7 +282,7 @@
         
 		/* 确保模态框内容可以完全显示 */
 		#card-modal .modal-content {
-		    max-height: 95vh;
+		    max-height: 100vh;
 		    overflow-y: auto; /* 只在内容确实超出时显示滚动条 */
 		}
 
@@ -410,6 +410,62 @@
             border-bottom: 1px solid #ddd;
             padding-bottom: 5px;
         }
+
+        /* 客户选择模态框样式 */
+        .customer-selection-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .customer-selection-table th,
+        .customer-selection-table td {
+            padding: 8px 12px;
+            text-align: left;
+            border-bottom: 1px solid #ecf0f1;
+        }
+        
+        .customer-selection-table th {
+            background: #f8f9fa;
+            font-weight: 600;
+        }
+        
+        .selected-customers-preview {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            min-height: 40px;
+        }
+        
+        .nickname-display {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+            min-height: 16px;
+        }
+		
+		/* 預約用戶列換行顯示 - 增強版 */
+		.reserved-user-cell {
+		    white-space: normal !important;
+		    word-wrap: break-word;
+		    max-width: 200px;
+		    min-width: 150px;
+		}
+
+		.user-list {
+		    display: flex;
+		    flex-direction: column;
+		    gap: 2px;
+		}
+
+		.user-item {
+		    padding: 2px 4px;
+		    background: #f8f9fa;
+		    border-radius: 3px;
+		    font-size: 12px;
+		    line-height: 1.3;
+		    border: 1px solid #e9ecef;
+		}
     </style>
 </head>
 <body>
@@ -488,6 +544,7 @@
                                 <th>号码</th>
                                 <th>卡密</th>
                                 <th>状态</th>
+                                <th>备注</th>
                                 <th>预约用户</th>
                                 <th>首次使用时间</th>
                                 <th>失效时间</th>
@@ -638,14 +695,26 @@
                             <select id="card-status" required>
                                 <option value="AVAILABLE">可用</option>
                                 <option value="IN_USE">使用中</option>
-								<option value="RESERVED">预约</option>
+                                <option value="RESERVED">预约</option>
                                 <option value="UNAVAILABLE">不可用</option>
                                 <option value="STANDBY">备用</option>
                             </select>
                         </div>
                         <div class="form-group">
+                            <label for="card-remark">备注</label>
+                            <input type="text" id="card-remark" placeholder="输入备注信息">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group" style="flex: 2;">
                             <label for="card-reserved-user">预约用户</label>
-                            <input type="text" id="card-reserved-user" placeholder="输入预约用户名称">
+                            <div style="display: flex; gap: 10px;">
+                                <input type="text" id="card-reserved-user" placeholder="输入预约用户名称" style="flex: 1;">
+                                <button type="button" class="btn" onclick="showCustomerSelectionModal()" style="white-space: nowrap;">查找用户</button>
+                            </div>
+                            <div id="reserved-user-nicknames" class="nickname-display">
+                                <!-- 这里显示用户名对应的昵称 -->
+                            </div>
                         </div>
                     </div>
                     <div class="form-row">
@@ -708,6 +777,45 @@
                         <button type="submit" class="btn btn-success">保存</button>
                     </div>
                 </form>
+            </div>
+        </div>
+        
+        <!-- 客户选择模态框 -->
+        <div id="customer-selection-modal" class="modal">
+            <div class="modal-content" style="max-width: 900px;">
+                <div class="modal-header">
+                    <h3>选择预约用户</h3>
+                    <span class="close" onclick="closeCustomerSelectionModal()">&times;</span>
+                </div>
+                <div class="search-box">
+                    <input type="text" id="customer-selection-search" placeholder="搜索用户名或昵称..." onkeyup="searchCustomersForSelection()">
+                </div>
+                <div style="max-height: 400px; overflow-y: auto; margin-bottom: 20px;">
+                    <table class="customer-selection-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 50px;">选择</th>
+                                <th>用户名</th>
+                                <th>昵称</th>
+                                <th>组名</th>
+                                <th>剩余次数</th>
+                            </tr>
+                        </thead>
+                        <tbody id="customer-selection-tbody">
+                            <!-- 动态加载客户数据 -->
+                        </tbody>
+                    </table>
+                </div>
+                <div class="selected-customers-preview">
+                    <strong>已选择用户:</strong>
+                    <span id="selected-customers-preview" style="margin-left: 10px; color: #666;">
+                        未选择任何用户
+                    </span>
+                </div>
+                <div style="text-align: right;">
+                    <button type="button" class="btn" onclick="closeCustomerSelectionModal()">取消</button>
+                    <button type="button" class="btn btn-success" onclick="confirmCustomerSelection()">确认选择</button>
+                </div>
             </div>
         </div>
         
@@ -856,43 +964,42 @@
             },
             
             // 登录
-			// 在 auth.login 方法中修改
-			async login(password) {
-			    try {
-			        const response = await fetch('/api/admin/vip/login', {
-			            method: 'POST',
-			            headers: {
-			                'Content-Type': 'application/json'
-			            },
-			            body: JSON.stringify({ password: password })
-			        });
-			        
-			        console.log('Response status:', response.status);
-			        
-			        if (response.ok) {
-			            const result = await response.json();
-			            console.log('Login result:', result);
-			            
-			            if (result.success) {
-			                // 保存token和过期时间（24小时）
-			                const expiry = new Date().getTime() + (24 * 60 * 60 * 1000);
-			                localStorage.setItem('admin_token', result.token);
-			                localStorage.setItem('admin_token_expiry', expiry.toString());
-			                this.isAuthenticated = true;
-			                this.token = result.token;
-			                return true;
-			            }
-			        } else {
-			            // 尝试读取错误信息
-			            const errorText = await response.text();
-			            console.error('Login failed with status:', response.status, 'Error:', errorText);
-			        }
-			        return false;
-			    } catch (error) {
-			        console.error('登录失败:', error);
-			        return false;
-			    }
-			},
+            async login(password) {
+                try {
+                    const response = await fetch('/api/admin/vip/login', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ password: password })
+                    });
+                    
+                    console.log('Response status:', response.status);
+                    
+                    if (response.ok) {
+                        const result = await response.json();
+                        console.log('Login result:', result);
+                        
+                        if (result.success) {
+                            // 保存token和过期时间（24小时）
+                            const expiry = new Date().getTime() + (24 * 60 * 60 * 1000);
+                            localStorage.setItem('admin_token', result.token);
+                            localStorage.setItem('admin_token_expiry', expiry.toString());
+                            this.isAuthenticated = true;
+                            this.token = result.token;
+                            return true;
+                        }
+                    } else {
+                        // 尝试读取错误信息
+                        const errorText = await response.text();
+                        console.error('Login failed with status:', response.status, 'Error:', errorText);
+                    }
+                    return false;
+                } catch (error) {
+                    console.error('登录失败:', error);
+                    return false;
+                }
+            },
             
             // 登出
             logout() {
@@ -1183,6 +1290,10 @@
         let currentEditingCard = null;
         let currentEditingCustomer = null;
         let currentEditingRecord = null;
+        
+        // 客户选择相关全局变量
+        let allCustomersForSelection = [];
+        let selectedCustomers = [];
 
         // 工具函数
         function formatDateTime(datetimeStr) {
@@ -1230,7 +1341,7 @@
             const statusMap = {
                 'AVAILABLE': '可用',
                 'IN_USE': '使用中',
-				'RESERVED': '预留',
+                'RESERVED': '预留',
                 'UNAVAILABLE': '不可用',
                 'STANDBY': '备用'
             };
@@ -1284,52 +1395,80 @@
             }
         }
 
-        // VIP卡管理功能
-        async function loadCards() {
-            try {
-                showMessage('cards-message', '正在加载VIP卡数据...', 'success');
-                allCards = await apiClient.getCards();
-                displayCards(allCards);
-                updateCardStats(allCards);
-            } catch (error) {
-                console.error('加载VIP卡失败:', error);
-                showMessage('cards-message', '加载VIP卡失败: ' + error.message);
-            }
-        }
+		async function loadCards() {
+		    try {
+		        showMessage('cards-message', '正在加载VIP卡数据...', 'success');
+		        
+		        // 确保先加载客户数据
+		        if (allCustomers.length === 0) {
+		            try {
+		                allCustomers = await apiClient.getCustomers();
+		            } catch (error) {
+		                console.error('加载客户数据失败:', error);
+		                // 即使客户数据加载失败，也继续加载卡片数据
+		            }
+		        }
+		        
+		        allCards = await apiClient.getCards();
+		        displayCards(allCards);
+		        updateCardStats(allCards);
+		    } catch (error) {
+		        console.error('加载VIP卡失败:', error);
+		        showMessage('cards-message', '加载VIP卡失败: ' + error.message);
+		    }
+		}
 
-        function displayCards(cards) {
-            const tbody = document.getElementById('cards-tbody');
-            tbody.innerHTML = '';
-            
-            if (cards.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="14" style="text-align: center; color: #666;">暂无VIP卡数据</td></tr>';
-                return;
-            }
-            
-            cards.forEach(card => {
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>${card.id}</td>
-                    <td><strong>${card.cardNumber}</strong></td>
-                    <td>${card.cardPassword}</td>
-                    <td class="status-${card.status.toLowerCase()}">${getStatusText(card.status)}</td>
-                    <td>${card.reservedUser || '<span class="empty-cell">-</span>'}</td>
-                    <td>${formatShortDateTime(card.firstUseTime)}</td>
-                    <td>${formatShortDateTime(card.expiryTime)}</td>
-                    <td>${formatShortDateTime(card.boardingTime)}</td>
-                    <td>${card.boardingStation || '<span class="empty-cell">-</span>'}</td>
-                    <td>${formatShortDateTime(card.alightingTime)}</td>
-                    <td>${card.alightingStation || '<span class="empty-cell">-</span>'}</td>
-                    <td class="${getInOutClass(card.inOutStatus)}">${getInOutText(card.inOutStatus) || '<span class="empty-cell">-</span>'}</td>
-                    <td>${formatShortDateTime(card.estimatedAlightingTime)}</td>
-                    <td class="action-buttons">
-                        <button class="action-btn btn-warning" onclick="editCard(${card.id})">编辑</button>
-                        <button class="action-btn btn-danger" onclick="deleteCard(${card.id})">删除</button>
-                    </td>
-                `;
-                tbody.appendChild(row);
-            });
-        }
+		// 替换现有的 displayCards 函数
+		function displayCards(cards) {
+		    const tbody = document.getElementById('cards-tbody');
+		    tbody.innerHTML = '';
+		    
+		    if (cards.length === 0) {
+		        tbody.innerHTML = '<tr><td colspan="15" style="text-align: center; color: #666;">暂无VIP卡数据</td></tr>';
+		        return;
+		    }
+		    
+		    cards.forEach(card => {
+		        const row = document.createElement('tr');
+		        
+		        // 格式化預約用戶顯示：userName-NickName（使用div換行）
+		        let reservedUserDisplay = '<span class="empty-cell">-</span>';
+		        if (card.reservedUser) {
+		            const userNames = card.reservedUser.split(',').map(name => name.trim());
+		            const userItems = userNames.map(userName => {
+		                const customer = allCustomers.find(c => c.userName === userName);
+		                if (customer && customer.nickName) {
+		                    return `<div class="user-item">${userName}-${customer.nickName}</div>`;
+		                }
+		                return `<div class="user-item">${userName}</div>`;
+		            }).join('');
+		            
+		            reservedUserDisplay = `<div class="user-list">${userItems}</div>`;
+		        }
+		        
+		        row.innerHTML = `
+		            <td>${card.id}</td>
+		            <td><strong>${card.cardNumber}</strong></td>
+		            <td>${card.cardPassword}</td>
+		            <td class="status-${card.status.toLowerCase()}">${getStatusText(card.status)}</td>
+		            <td>${card.remark || '<span class="empty-cell">-</span>'}</td>
+		            <td class="reserved-user-cell">${reservedUserDisplay}</td>
+		            <td>${formatShortDateTime(card.firstUseTime)}</td>
+		            <td>${formatShortDateTime(card.expiryTime)}</td>
+		            <td>${formatShortDateTime(card.boardingTime)}</td>
+		            <td>${card.boardingStation || '<span class="empty-cell">-</span>'}</td>
+		            <td>${formatShortDateTime(card.alightingTime)}</td>
+		            <td>${card.alightingStation || '<span class="empty-cell">-</span>'}</td>
+		            <td class="${getInOutClass(card.inOutStatus)}">${getInOutText(card.inOutStatus) || '<span class="empty-cell">-</span>'}</td>
+		            <td>${formatShortDateTime(card.estimatedAlightingTime)}</td>
+		            <td class="action-buttons">
+		                <button class="action-btn btn-warning" onclick="editCard(${card.id})">编辑</button>
+		                <button class="action-btn btn-danger" onclick="deleteCard(${card.id})">删除</button>
+		            </td>
+		        `;
+		        tbody.appendChild(row);
+		    });
+		}
 
         function updateCardStats(cards) {
             const total = cards.length;
@@ -1355,6 +1494,7 @@
                     (card.boardingStation && card.boardingStation.toLowerCase().includes(searchTerm)) ||
                     (card.alightingStation && card.alightingStation.toLowerCase().includes(searchTerm)) ||
                     (card.reservedUser && card.reservedUser.toLowerCase().includes(searchTerm)) ||
+                    (card.remark && card.remark.toLowerCase().includes(searchTerm)) ||
                     getStatusText(card.status).toLowerCase().includes(searchTerm)
                 );
             }
@@ -1378,6 +1518,8 @@
             document.getElementById('card-status').value = 'AVAILABLE';
             document.getElementById('card-in-out-status').value = '';
             document.getElementById('card-reserved-user').value = '';
+            document.getElementById('card-remark').value = '';
+            document.getElementById('reserved-user-nicknames').innerHTML = '';
             document.getElementById('card-modal').style.display = 'block';
         }
 
@@ -1395,6 +1537,7 @@
                 document.getElementById('card-number').value = card.cardNumber;
                 document.getElementById('card-password').value = card.cardPassword;
                 document.getElementById('card-status').value = card.status;
+                document.getElementById('card-remark').value = card.remark || '';
                 document.getElementById('card-reserved-user').value = card.reservedUser || '';
                 document.getElementById('card-expiry').value = formatDateTimeForInput(card.expiryTime);
                 document.getElementById('card-first-use-time').value = formatDateTimeForInput(card.firstUseTime);
@@ -1404,6 +1547,9 @@
                 document.getElementById('card-alighting-station').value = card.alightingStation || '';
                 document.getElementById('card-in-out-status').value = card.inOutStatus || '';
                 document.getElementById('card-estimated-alighting-time').value = formatDateTimeForInput(card.estimatedAlightingTime);
+                
+                // 更新昵称显示
+                updateNicknameDisplay(card.reservedUser);
                 
                 document.getElementById('card-modal').style.display = 'block';
             } catch (error) {
@@ -1436,6 +1582,7 @@
                 cardNumber: document.getElementById('card-number').value.trim(),
                 cardPassword: document.getElementById('card-password').value.trim(),
                 status: document.getElementById('card-status').value,
+                remark: document.getElementById('card-remark').value.trim() || null,
                 reservedUser: document.getElementById('card-reserved-user').value.trim() || null,
                 expiryTime: document.getElementById('card-expiry').value || null,
                 firstUseTime: document.getElementById('card-first-use-time').value || null,
@@ -1468,6 +1615,125 @@
                 showMessage('cards-message', '操作失败: ' + error.message);
             }
         });
+
+        // 客户选择相关功能
+        function showCustomerSelectionModal() {
+            loadCustomersForSelection();
+            document.getElementById('customer-selection-modal').style.display = 'block';
+        }
+
+        function closeCustomerSelectionModal() {
+            document.getElementById('customer-selection-modal').style.display = 'none';
+            selectedCustomers = [];
+        }
+
+        async function loadCustomersForSelection() {
+            try {
+                allCustomersForSelection = await apiClient.getCustomers();
+                displayCustomersForSelection(allCustomersForSelection);
+                updateSelectedCustomersPreview();
+            } catch (error) {
+                console.error('加载客户数据失败:', error);
+            }
+        }
+
+        function displayCustomersForSelection(customers) {
+            const tbody = document.getElementById('customer-selection-tbody');
+            tbody.innerHTML = '';
+            
+            customers.forEach(customer => {
+                const row = document.createElement('tr');
+                const isSelected = selectedCustomers.some(c => c.userName === customer.userName);
+                
+                row.innerHTML = `
+                    <td style="text-align: center;">
+                        <input type="checkbox" value="${customer.userName}" 
+                               ${isSelected ? 'checked' : ''} 
+                               onchange="toggleCustomerSelection('${customer.userName}', '${customer.nickName || ''}')">
+                    </td>
+                    <td>${customer.userName}</td>
+                    <td>${customer.nickName || '<span class="empty-cell">-</span>'}</td>
+                    <td>${customer.groupName || '<span class="empty-cell">-</span>'}</td>
+                    <td>${customer.rideCount}</td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        function toggleCustomerSelection(userName, nickName) {
+            const existingIndex = selectedCustomers.findIndex(c => c.userName === userName);
+            
+            if (existingIndex > -1) {
+                selectedCustomers.splice(existingIndex, 1);
+            } else {
+                selectedCustomers.push({ userName, nickName });
+            }
+            
+            updateSelectedCustomersPreview();
+        }
+
+        function updateSelectedCustomersPreview() {
+            const previewElement = document.getElementById('selected-customers-preview');
+            if (selectedCustomers.length === 0) {
+                previewElement.textContent = '未选择任何用户';
+                previewElement.style.color = '#666';
+            } else {
+                const previewText = selectedCustomers.map(c => 
+                    c.nickName ? `${c.userName}(${c.nickName})` : c.userName
+                ).join(', ');
+                previewElement.textContent = previewText;
+                previewElement.style.color = '#333';
+            }
+        }
+
+        function searchCustomersForSelection() {
+            const searchTerm = document.getElementById('customer-selection-search').value.toLowerCase();
+            
+            if (!searchTerm) {
+                displayCustomersForSelection(allCustomersForSelection);
+                return;
+            }
+            
+            const filteredCustomers = allCustomersForSelection.filter(customer => 
+                customer.userName.toLowerCase().includes(searchTerm) ||
+                (customer.nickName && customer.nickName.toLowerCase().includes(searchTerm)) ||
+                (customer.groupName && customer.groupName.toLowerCase().includes(searchTerm))
+            );
+            
+            displayCustomersForSelection(filteredCustomers);
+        }
+
+        function confirmCustomerSelection() {
+            const userNames = selectedCustomers.map(c => c.userName).join(', ');
+            document.getElementById('card-reserved-user').value = userNames;
+            
+            // 更新昵称显示
+            updateNicknameDisplay(userNames);
+            
+            closeCustomerSelectionModal();
+        }
+
+        function updateNicknameDisplay(userNames) {
+            const nicknamesDiv = document.getElementById('reserved-user-nicknames');
+            
+            if (!userNames || userNames.trim() === '') {
+                nicknamesDiv.innerHTML = '';
+                return;
+            }
+            
+            const userNameArray = userNames.split(',').map(name => name.trim()).filter(name => name);
+            let displayText = '';
+            
+            userNameArray.forEach(userName => {
+                // 在已加载的客户数据中查找对应的昵称
+                const customer = allCustomersForSelection.find(c => c.userName === userName);
+                if (customer && customer.nickName) {
+                    displayText += `${userName} → ${customer.nickName}<br>`;
+                }
+            });
+            
+            nicknamesDiv.innerHTML = displayText || '未找到对应的昵称信息';
+        }
 
         // 客户管理功能
         async function loadCustomers() {

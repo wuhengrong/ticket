@@ -19,6 +19,16 @@ public class VipCardDTO {
     private VipCard.InOutStatus inOutStatus;
     private LocalDateTime estimatedAlightingTime;
     
+    private String remark;
+    
+    
+    public String getRemark() {
+        return remark;
+    }
+    
+    public void setRemark(String remark) {
+        this.remark = remark;
+    }
     // Constructors
     public VipCardDTO() {}
     
@@ -36,6 +46,7 @@ public class VipCardDTO {
         this.inOutStatus = vipCard.getInOutStatus();
         this.estimatedAlightingTime = vipCard.getEstimatedAlightingTime();
         this.reservedUser = vipCard.getReservedUser();
+        this.remark = vipCard.getRemark();
     }
     
     // 新增预约用户字段

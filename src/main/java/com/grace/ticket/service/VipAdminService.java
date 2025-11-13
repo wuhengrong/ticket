@@ -5,6 +5,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -31,9 +32,18 @@ public class VipAdminService {
     
     @Transactional(readOnly = true)
     public List<VipCardDTO> getAllCards() {
-        return vipCardRepository.findAll().stream()
+    	
+    	 // 多字段组合排序：先按status升序，再按alightingTime升序
+        Sort sort = Sort.by(
+            Sort.Order.asc("status"),
+            Sort.Order.asc("alightingTime")
+        );
+        
+        return vipCardRepository.findAll(sort).stream()
                 .map(VipCardDTO::new)
                 .collect(Collectors.toList());
+        
+
     }
     
     @Transactional(readOnly = true)
@@ -80,6 +90,7 @@ public class VipAdminService {
         card.setAlightingTime(cardDTO.getAlightingTime());
         card.setBoardingTime(cardDTO.getBoardingTime());
         card.setReservedUser(cardDTO.getReservedUser());
+        card.setInOutStatus(cardDTO.getInOutStatus());
         
         VipCard updatedCard = vipCardRepository.save(card);
         return new VipCardDTO(updatedCard);

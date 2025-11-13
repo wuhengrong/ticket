@@ -65,6 +65,21 @@ public class VipCard {
     @Column(name = "reserved_user")
     private String reservedUser;
     
+    // 新增备注字段
+    @Column(name = "remark", length = 500)
+    private String remark;
+    
+    // ... 现有方法 ...
+    
+    // 新增备注的getter和setter
+    public String getRemark() {
+        return remark;
+    }
+    
+    public void setRemark(String remark) {
+        this.remark = remark;
+    }
+    
     public String getReservedUser() {
         return reservedUser;
     }
