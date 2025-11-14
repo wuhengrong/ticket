@@ -1,8 +1,8 @@
 package com.grace.ticket.config;
 
 public class Constants {
-	public static final String DOMAIN = "https://ticket-1-6sz7.onrender.com";
-	//public static final String DOMAIN = "http://localhost:8080";
+	//public static final String DOMAIN = "https://ticket-1-6sz7.onrender.com";
+	public static final String DOMAIN = "http://localhost";
     
 	
 	public static final String BASE_URL = "http://19.nat0.cn:29027/mobile/shenzhen/pages/count-card.html";

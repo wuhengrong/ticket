@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VIP乘车票务系统</title>
+    <title>次数信息</title>
     <style>
         * {
             margin: 0;
@@ -41,6 +41,45 @@
             border-radius: 8px;
             margin-bottom: 20px;
             text-align: center;
+        }
+        
+        .guide-section {
+            background: #fff8e1;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            border-left: 4px solid #ffc107;
+        }
+        
+        .guide-title {
+            font-size: 16px;
+            font-weight: bold;
+            color: #e65100;
+            margin-bottom: 10px;
+        }
+        
+        .guide-step {
+            margin-bottom: 8px;
+            padding-left: 15px;
+            position: relative;
+            font-size: 14px;
+        }
+		
+		.guide-step-red {
+		    margin-bottom: 8px;
+		    padding-left: 15px;
+		    position: relative;
+		    font-size: 14px;
+		    color: #ff0000; /* 添加红色字体 */
+		    font-weight: bold; /* 可选：加粗字体更醒目 */
+		}
+        
+        .guide-step:before {
+            content: "•";
+            position: absolute;
+            left: 0;
+            color: #ff9800;
+            font-weight: bold;
         }
         
         .form-group {
@@ -102,6 +141,11 @@
             background: #c0392b;
         }
         
+        .btn:disabled {
+            background: #bdc3c7;
+            cursor: not-allowed;
+        }
+        
         .result {
             display: none;
             margin-top: 20px;
@@ -149,7 +193,6 @@
         .history-item {
             padding: 10px;
             border-bottom: 1px solid #eee;
-            cursor: pointer;
         }
         
         .history-item:hover {
@@ -167,99 +210,232 @@
             padding: 20px;
             color: #3498db;
         }
+        
+        .error {
+            text-align: center;
+            padding: 20px;
+            color: #e74c3c;
+            background: #fadbd8;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        .time-suggestion {
+            display: flex;
+            gap: 10px;
+            margin-top: 5px;
+        }
+        
+        .time-btn {
+            flex: 1;
+            background: #ecf0f1;
+            border: none;
+            padding: 8px;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+        
+        .time-btn:hover {
+            background: #d5dbdb;
+        }
+
+        .card-display {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin: 15px 0;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .card-title {
+            font-size: 16px;
+            margin-bottom: 15px;
+            opacity: 0.9;
+        }
+
+		.info-row {
+		    display: flex;
+		    justify-content: space-between;
+		    align-items: center;
+		    margin: 12px 0;
+		    padding: 10px;
+		    background: rgba(255, 255, 255, 0.1);
+		    border-radius: 8px;
+		}
+
+		.info-label {
+		    font-size: 14px;
+		    opacity: 0.9;
+		    min-width: 80px;
+		    text-align: left;
+		}
+
+		.info-value {
+		    font-size: 16px;
+		    font-weight: bold;
+		    font-family: monospace;
+		    flex: 1;
+		    text-align: center;
+		    margin: 0 10px;
+		}
+
+
+        .user-name {
+            font-size: 20px;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+
+        .ride-count {
+            font-size: 18px;
+            color: #e74c3c;
+            font-weight: bold;
+        }
+		
+		.toast {
+		    position: fixed;
+		    top: 20px;
+		    left: 50%;
+		    transform: translateX(-50%);
+		    background: rgba(0, 0, 0, 0.8);
+		    color: white;
+		    padding: 12px 20px;
+		    border-radius: 6px;
+		    font-size: 14px;
+		    z-index: 1000;
+		    opacity: 0;
+		    transition: opacity 0.3s;
+		    pointer-events: none;
+		}
+
+		.toast.show {
+		    opacity: 1;
+		}
+
+        .debug-info {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 10px;
+            margin-top: 10px;
+            font-size: 12px;
+            color: #6c757d;
+        }
     </style>
 </head>
 <body>
+    <!-- 错误提示 -->
+    <div id="errorContainer" class="error hidden"></div>
+
     <!-- 用户信息显示 -->
-    <div class="container">
+    <div class="container" id="userInfoContainer">
         <div class="user-info">
-            <h2>VIP客户信息</h2>
-            <p>客户ID: <span id="vipCustomerId">12345</span></p>
-            <p>客户名称: <span id="vipCustomerName">张三</span></p>
-            <p>剩余次卡次数: <span id="rideCount">5</span> 次</p>
+            <h2>次卡信息</h2>
+            <div class="user-name" id="vipCustomerName">-</div>
+            <p>剩余乘车次数: <span class="ride-count" id="rideCount">-</span> 次</p>
+        </div>
+        
+        <!-- 添加的使用指南 -->
+        <div class="guide-section">
+            <div class="guide-title">使用指南</div>
+            
+            <div style="margin-bottom: 15px;">
+                <div style="font-weight: bold; color: #2c3e50; margin-bottom: 8px;">获取账号：</div>
+                <div class="guide-step">输入起始站点和目的站点，查询可用票</div>
+                <div class="guide-step">点击"使用此票卡"获取账号密码</div>
+                <div class="guide-step-red">乘车结束后点击"归还票卡",否则超时将导致次数异常</div>
+            </div>
+            
+            <div>
+                <div style="font-weight: bold; color: #2c3e50; margin-bottom: 8px;">登录扫码：</div>
+                <div class="guide-step">打开'深圳地铁'app，点击'立即登录-切换账号-密码登录'</div>
+                <div class="guide-step">登录后选择'首页-虚拟票-我的票卡-使用'</div>
+            </div>
         </div>
     </div>
 
     <!-- 票务查询 -->
-    <div class="container">
-        <h2>乘车票务查询</h2>
+    <div class="container" id="ticketQueryContainer">
+        <h2>乘车查询</h2>
         
         <form id="ticketForm">
             <div class="form-group">
                 <label for="startStation">起始站点</label>
-                <input type="text" id="startStation" placeholder="输入或选择起始站点" list="stations">
-                <datalist id="stations">
-                    <option value="北京南站">
-                    <option value="上海虹桥">
-                    <option value="广州南站">
-                    <option value="深圳北站">
-                    <option value="福田站">
-                    <option value="红山站">
-                    <option value="马安山站">
-                </datalist>
+                <input type="text" id="startStation" placeholder="输入起始站点">
+              
             </div>
             
             <div class="form-group">
                 <label for="endStation">目的站点</label>
-                <input type="text" id="endStation" placeholder="输入或选择目的站点" list="stations">
+                <input type="text" id="endStation" placeholder="输入目的站点" >
             </div>
             
             <div class="form-group">
                 <label for="travelTime">乘车时间</label>
                 <input type="datetime-local" id="travelTime">
-            </div>
-            
-            <button type="button" class="btn" onclick="searchTickets()">查询可用票</button>
-        </form>
-    </div>
-    
-    <!-- 查询结果 -->
-    <div class="container" id="resultContainer" style="display: none;">
-        <h2>查询结果</h2>
-        <div id="noTickets" class="no-tickets">
-            <p>暂时无可用票，请调整查询条件或稍后再试。</p>
-        </div>
-        
-        <div id="loading" class="loading" style="display: none;">
-            <p>正在计算最佳路线...</p>
-        </div>
-        
-        <div id="ticketResult" class="result">
-            <div class="status status-available">找到最佳匹配票</div>
-            <div class="ticket-info">
-                <div class="card-details">
-                    <p><strong>票卡号码：</strong><span id="cardNumber">CARD-123456</span></p>
-                    <p><strong>票卡密码：</strong><span id="cardPassword">******</span></p>
+                <div class="time-suggestion">
+                    <button type="button" class="time-btn" onclick="setTime('now')">现在</button>
+                    <button type="button" class="time-btn" onclick="setTime('15min')">15分钟后</button>
+                    <button type="button" class="time-btn" onclick="setTime('30min')">30分钟后</button>
                 </div>
-                <p><strong>起始站：</strong><span id="resultStart">北京南站</span></p>
-                <p><strong>目的站：</strong><span id="resultEnd">上海虹桥</span></p>
-                <p><strong>乘车时间：</strong><span id="resultTime">2023-10-15 08:30</span></p>
-                <p><strong>预估出站时间：</strong><span id="estimatedTime">2023-10-15 13:45</span></p>
             </div>
             
-            <button class="btn btn-success" onclick="useTicket()">复制并使用</button>
-        </div>
+            <button type="button" class="btn" id="searchBtn" onclick="searchTickets()">查询可用票</button>
+        </form>
+
+		<!-- 修改后的票务查询结果显示 -->
+		<div id="searchResult" style="display: none;">
+		    <div class="card-display">
+		        <div class="card-title">为您找到最佳匹配票卡</div>
+		        
+		        <!-- 票卡号码行 - 默认显示带掩码的信息 -->
+		        <div class="info-row">
+		            <span class="info-label">登录号</span>
+		            <span class="info-value" id="displayCardNumber">-</span>
+		        </div>
+		        
+		        <!-- 票卡密码行 - 默认显示带掩码的信息 -->
+		        <div class="info-row">
+		            <span class="info-label">登录码</span>
+		            <span class="info-value" id="displayCardPassword">-</span>
+		        </div>
+		    </div>
+
+		    <button class="btn btn-success" id="useTicketBtn" onclick="useTicket()">使用此票卡</button>
+		</div>
+		
     </div>
     
     <!-- 当前使用中 -->
-    <div class="container" id="inUseContainer" style="display: none;">
-        <h2>当前使用中</h2>
-        <div class="status status-in-use">票务使用中</div>
-        <div class="ticket-info">
-            <div class="card-details">
-                <p><strong>票卡号码：</strong><span id="currentCardNumber">CARD-123456</span></p>
-            </div>
-            <p><strong>起始站：</strong><span id="currentStart">北京南站</span></p>
-            <p><strong>目的站：</strong><span id="currentEnd">上海虹桥</span></p>
-            <p><strong>乘车时间：</strong><span id="currentTime">2023-10-15 08:30</span></p>
-            <p><strong>预估出站时间：</strong><span id="currentEstimatedTime">2023-10-15 13:45</span></p>
-        </div>
-        
-        <button class="btn btn-danger" onclick="returnTicket()">归还票卡</button>
-    </div>
+	<div class="container" id="inUseContainer">
+	    <h2>当前使用中</h2>
+	    <div class="status status-in-use">票务使用中</div>
+	    <div class="ticket-info">
+	        <div class="card-details">
+	            <!-- 在使用中界面完整显示卡号和密码 -->
+	            <p><strong>票卡号码：</strong><span id="currentCardNumber">-</span></p>
+	            <p><strong>票卡密码：</strong><span id="currentCardPassword">-</span></p>
+	        </div>
+	        <p><strong>起始站：</strong><span id="currentStart">-</span></p>
+	        <p><strong>目的站：</strong><span id="currentEnd">-</span></p>
+	        <p><strong>乘车时间：</strong><span id="currentTime">-</span></p>
+	        <p><strong>预估出站时间：</strong><span id="currentEstimatedTime">-</span></p>
+	    </div>
+	    
+	    <button class="btn btn-danger" id="returnTicketBtn" onclick="returnTicket()">归还票卡</button>
+	    <div class="debug-info" id="returnDebugInfo" style="display: none;"></div>
+	</div>
     
     <!-- 乘车历史 -->
-    <div class="container">
+    <div class="container" id="historyContainer">
         <h2>乘车历史记录</h2>
         <div id="historyList">
             <!-- 动态生成历史记录 -->
@@ -267,16 +443,418 @@
     </div>
 
     <script>
+        // 全局变量
         let currentTicket = null;
-        
-        // 设置默认时间
-        function setDefaultTime() {
-            const now = new Date();
-            now.setMinutes(now.getMinutes() + 5); // 5分钟后
-            const formatted = now.toISOString().slice(0, 16);
-            document.getElementById('travelTime').value = formatted;
+        let currentCustomer = null;
+        let urlParams = {};
+        let activeTicketInfo = null;
+
+        // 字符串掩码函数 - 中间3位替换为***
+        function maskString(str) {
+            if (!str || str.length < 6) return str;
+            
+            const length = str.length;
+            const maskCount = 3; // 固定替换3位
+            const startIndex = Math.floor((length - maskCount) / 2);
+            const endIndex = startIndex + maskCount;
+            
+            const prefix = str.substring(0, startIndex);
+            const suffix = str.substring(endIndex);
+            const stars = '*'.repeat(maskCount);
+            
+            return prefix + stars + suffix;
         }
         
+        // API调用函数
+        const apiClient = {
+            // 获取客户信息
+            async getCustomerInfo(vipUrl) {
+                try {
+                    const response = await fetch(`/api/vip/customer/${encodeURIComponent(vipUrl)}`);
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return await response.json();
+                } catch (error) {
+                    console.error('获取客户信息失败:', error);
+                    throw error;
+                }
+            },
+            
+            // 搜索票卡
+            async searchTickets(searchData) {
+                try {
+                    const response = await fetch('/api/vip/tickets/search', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(searchData)
+                    });
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return await response.json();
+                } catch (error) {
+                    console.error('搜索票卡失败:', error);
+                    throw error;
+                }
+            },
+            
+            // 使用票卡
+            async useTicket(useData) {
+                try {
+                    const response = await fetch('/api/vip/tickets/use', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(useData)
+                    });
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return await response.json();
+                } catch (error) {
+                    console.error('使用票卡失败:', error);
+                    throw error;
+                }
+            },
+            
+            // 归还票卡
+            async returnTicket(cardId, alightingStation, customerId) {
+                try {
+                    console.log('归还票卡请求参数:', {
+                        cardId: cardId,
+                        customerId: customerId,
+                        alightingStation: alightingStation
+                    });
+
+                    const url = `/api/vip/tickets/return/${cardId}?alightingStation=${encodeURIComponent(alightingStation)}&customerId=${customerId}`;
+                    console.log('请求URL:', url);
+
+                    const response = await fetch(url, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        }
+                    });
+                    
+                    console.log('响应状态:', response.status);
+                    
+                    if (!response.ok) {
+                        let errorMessage = `HTTP error! status: ${response.status}`;
+                        try {
+                            const errorResponse = await response.json();
+                            errorMessage = errorResponse.message || errorMessage;
+                        } catch (e) {
+                            // 忽略JSON解析错误
+                        }
+                        throw new Error(errorMessage);
+                    }
+                    
+                    const result = await response.json();
+                    console.log('响应结果:', result);
+                    return result;
+                    
+                } catch (error) {
+                    console.error('归还票卡失败:', error);
+                    throw error;
+                }
+            },
+
+            // 获取客户当前进行中的票务
+            async getActiveTicket(customerId) {
+                try {
+                    const response = await fetch(`/api/vip/customer/${customerId}/active-ticket`);
+                    if (!response.ok) {
+                        if (response.status === 404) {
+                            return null;
+                        }
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return await response.json();
+                } catch (error) {
+                    console.error('获取进行中票务失败:', error);
+                    return null;
+                }
+            }
+        };
+
+        // 工具函数
+        function showError(message) {
+            const errorContainer = document.getElementById('errorContainer');
+            errorContainer.textContent = message;
+            errorContainer.classList.remove('hidden');
+        }
+
+        function hideError() {
+            document.getElementById('errorContainer').classList.add('hidden');
+        }
+
+        function showDebugInfo(info) {
+            const debugInfo = document.getElementById('returnDebugInfo');
+            debugInfo.textContent = info;
+            debugInfo.style.display = 'block';
+        }
+
+        function hideDebugInfo() {
+            document.getElementById('returnDebugInfo').style.display = 'none';
+        }
+
+		function setTime(type) {
+		    const now = new Date();
+		    let timeInput = document.getElementById('travelTime');
+		    
+		    const beijingOffset = 8 * 60 * 60 * 1000;
+		    const beijingTime = new Date(now.getTime() + beijingOffset);
+		    
+		    if (type === 'now') {
+		        beijingTime.setMinutes(beijingTime.getMinutes() + 5);
+		    } else if (type === '15min') {
+		        beijingTime.setMinutes(beijingTime.getMinutes() + 15);
+		    } else if (type === '30min') {
+		        beijingTime.setMinutes(beijingTime.getMinutes() + 30);
+		    }
+		    
+		    const formatted = beijingTime.toISOString().slice(0, 16);
+		    timeInput.value = formatted;
+		    
+		    document.querySelectorAll('.time-btn').forEach(btn => {
+		        btn.classList.remove('active');
+		    });
+		    
+		    const buttons = document.querySelectorAll('.time-btn');
+		    buttons.forEach(btn => {
+		        if (btn.textContent === getButtonText(type)) {
+		            btn.classList.add('active');
+		        }
+		    });
+		}
+
+		function getButtonText(type) {
+		    const textMap = {
+		        'now': '现在',
+		        '15min': '15分钟后',
+		        '30min': '30分钟后'
+		    };
+		    return textMap[type] || type;
+		}
+
+        function formatDateTime(datetimeStr) {
+            if (!datetimeStr) return '-';
+            const date = new Date(datetimeStr);
+            return `${date.getFullYear()}-${padZero(date.getMonth()+1)}-${padZero(date.getDate())} ${padZero(date.getHours())}:${padZero(date.getMinutes())}`;
+        }
+
+        function padZero(num) {
+            return num < 10 ? '0' + num : num;
+        }
+
+
+		// Toast提示函数
+		function showToast(message) {
+		    let toast = document.getElementById('toast');
+		    if (!toast) {
+		        toast = document.createElement('div');
+		        toast.id = 'toast';
+		        toast.style.cssText = `
+		            position: fixed;
+		            top: 20px;
+		            left: 50%;
+		            transform: translateX(-50%);
+		            background: rgba(0, 0, 0, 0.8);
+		            color: white;
+		            padding: 12px 20px;
+		            border-radius: 6px;
+		            font-size: 14px;
+		            z-index: 1000;
+		            opacity: 0;
+		            transition: opacity 0.3s;
+		            pointer-events: none;
+		        `;
+		        document.body.appendChild(toast);
+		    }
+		    
+		    toast.textContent = message;
+		    toast.style.opacity = '1';
+		    
+		    setTimeout(() => {
+		        toast.style.opacity = '0';
+		    }, 2000);
+		}
+
+        // 解析URL参数
+        function parseUrlParams() {
+            const urlParams = new URLSearchParams(window.location.search);
+            return {
+                uId: urlParams.get('uId'),
+                gId: urlParams.get('gId'),
+                code: urlParams.get('code')
+            };
+        }
+
+        // 验证URL参数
+        function validateUrlParams(params) {
+            if (!params.uId || !params.gId || !params.code) {
+                return false;
+            }
+            return params.uId.length > 0 && params.gId.length > 0 && params.code.length > 0;
+        }
+
+        // 构建VIP URL
+        function buildVipUrl(uId, gId, code) {
+            return `vip.html?uId=${uId}&gId=${gId}&code=${code}`;
+        }
+
+		// 初始化页面
+		async function initializePage() {
+		    try {
+		        hideError();
+		        hideDebugInfo();
+		        
+		        urlParams = parseUrlParams();
+		        
+		        if (!validateUrlParams(urlParams)) {
+		            showError('无效的访问链接，请检查URL参数是否正确');
+		            disableAllFeatures();
+		            return;
+		        }
+		        
+		        const vipUrl = buildVipUrl(urlParams.uId, urlParams.gId, urlParams.code);
+		        const customerData = await apiClient.getCustomerInfo(vipUrl);
+		        
+		        if (customerData && customerData.customer) {
+		            currentCustomer = customerData.customer;
+		            displayCustomerInfo(currentCustomer);
+		            
+		            if (customerData.history) {
+		                displayHistory(customerData.history);
+		            }
+		            
+		            if (customerData.activeTicket && customerData.activeTicket.hasActiveTicket) {
+		                showInUseSection(customerData.activeTicket);
+		            } else {
+		                hideInUseSection();
+		            }
+		            
+		        } else {
+		            showError('无法获取客户信息，请检查URL参数');
+		            disableAllFeatures();
+		        }
+		        
+		    } catch (error) {
+		        console.error('初始化页面失败:', error);
+		        showError('页面初始化失败: ' + error.message);
+		        disableAllFeatures();
+		    }
+		}
+
+        // 显示客户信息
+        function displayCustomerInfo(customer) {
+            document.getElementById('vipCustomerName').textContent = customer.userName || '-';
+            document.getElementById('rideCount').textContent = customer.rideCount || 0;
+            updateUIByRideCount(customer.rideCount);
+        }
+
+        // 根据次卡次数更新界面
+        function updateUIByRideCount(rideCount) {
+            const searchBtn = document.getElementById('searchBtn');
+            if (rideCount <= 0) {
+                searchBtn.disabled = true;
+                searchBtn.textContent = '次卡次数不足';
+                showError('您的次卡次数已用完，无法查询票务');
+            } else {
+                searchBtn.disabled = false;
+                searchBtn.textContent = '查询可用票';
+                hideError();
+            }
+        }
+
+        // 显示历史记录
+        function displayHistory(history) {
+            const historyList = document.getElementById('historyList');
+            
+            if (!history || history.length === 0) {
+                historyList.innerHTML = '<div class="no-tickets"><p>暂无乘车记录</p></div>';
+                return;
+            }
+            
+            let html = '';
+            history.forEach(record => {
+                const boardingTime = formatDateTime(record.boardingTime);
+                const alightingTime = record.alightingTime ? formatDateTime(record.alightingTime) : '使用中';
+                const status = record.alightingTime ? '已完成' : '进行中';
+                
+                html += `
+                    <div class="history-item">
+                        <p><strong>${record.boardingStation} → ${record.alightingStation || '未出站'}</strong></p>
+                        <p>进站: ${boardingTime} | 出站: ${alightingTime}</p>
+                        <p>状态: ${status}</p>
+                    </div>
+                `;
+            });
+            
+            historyList.innerHTML = html;
+        }
+
+		// 显示使用中界面
+		function showInUseSection(ticketInfo) {
+		    console.log('显示使用中界面，接收到的数据:', ticketInfo);
+		    
+		    document.getElementById('ticketQueryContainer').style.display = 'none';
+		    document.getElementById('inUseContainer').style.display = 'block';
+		    document.getElementById('historyContainer').style.display = 'block';
+		    
+		    if (ticketInfo) {
+		        const cardPassword = ticketInfo.cardPassword || 
+		                           (currentTicket && currentTicket.cardPassword) || 
+		                           '-';
+		        
+		        // 在使用中界面显示完整信息
+		        document.getElementById('currentCardNumber').textContent = ticketInfo.cardNumber || '-';
+		        document.getElementById('currentCardPassword').textContent = cardPassword;
+		        document.getElementById('currentStart').textContent = ticketInfo.boardingStation || '-';
+		        document.getElementById('currentEnd').textContent = ticketInfo.alightingStation || '-';
+		        document.getElementById('currentTime').textContent = formatDateTime(ticketInfo.boardingTime) || '-';
+		        document.getElementById('currentEstimatedTime').textContent = formatDateTime(ticketInfo.estimatedAlightingTime) || '-';
+		        
+		        currentTicket = {
+		            id: ticketInfo.cardId || currentTicket?.id,
+		            cardNumber: ticketInfo.cardNumber || currentTicket?.cardNumber,
+		            cardPassword: cardPassword
+		        };
+		    }
+		}
+
+		// 隐藏使用中界面
+		function hideInUseSection() {
+		    document.getElementById('ticketQueryContainer').style.display = 'block';
+		    document.getElementById('inUseContainer').style.display = 'none';
+		    document.getElementById('historyContainer').style.display = 'block';
+		    
+		    currentTicket = null;
+		    activeTicketInfo = null;
+		    hideSearchResult();
+		}
+
+        // 禁用所有功能
+        function disableAllFeatures() {
+            document.getElementById('ticketQueryContainer').style.display = 'none';
+            document.getElementById('inUseContainer').style.display = 'none';
+            document.getElementById('historyContainer').style.display = 'none';
+        }
+
+        // 显示查询结果
+        function showSearchResult() {
+            document.getElementById('searchResult').style.display = 'block';
+        }
+
+        // 隐藏查询结果
+        function hideSearchResult() {
+            document.getElementById('searchResult').style.display = 'none';
+        }
+
         // 搜索票务
         async function searchTickets() {
             const startStation = document.getElementById('startStation').value;
@@ -284,218 +862,173 @@
             const travelTime = document.getElementById('travelTime').value;
             
             if (!startStation || !endStation || !travelTime) {
-                alert('请填写完整的查询信息');
+                showError('请填写完整的查询信息');
                 return;
             }
             
-            document.getElementById('resultContainer').style.display = 'block';
-            document.getElementById('loading').style.display = 'block';
-            document.getElementById('noTickets').style.display = 'none';
-            document.getElementById('ticketResult').style.display = 'none';
+            if (!currentCustomer) {
+                showError('客户信息未加载，请刷新页面重试');
+                return;
+            }
             
             try {
-                // 模拟API调用
-                const response = await mockSearchTickets(startStation, endStation, travelTime);
+                hideError();
+                hideSearchResult();
                 
-                document.getElementById('loading').style.display = 'none';
+                document.getElementById('searchBtn').disabled = true;
+                document.getElementById('searchBtn').textContent = '查询中...';
+                
+                const searchData = {
+                    boardingStation: startStation,
+                    alightingStation: endStation,
+                    boardingTime: travelTime,
+                    vipCustomerId: currentCustomer.id
+                };
+                
+                const response = await apiClient.searchTickets(searchData);
+                
+                document.getElementById('searchBtn').disabled = false;
+                document.getElementById('searchBtn').textContent = '查询可用票';
                 
                 if (response.success) {
-                    currentTicket = response.data;
-                    displayTicketResult(currentTicket);
+                    currentTicket = {
+                        id: response.matchedCard.id,
+                        cardNumber: response.matchedCard.cardNumber,
+                        cardPassword: response.matchedCard.cardPassword
+                    };
+                    
+                    console.log('搜索后设置的 currentTicket:', currentTicket);
+                    
+                    // 显示带掩码的卡号和密码
+                    displayTicketResult(response);
+                    showSearchResult();
                 } else {
-                    document.getElementById('noTickets').style.display = 'block';
+                    showError(response.message || '查询失败，暂无可用票');
                 }
             } catch (error) {
-                document.getElementById('loading').style.display = 'none';
-                document.getElementById('noTickets').style.display = 'block';
-                console.error('查询失败:', error);
+                document.getElementById('searchBtn').disabled = false;
+                document.getElementById('searchBtn').textContent = '查询可用票';
+                showError('查询失败: ' + error.message);
+                console.error('搜索票务失败:', error);
             }
         }
-        
-        // 显示票务结果
-        function displayTicketResult(ticket) {
-            document.getElementById('cardNumber').textContent = ticket.cardNumber;
-            document.getElementById('cardPassword').textContent = ticket.cardPassword;
-            document.getElementById('resultStart').textContent = ticket.boardingStation;
-            document.getElementById('resultEnd').textContent = ticket.alightingStation;
-            document.getElementById('resultTime').textContent = formatDateTime(ticket.boardingTime);
-            document.getElementById('estimatedTime').textContent = formatDateTime(ticket.estimatedAlightingTime);
+
+        // 显示票务结果 - 修改为默认显示带掩码的信息
+        function displayTicketResult(response) {
+            const ticket = response.matchedCard;
             
-            document.getElementById('ticketResult').style.display = 'block';
+            // 显示带掩码的卡号和密码
+            const maskedCardNumber = maskString(ticket.cardNumber);
+            const maskedCardPassword = maskString(ticket.cardPassword);
+            
+            document.getElementById('displayCardNumber').textContent = maskedCardNumber || '-';
+            document.getElementById('displayCardPassword').textContent = maskedCardPassword || '-';
         }
-        
+
         // 使用票务
-        async function useTicket() {
-            if (!currentTicket) {
-                alert('没有可用的票务信息');
-                return;
-            }
-            
-            try {
-                // 复制票卡信息
-                const cardInfo = `票卡号码: ${currentTicket.cardNumber}\n票卡密码: ${currentTicket.cardPassword}`;
-                await navigator.clipboard.writeText(cardInfo);
-                
-                // 模拟API调用使用票务
-                const response = await mockUseTicket(currentTicket);
-                
-                if (response.success) {
-                    alert('票务信息已复制，次卡次数已扣除！');
-                    
-                    // 更新界面
-                    document.getElementById('rideCount').textContent = response.remainingRides;
-                    document.getElementById('resultContainer').style.display = 'none';
-                    document.getElementById('inUseContainer').style.display = 'block';
-                    
-                    // 更新当前使用信息
-                    document.getElementById('currentCardNumber').textContent = currentTicket.cardNumber;
-                    document.getElementById('currentStart').textContent = currentTicket.boardingStation;
-                    document.getElementById('currentEnd').textContent = currentTicket.alightingStation;
-                    document.getElementById('currentTime').textContent = formatDateTime(currentTicket.boardingTime);
-                    document.getElementById('currentEstimatedTime').textContent = formatDateTime(currentTicket.estimatedAlightingTime);
-                } else {
-                    alert('使用票务失败: ' + response.message);
-                }
-            } catch (error) {
-                console.error('使用票务失败:', error);
-                alert('使用票务失败，请重试');
-            }
-        }
-        
-        // 归还票卡
-        async function returnTicket() {
-            try {
-                const response = await mockReturnTicket(currentTicket);
-                
-                if (response.success) {
-                    alert('票卡已成功归还！');
-                    document.getElementById('inUseContainer').style.display = 'none';
-                    addToHistory(currentTicket);
-                    currentTicket = null;
-                } else {
-                    alert('归还票卡失败: ' + response.message);
-                }
-            } catch (error) {
-                console.error('归还票卡失败:', error);
-                alert('归还票卡失败，请重试');
-            }
-        }
-        
-        // 添加到历史记录
-        function addToHistory(ticket) {
-            const historyList = document.getElementById('historyList');
-            const now = new Date();
-            const formattedDate = now.toISOString().slice(0, 10).replace(/-/g, '-');
-            
-            const historyItem = document.createElement('div');
-            historyItem.className = 'history-item';
-            historyItem.onclick = () => fillFromHistory(ticket);
-            
-            historyItem.innerHTML = `
-                <p><strong>${ticket.boardingStation} → ${ticket.alightingStation}</strong></p>
-                <p>${formattedDate} - 已完成</p>
-            `;
-            
-            historyList.insertBefore(historyItem, historyList.firstChild);
-        }
-        
-        // 从历史记录填充
-        function fillFromHistory(ticket) {
-            document.getElementById('startStation').value = ticket.boardingStation;
-            document.getElementById('endStation').value = ticket.alightingStation;
-            window.scrollTo(0, 0);
-        }
-        
-        // 格式化日期时间
-        function formatDateTime(datetimeStr) {
-            const date = new Date(datetimeStr);
-            return `${date.getFullYear()}-${padZero(date.getMonth()+1)}-${padZero(date.getDate())} ${padZero(date.getHours())}:${padZero(date.getMinutes())}`;
-        }
-        
-        // 补零函数
-        function padZero(num) {
-            return num < 10 ? '0' + num : num;
-        }
-        
-        // 模拟搜索票务API
-        function mockSearchTickets(startStation, endStation, travelTime) {
-            return new Promise((resolve) => {
-                setTimeout(() => {
-                    const hasTickets = Math.random() > 0.3; // 70%概率有票
-                    
-                    if (hasTickets) {
-                        resolve({
-                            success: true,
-                            data: {
-                                cardNumber: 'CARD-' + Math.random().toString(36).substr(2, 8).toUpperCase(),
-                                cardPassword: Math.random().toString(36).substr(2, 6).toUpperCase(),
-                                boardingStation: startStation,
-                                alightingStation: endStation,
-                                boardingTime: travelTime,
-                                estimatedAlightingTime: new Date(new Date(travelTime).getTime() + 5 * 60 * 60 * 1000).toISOString() // 5小时后
-                            }
-                        });
-                    } else {
-                        resolve({
-                            success: false,
-                            message: '暂无可用票'
-                        });
-                    }
-                }, 1500);
-            });
-        }
-        
-        // 模拟使用票务API
-        function mockUseTicket(ticket) {
-            return new Promise((resolve) => {
-                setTimeout(() => {
-                    resolve({
-                        success: true,
-                        remainingRides: parseInt(document.getElementById('rideCount').textContent) - 1
-                    });
-                }, 1000);
-            });
-        }
-        
-        // 模拟归还票务API
-        function mockReturnTicket(ticket) {
-            return new Promise((resolve) => {
-                setTimeout(() => {
-                    resolve({
-                        success: true
-                    });
-                }, 1000);
-            });
-        }
-        
-        // 初始化页面
-        window.onload = function() {
-            setDefaultTime();
-            // 加载历史记录
-            loadHistory();
-        };
-        
-        // 加载历史记录
-        function loadHistory() {
-            // 模拟历史记录数据
-            const mockHistory = [
-                { boardingStation: '福田站', alightingStation: '红山站', date: '2023-10-10' },
-                { boardingStation: '红山站', alightingStation: '马安山站', date: '2023-10-05' }
-            ];
-            
-            mockHistory.forEach(item => {
-                const historyItem = document.createElement('div');
-                historyItem.className = 'history-item';
-                historyItem.onclick = () => fillFromHistory(item);
-                
-                historyItem.innerHTML = `
-                    <p><strong>${item.boardingStation} → ${item.alightingStation}</strong></p>
-                    <p>${item.date} - 已完成</p>
-                `;
-                
-                document.getElementById('historyList').appendChild(historyItem);
-            });
-        }
+		async function useTicket() {
+		    if (!currentTicket || !currentCustomer) {
+		        showError('票务信息或客户信息不完整');
+		        return;
+		    }
+		    
+		    try {
+		        hideError();
+		        document.getElementById('useTicketBtn').disabled = true;
+		        document.getElementById('useTicketBtn').textContent = '处理中...';
+		        
+		        const useData = {
+		            vipCustomerId: currentCustomer.id,
+		            vipCardId: currentTicket.id,
+		            boardingStation: document.getElementById('startStation').value,
+		            alightingStation: document.getElementById('endStation').value
+		        };
+		        
+		        const response = await apiClient.useTicket(useData);
+		        
+		        if (response.success) {
+		            currentCustomer.rideCount = response.remainingRides;
+		            displayCustomerInfo(currentCustomer);
+		            showToast('票卡信息获取成功！次卡次数将在行程结束后扣除');
+		            hideSearchResult();
+		            
+		            showInUseSection({
+		                cardId: currentTicket.id,
+		                cardNumber: currentTicket.cardNumber,
+		                cardPassword: currentTicket.cardPassword,
+		                boardingStation: useData.boardingStation,
+		                alightingStation: useData.alightingStation,
+		                boardingTime: new Date().toISOString(),
+		                estimatedAlightingTime: response.estimatedAlightingTime
+		            });
+		            
+		        } else {
+		            showError('使用票务失败: ' + response.message);
+		            document.getElementById('useTicketBtn').disabled = false;
+		            document.getElementById('useTicketBtn').textContent = '使用此票卡';
+		        }
+		    } catch (error) {
+		        console.error('使用票务失败:', error);
+		        showError('使用票务失败: ' + error.message);
+		        document.getElementById('useTicketBtn').disabled = false;
+		        document.getElementById('useTicketBtn').textContent = '使用此票卡';
+		    }
+		}
+
+		// 归还票卡
+		async function returnTicket() {
+		    if (!currentTicket || !currentCustomer) {
+		        showError('没有正在使用的票卡或客户信息');
+		        return;
+		    }
+		    
+		    try {
+		        hideError();
+		        const returnBtn = document.getElementById('returnTicketBtn');
+		        returnBtn.disabled = true;
+		        returnBtn.textContent = '处理中...';
+		        
+		        const alightingStation = document.getElementById('currentEnd').textContent;
+		        if (!alightingStation || alightingStation === '-') {
+		            showError('出站点信息不完整');
+		            returnBtn.disabled = false;
+		            returnBtn.textContent = '归还票卡';
+		            return;
+		        }
+
+		        const result = await apiClient.returnTicket(currentTicket.id, alightingStation, currentCustomer.id);
+		        
+		        if (result.success) {
+		            showToast('票卡已成功归还！');
+		            hideInUseSection();
+		            hideSearchResult();
+		            document.getElementById('ticketForm').reset();
+		            setTime('now');
+		            await initializePage();
+		            
+		        } else {
+		            showError('归还票卡失败: ' + result.message);
+		            returnBtn.disabled = false;
+		            returnBtn.textContent = '归还票卡';
+		        }
+		    } catch (error) {
+		        console.error('归还票卡失败:', error);
+		        const debugInfo = `请求详情:
+URL: /api/vip/tickets/return/${currentTicket?.id}
+参数: alightingStation=${document.getElementById('currentEnd').textContent}&customerId=${currentCustomer?.id}
+错误: ${error.message}`;
+		        showDebugInfo(debugInfo);
+		        showError('归还票卡失败: ' + error.message);
+		        document.getElementById('returnTicketBtn').disabled = false;
+		        document.getElementById('returnTicketBtn').textContent = '归还票卡';
+		    }
+		}
+
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            setTime('now');
+            initializePage();
+        });
     </script>
 </body>
 </html>

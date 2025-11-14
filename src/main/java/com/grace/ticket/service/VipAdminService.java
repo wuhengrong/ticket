@@ -66,7 +66,7 @@ public class VipAdminService {
         card.setStatus(cardDTO.getStatus());
         card.setExpiryTime(cardDTO.getExpiryTime());
         card.setFirstUseTime(cardDTO.getFirstUseTime());
-        
+        card.setRemark(cardDTO.getRemark());
         VipCard savedCard = vipCardRepository.save(card);
         return new VipCardDTO(savedCard);
     }
@@ -91,6 +91,7 @@ public class VipAdminService {
         card.setBoardingTime(cardDTO.getBoardingTime());
         card.setReservedUser(cardDTO.getReservedUser());
         card.setInOutStatus(cardDTO.getInOutStatus());
+        card.setRemark(cardDTO.getRemark());
         
         VipCard updatedCard = vipCardRepository.save(card);
         return new VipCardDTO(updatedCard);
