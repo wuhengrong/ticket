@@ -59,12 +59,13 @@ public class VipRecord {
     // Constructors, Getters and Setters
     public VipRecord() {}
     
-    public VipRecord(Long vipCustomerId, Long vipCardId, String boardingStation, LocalDateTime boardingTime, String alightingStation) {
+    public VipRecord(Long vipCustomerId, Long vipCardId, String boardingStation, LocalDateTime boardingTime, String alightingStation, LocalDateTime estimatedAlightingTime) {
         this.vipCustomerId = vipCustomerId;
         this.vipCardId = vipCardId;
         this.boardingStation = boardingStation;
         this.boardingTime = boardingTime;
         this.alightingStation = alightingStation;
+        this.estimatedAlightingTime=estimatedAlightingTime;
     }
     
     // Getters and Setters

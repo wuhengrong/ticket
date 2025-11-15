@@ -26,7 +26,7 @@ import com.grace.ticket.dto.TicketInfoDTO;
 	public class VipTripValidator {
 
 	    // 高德地图API配置 - 使用您提供的API Key
-	    private static final String AMAP_API_KEY = "dbf17a822ded817a149e45cb535f953a";
+	    private static final String AMAP_API_KEY = "dbf17a822ded817a149e45cb535f953a"; 
 	    private static final String AMAP_BASE_URL = "https://restapi.amap.com/v3";
 	    private static final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -83,7 +83,7 @@ import com.grace.ticket.dto.TicketInfoDTO;
 	        TicketInfoDTO minSubwayDto = null;
 	        int minSubwayTime = Integer.MAX_VALUE;
 
-	        for(TicketInfoDTO ticket : sublist) {
+	        for(TicketInfoDTO ticket : tickets) {
 	            TicketInfoDTO dto = validateSingleTicketTrip(boardingStation, boardingTime, ticket);
 	            
 	            // 行程符合，检查并更新最小值

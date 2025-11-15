@@ -162,8 +162,6 @@ public class VipTicketController {
     public ResponseEntity<TicketSearchResponse> searchTickets(@RequestBody TicketSearchRequest request) {
         TicketSearchResponse response = vipCardService.searchBestMatchCard(request);
         
-        //response.getMatchedCard().setCardNumber(StringMaskUtil.maskMiddle(response.getMatchedCard().getCardNumber()));
-        //response.getMatchedCard().setCardPassword(StringMaskUtil.maskMiddle(response.getMatchedCard().getCardPassword()));
         return ResponseEntity.ok(response);
     }
     

@@ -311,10 +311,11 @@
             color: #34495e;
         }
         
-        .status-available { color: #27ae60; font-weight: 600; }
-        .status-in-use { color: #f39c12; font-weight: 600; }
-        .status-unavailable { color: #e74c3c; font-weight: 600; }
-        .status-standby { color: #3498db; font-weight: 600; }
+		.status-available { color: #27ae60; font-weight: 600; } /* 绿色 - 可用/正常 */
+		.status-in_use { color: #e74c3c; font-weight: 600; } /* 红色 - 使用中/警告 */
+		.status-unavailable { color: #95a5a6; font-weight: 600; } /* 灰色 - 不可用/禁用 */
+		.status-reserved { color: #f39c12; font-weight: 600; } /* 橙色 - 预留/待定 */
+		.status-standby { color: #3498db; font-weight: 600; } /* 蓝色 - 备用/就绪 */
         
         .in-out-in { color: #2ecc71; font-weight: 600; }
         .in-out-out { color: #e74c3c; font-weight: 600; }
@@ -466,6 +467,82 @@
 		    line-height: 1.3;
 		    border: 1px solid #e9ecef;
 		}
+		
+		/* 表格行悬停效果 */
+		#cards-table tbody tr:hover {
+		    background: #e3f2fd !important; /* 浅蓝色背景 */
+		    transform: translateY(-1px);
+		    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+		    transition: all 0.2s ease;
+		}
+
+		/* 确保悬停时文字可读性 */
+		#cards-table tbody tr:hover td {
+		    color: #2c3e50;
+		}
+
+		/* 可选：为其他表格也添加悬停效果 */
+		#customers-table tbody tr:hover,
+		#records-table tbody tr:hover {
+		    background: #f8f9fa !important;
+		    transition: background 0.2s ease;
+		}
+		
+		/* 必填字段标签样式 */
+		.form-group label[for="card-number"]::after,
+		.form-group label[for="card-password"]::after,
+		.form-group label[for="card-status"]::after {
+		    content: " *";
+		    color: #e74c3c;
+		    font-weight: bold;
+		}
+
+		/* 必填字段输入框边框提示 */
+		#card-number:required,
+		#card-password:required,
+		#card-status:required {
+		    border-left: 3px solid #e74c3c;
+		}
+
+		/* 进站信息区域样式 */
+		.station-section {
+		    background: #e8f4fc;
+		    padding: 15px;
+		    border-radius: 8px;
+		    margin-bottom: 15px;
+		    border-left: 4px solid #3498db;
+		}
+
+		.station-section h4 {
+		    margin-bottom: 10px;
+		    color: #2980b9;
+		    border-bottom: 2px solid #3498db;
+		    padding-bottom: 5px;
+		    font-weight: 600;
+		}
+
+		/* 出站信息区域样式 */
+		.station-section:last-of-type {
+		    background: #fff8e1;
+		    border-left: 4px solid #f39c12;
+		}
+
+		.station-section:last-of-type h4 {
+		    color: #e67e22;
+		    border-bottom: 2px solid #f39c12;
+		}
+
+		/* 可选：为必填字段添加背景色提示 */
+		.form-group:has(input:required) label,
+		.form-group:has(select:required) label {
+		    font-weight: 700;
+		    color: #2c3e50;
+		}
+
+		.form-group:has(input:required),
+		.form-group:has(select:required) {
+		    position: relative;
+		}
     </style>
 </head>
 <body>
@@ -527,10 +604,11 @@
                     <input type="text" id="card-search" placeholder="搜索卡号、站点或状态..." onkeyup="searchCards()">
                     <select id="card-status-filter" onchange="filterCards()">
                         <option value="">所有状态</option>
-                        <option value="AVAILABLE">可用</option>
+                        <option value="AVAILABLE">可使用</option>
                         <option value="IN_USE">使用中</option>
-                        <option value="UNAVAILABLE">不可用</option>
-                        <option value="STANDBY">备用</option>
+						<option value="RESERVED">预留票</option>
+                        <option value="STANDBY">备用票</option>
+						<option value="UNAVAILABLE">不可用</option>
                     </select>
                 </div>
                 
@@ -693,11 +771,12 @@
                         <div class="form-group">
                             <label for="card-status">状态 *</label>
                             <select id="card-status" required>
-                                <option value="AVAILABLE">可用</option>
+                                <option value="AVAILABLE">可使用</option>
                                 <option value="IN_USE">使用中</option>
-                                <option value="RESERVED">预约</option>
+                                <option value="RESERVED">预留票</option>
+								<option value="STANDBY">备用票</option>
                                 <option value="UNAVAILABLE">不可用</option>
-                                <option value="STANDBY">备用</option>
+                                
                             </select>
                         </div>
                         <div class="form-group">
@@ -707,7 +786,7 @@
                     </div>
                     <div class="form-row">
                         <div class="form-group" style="flex: 2;">
-                            <label for="card-reserved-user">预约用户</label>
+                            <label for="card-reserved-user">预留用户</label>
                             <div style="display: flex; gap: 10px;">
                                 <input type="text" id="card-reserved-user" placeholder="输入预约用户名称" style="flex: 1;">
                                 <button type="button" class="btn" onclick="showCustomerSelectionModal()" style="white-space: nowrap;">查找用户</button>
@@ -1339,11 +1418,11 @@
 
         function getStatusText(status) {
             const statusMap = {
-                'AVAILABLE': '可用',
+                'AVAILABLE': '可使用',
                 'IN_USE': '使用中',
-                'RESERVED': '预留',
+                'RESERVED': '预留票',
                 'UNAVAILABLE': '不可用',
-                'STANDBY': '备用'
+                'STANDBY': '备用票'
             };
             return statusMap[status] || status;
         }

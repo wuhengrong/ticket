@@ -57,24 +57,29 @@ public class VipCardService {
             List<VipCard> reservedCards = vipCardRepository.findReservedCardsByUserName(customer.getUserName());
             if (!reservedCards.isEmpty()) {
                 // 找到用户预定的卡片，直接返回第一个
-                VipCard reservedCard = reservedCards.get(0);
+            	
+            	for(VipCard reservedCard:reservedCards) {
+            		if(null!=reservedCard.getExpiryTime() && null!= request.getBoardingTime() && reservedCard.getExpiryTime().isAfter(request.getBoardingTime())) {
+            			 // 计算预估出站时间
+                        LocalDateTime estimatedTime = vipCardValidator.calculateEstimatedAlightingTime(
+                            request.getBoardingStation(),
+                            request.getAlightingStation(),
+                            request.getBoardingTime()
+                        );
+                        
+                        return TicketSearchResponse.success(
+                            new com.grace.ticket.dto.VipCardDTO(reservedCard),
+                            estimatedTime,
+                            customer.getRideCount()
+                        );
+            		}
+            	}
                 
-                // 计算预估出站时间
-                LocalDateTime estimatedTime = vipCardValidator.calculateEstimatedAlightingTime(
-                    request.getBoardingStation(),
-                    request.getAlightingStation(),
-                    request.getBoardingTime()
-                );
-                
-                return TicketSearchResponse.success(
-                    new com.grace.ticket.dto.VipCardDTO(reservedCard),
-                    estimatedTime,
-                    customer.getRideCount()
-                );
+               
             }
             
             // 获取可用票卡
-            List<VipCard> availableCards = vipCardRepository.findAvailableCards(DateTimeUtils.now());
+            List<VipCard> availableCards = vipCardRepository.findAvailableCards(DateTimeUtils.now()); 
             if (availableCards.isEmpty()) {
                 return TicketSearchResponse.failure("暂时无可用票");
             }
@@ -176,12 +181,13 @@ public class VipCardService {
             }
             
             // 记录使用日志
-            VipRecord record = new VipRecord(
+            VipRecord record = new VipRecord( 
                 request.getVipCustomerId(),
                 request.getVipCardId(),
                 request.getBoardingStation(), 
                 DateTimeUtils.now(),
-                request.getAlightingStation()
+                request.getAlightingStation(),
+                estimatedTime
             );
             record.setEstimatedAlightingTime(estimatedTime);
             vipRecordRepository.save(record);
