@@ -81,7 +81,88 @@ public class VipCardService {
             // 获取可用票卡
             List<VipCard> availableCards = vipCardRepository.findAvailableCards(DateTimeUtils.now()); 
             if (availableCards.isEmpty()) {
-                return TicketSearchResponse.failure("暂时无可用票");
+                return TicketSearchResponse.failure("暂无可用票"); 
+            }
+            
+            // 查找最佳匹配票卡
+            Optional<VipCard> bestMatch = vipCardValidator.findBestMatchCard(
+                availableCards, 
+                request.getBoardingStation(), 
+                request.getAlightingStation(), 
+                request.getBoardingTime()
+            );
+            
+            if (bestMatch.isEmpty()) {
+                return TicketSearchResponse.failure("无匹配票卡");
+            }
+            
+            VipCard matchedCard = bestMatch.get();
+            
+            // 计算预估出站时间
+            LocalDateTime estimatedTime = vipCardValidator.calculateEstimatedAlightingTime(
+                request.getBoardingStation(),
+                request.getAlightingStation(),
+                request.getBoardingTime()
+            );
+            
+            return TicketSearchResponse.success(
+                new com.grace.ticket.dto.VipCardDTO(matchedCard),
+                estimatedTime,
+                customer.getRideCount()
+            );
+            
+        } catch (Exception e) {
+            return TicketSearchResponse.failure("查询失败: " + e.getMessage());
+        }
+    }
+    
+    /**
+     * 搜索最佳匹配票卡
+     */
+    @Transactional(readOnly = true)
+    public TicketSearchResponse searchBestMatchCardForVIP(TicketSearchRequest request) {
+        try {
+            // 验证VIP客户
+            Optional<VipCustomer> customerOpt = vipCustomerRepository.findById(request.getVipCustomerId());
+            if (customerOpt.isEmpty()) {
+                return TicketSearchResponse.failure("VIP客户不存在");
+            }
+            
+            VipCustomer customer = customerOpt.get();
+            if (customer.getRideCount() <= 0) {
+                return TicketSearchResponse.failure("次卡次数不足");
+            }
+            
+            
+         // 首先检查用户是否有预定的VIP卡（状态为RESERVED）
+            List<VipCard> reservedCards = vipCardRepository.findReservedCardsByUserName(customer.getUserName());
+            if (!reservedCards.isEmpty()) {
+                // 找到用户预定的卡片，直接返回第一个
+            	
+            	for(VipCard reservedCard:reservedCards) {
+            		if(null!=reservedCard.getExpiryTime() && null!= request.getBoardingTime() && reservedCard.getExpiryTime().isAfter(request.getBoardingTime())) {
+            			 // 计算预估出站时间
+                        LocalDateTime estimatedTime = vipCardValidator.calculateEstimatedAlightingTime(
+                            request.getBoardingStation(),
+                            request.getAlightingStation(),
+                            request.getBoardingTime()
+                        );
+                        
+                        return TicketSearchResponse.success(
+                            new com.grace.ticket.dto.VipCardDTO(reservedCard),
+                            estimatedTime,
+                            customer.getRideCount()
+                        );
+            		}
+            	}
+                
+               
+            }
+            
+            // 获取可用票卡
+            List<VipCard> availableCards = vipCardRepository.findAvailableCards(DateTimeUtils.now()); 
+            if (availableCards.isEmpty()) {
+                return TicketSearchResponse.failure("无可用票,点击如下按钮获取连接二维码乘车"); 
             }
             
             // 查找最佳匹配票卡

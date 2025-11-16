@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -16,17 +17,23 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.grace.ticket.dto.GenerateRideLinkRequest;
+import com.grace.ticket.dto.GenerateRideLinkResponse;
+import com.grace.ticket.dto.GetActiveQrResponse;
 import com.grace.ticket.dto.TicketSearchRequest;
 import com.grace.ticket.dto.TicketSearchResponse;
 import com.grace.ticket.dto.UseTicketRequest;
 import com.grace.ticket.dto.VipCardDTO;
 import com.grace.ticket.entity.VipCard;
 import com.grace.ticket.entity.VipCustomer;
+import com.grace.ticket.entity.VipQrRecord;
 import com.grace.ticket.entity.VipRecord;
 import com.grace.ticket.repository.VipCardRepository;
 import com.grace.ticket.repository.VipCustomerRepository;
 import com.grace.ticket.repository.VipRecordRepository;
+import com.grace.ticket.service.VipAdminService;
 import com.grace.ticket.service.VipCardService;
+import com.grace.ticket.service.VipQrRecordService;
 import com.grace.ticket.util.DateTimeUtils;
 
 import jakarta.transaction.Transactional;
@@ -48,6 +55,12 @@ public class VipTicketController {
     @Autowired
     private VipRecordRepository vipRecordRepository;
     
+    @Autowired
+    private  VipAdminService vipAdminService;
+    
+    
+    @Autowired
+    private  VipQrRecordService vipQrRecordService;
     /**
      * VIP客户登录页面
      */
@@ -256,6 +269,108 @@ public class VipTicketController {
             System.out.println("归还票卡异常: " + e.getMessage());
             e.printStackTrace();
             return ResponseEntity.badRequest().body(TicketSearchResponse.failure("归还票卡失败: " + e.getMessage()));
+        }
+    }
+    
+    
+    
+    
+    @PostMapping("/generate-ride-link")
+    public ResponseEntity<GenerateRideLinkResponse> generateRideLink(@RequestBody GenerateRideLinkRequest request) {
+        try {
+            GenerateRideLinkResponse response = vipAdminService.generateRideLink(
+                request.getCustomerId(), 
+                request.getStartStation(), 
+                request.getEndStation()
+            );
+            
+            return ResponseEntity.ok(response);
+            
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(GenerateRideLinkResponse.error("服务器错误"));
+        }
+    }
+    
+    @GetMapping("/customerv2/{vipUrl}")
+    public ResponseEntity<?> getCustomerInfoV2(@PathVariable String vipUrl) {
+        try {
+            Optional<VipCustomer> customerOpt = vipCardService.getCustomerByVipUrl(vipUrl);
+            if (customerOpt.isEmpty()) {
+                return ResponseEntity.badRequest().body("VIP客户不存在");
+            }
+            
+            VipCustomer customer = customerOpt.get();
+            List<VipRecord> history = vipCardService.getCustomerHistory(customer.getId());
+            
+            // 检查客户是否有进行中的票务
+            Map<String, Object> activeTicketInfo = getActiveTicketInfo(customer.getId()); 
+            
+            // 新增：检查客户是否有活跃的二维码记录
+            Map<String, Object> activeQrInfo = getActiveQrInfo(customer.getId());
+            
+            Map<String, Object> response = new HashMap<>();
+            response.put("customer", customer);
+            response.put("history", history);
+            
+            if((boolean)activeTicketInfo.get("hasActiveTicket")) {
+                response.put("activeTicket", activeTicketInfo); // 返回进行中的票务信息
+            }
+            
+            // 新增：如果有活跃的二维码记录，也返回
+            if((boolean)activeQrInfo.get("hasActiveQr")) {
+                response.put("activeQr", activeQrInfo); // 返回活跃的二维码信息
+            }
+            
+            return ResponseEntity.ok(response);
+            
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("获取客户信息失败: " + e.getMessage());
+        }
+    }
+
+    // 新增：获取活跃二维码信息的方法
+    private Map<String, Object> getActiveQrInfo(Long customerId) {
+        Map<String, Object> qrInfo = new HashMap<>();
+        
+        try {
+            VipQrRecord activeRecord = vipQrRecordService.findActiveByCustomerId(customerId);
+            if (activeRecord != null) {
+                qrInfo.put("hasActiveQr", true);
+                qrInfo.put("qrRecord", activeRecord);
+                qrInfo.put("qrUrl", activeRecord.getQrUrl());
+                qrInfo.put("startStation", activeRecord.getStartStation());
+                qrInfo.put("endStation", activeRecord.getEndStation());
+                qrInfo.put("createTime", activeRecord.getCreateTime());
+            } else {
+                qrInfo.put("hasActiveQr", false);
+            }
+        } catch (Exception e) {
+            qrInfo.put("hasActiveQr", false);
+            qrInfo.put("error", e.getMessage());
+        }
+        
+        return qrInfo;
+    }
+
+    // 可以删除原来的 getActiveQrRecord 方法，或者保留作为独立接口
+    // @GetMapping("/active-qr/{customerId}")
+    // public ResponseEntity<GetActiveQrResponse> getActiveQrRecord(@PathVariable Long customerId) {
+//         // ... 原有代码 ...
+    // }
+    
+    @GetMapping("/active-qr/{customerId}")
+    public ResponseEntity<GetActiveQrResponse> getActiveQrRecord(@PathVariable Long customerId) {
+        try {
+            VipQrRecord activeRecord = vipQrRecordService.findActiveByCustomerId(customerId);
+            if (activeRecord != null) {
+                return ResponseEntity.ok(new GetActiveQrResponse(true, "获取成功", activeRecord));
+            } else {
+                return ResponseEntity.ok(new GetActiveQrResponse(false, "没有活跃的二维码记录"));
+            }
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError()
+                .body(new GetActiveQrResponse(false, "查询失败: " + e.getMessage()));
         }
     }
     

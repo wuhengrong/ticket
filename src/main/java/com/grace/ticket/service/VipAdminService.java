@@ -1,5 +1,7 @@
 package com.grace.ticket.service;
 
+
+
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -9,12 +11,19 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.grace.ticket.dto.GenerateRideLinkResponse;
 import com.grace.ticket.dto.VipCardDTO;
 import com.grace.ticket.dto.VipCustomerDTO;
 import com.grace.ticket.entity.VipCard;
 import com.grace.ticket.entity.VipCustomer;
+import com.grace.ticket.entity.VipQR;
+import com.grace.ticket.entity.VipQrRecord;
+import com.grace.ticket.entity.VipRecord;
 import com.grace.ticket.repository.VipCardRepository;
 import com.grace.ticket.repository.VipCustomerRepository;
+import com.grace.ticket.repository.VipQRRepository;
+import com.grace.ticket.repository.VipRecordRepository;
+import com.grace.ticket.util.DateTimeUtils;
 
 @Service
 public class VipAdminService {
@@ -28,7 +37,125 @@ public class VipAdminService {
     @Autowired
     private SecureUrlService secureUrlService;
     
+    
+    @Autowired
+    private VipQRRepository vipQRRepository;
+    
+    
+    @Autowired
+    private VipRecordRepository vipRecordRepository;
+    
+    
+    @Autowired
+    private VipQrRecordService vipQrRecordService;
     // VipCard 相关方法
+    
+    public GenerateRideLinkResponse generateRideLink2(Long customerId, String startStation, String endStation) {
+        try {
+            // 查找客户
+            VipCustomer customer = vipCustomerRepository.findById(customerId)
+                .orElseThrow(() -> new RuntimeException("客户不存在"));
+            
+            // 检查剩余次数
+            if (customer.getRideCount() <= 0) {
+                return GenerateRideLinkResponse.error("次卡次数已用完");
+            }
+            
+            // 生成唯一的二维码标识
+            
+            List<VipQR> vipQRList =vipQRRepository.findByStatus(VipQR.QRStatus.AVAILABLE);
+            VipQR vipQR = null;
+            if(vipQRList!=null && vipQRList.size()>0) {
+            	vipQR = vipQRList.get(0);
+            	vipQR.setUpdatedTime(DateTimeUtils.now());
+            	vipQR.setUserName(customer.getNickName());
+            	vipQR.setStatus(VipQR.QRStatus.USED);
+            	vipQRRepository.save(vipQR);
+            	
+            	  VipRecord record = new VipRecord( 
+            			  customerId,
+            			  vipQR.getId(),
+                          startStation, 
+                          DateTimeUtils.now(),
+                          endStation,
+                          DateTimeUtils.now()
+                      );
+                  vipRecordRepository.save(record);
+                  
+                  // 扣除次数
+                  customer.setRideCount(customer.getRideCount() - 1);
+                  vipCustomerRepository.save(customer);
+                  
+                      
+            	return GenerateRideLinkResponse.success(vipQR.getCardUrl(), customer.getRideCount());
+            } else {
+            	
+            }
+       
+            
+          
+            // 生成二维码链接（根据您的实际业务逻辑调整）
+            
+            return GenerateRideLinkResponse.error("暂无链接二维码次卡...");
+            
+        } catch (Exception e) {
+            return GenerateRideLinkResponse.error("生成乘车链接失败: " + e.getMessage());
+        }
+    }
+    
+    public GenerateRideLinkResponse generateRideLink(Long customerId, String startStation, String endStation) {
+        try {
+            // 查找客户
+            VipCustomer customer = vipCustomerRepository.findById(customerId)
+                .orElseThrow(() -> new RuntimeException("客户不存在"));
+            
+            // 检查剩余次数
+            if (customer.getRideCount() <= 0) {
+                return GenerateRideLinkResponse.error("次卡次数已用完");
+            }
+            
+            // 检查是否已有活跃的二维码记录
+            VipQrRecord existingRecord = vipQrRecordService.findActiveByCustomerId(customerId);
+            if (existingRecord != null) {
+                return GenerateRideLinkResponse.success(existingRecord.getQrUrl(), customer.getRideCount());
+            }
+            
+            // 查找可用的VipQR
+            List<VipQR> vipQRList = vipQRRepository.findByStatus(VipQR.QRStatus.AVAILABLE);
+            VipQR vipQR = null;
+            if(vipQRList != null && vipQRList.size() > 0) {
+                vipQR = vipQRList.get(0);
+                vipQR.setUpdatedTime(DateTimeUtils.now());
+                vipQR.setUserName(customer.getNickName());
+                vipQR.setStatus(VipQR.QRStatus.USED);
+                vipQRRepository.save(vipQR);
+                
+                // 创建并保存 VipQrRecord
+                VipQrRecord qrRecord = new VipQrRecord();
+                qrRecord.setCustomerId(customerId);
+                qrRecord.setStartStation(startStation);
+                qrRecord.setEndStation(endStation);
+                qrRecord.setQrUrl(vipQR.getCardUrl());
+                qrRecord.setStatus("ACTIVE");
+                qrRecord.setCreateTime(DateTimeUtils.now());
+                qrRecord.setUpdateTime(DateTimeUtils.now());
+                qrRecord.setUserName(customer.getUserName());
+                qrRecord.setNickName(customer.getNickName());
+                vipQrRecordService.save(qrRecord);
+                
+                // 扣除次数
+                customer.setRideCount(customer.getRideCount() - 1);
+                vipCustomerRepository.save(customer);
+                
+                return GenerateRideLinkResponse.success(vipQR.getCardUrl(), customer.getRideCount());
+            } else {
+                return GenerateRideLinkResponse.error("暂无可用二维码次卡...");
+            }
+            
+        } catch (Exception e) {
+            return GenerateRideLinkResponse.error("生成乘车链接失败: " + e.getMessage());
+        }
+    }
     
     @Transactional(readOnly = true)
     public List<VipCardDTO> getAllCards() {
