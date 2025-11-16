@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>二维码乘车</title>
+	<style>
+	        * {
+	            margin: 0;
+	            padding: 0;
+	            box-sizing: border-box;
+	            font-family: 'Helvetica Neue', Arial, sans-serif;
+	        }
+	        
+	        /* 关键修改：让页面占满整个iframe */
+	        html, body {
+	            height: 100%;
+	            width: 100%;
+	            background-color: transparent;
+	            overflow: hidden;
+	        }
+	        
+	        body {
+	            color: #333;
+	            line-height: 1.6;
+	            padding: 0;
+	            margin: 0;
+	            display: flex;
+	            flex-direction: column;
+	            min-height: 100vh;
+	        }
+	        
+	        /* 关键修改：容器占满整个页面 */
+	        .container {
+	            background: white;
+	            border-radius: 12px;
+	            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+	            padding: 0px;
+	            flex: 1; /* 占满剩余空间 */
+	            display: flex;
+	            flex-direction: column;
+	            height: 100%; /* 占满父容器高度 */
+	            width: 100%; /* 占满父容器宽度 */
+	            margin: 0; /* 移除外边距 */
+	        }
+	        
+	        .qr-alternative {
+	            background: #fff3cd;
+	            border: 1px solid #ffeaa7;
+	            border-radius: 8px;
+	            padding: 20px;
+	            text-align: center;
+	            flex: 1; /* 占满容器 */
+	            display: flex;
+	            flex-direction: column;
+	            justify-content: space-between;
+	            height: 100%; /* 占满父容器 */
+	            min-height: 0; /* 防止flex项目溢出 */
+	        }
+	        
+	        .method-title {
+	            color: #856404;
+	            font-weight: bold;
+	            margin-bottom: 15px;
+	            font-size: 16px;
+	            text-align: left;
+	        }
+	        
+	        .step {
+	            margin: 8px 0;
+	            padding-left: 20px;
+	            position: relative;
+	            color: #856404;
+	            text-align: left;
+	        }
+	        
+	        .step:before {
+	            content: "•";
+	            position: absolute;
+	            left: 8px;
+	            color: #856404;
+	        }
+	        
+	        .qr-button {
+	            background: linear-gradient(135deg, #3498db, #2980b9);
+	            color: white;
+	            border: none;
+	            padding: 12px 25px;
+	            border-radius: 8px;
+	            font-size: 16px;
+	            font-weight: bold;
+	            cursor: pointer;
+	            transition: all 0.3s ease;
+	            margin: 15px 0;
+	            width: 100%;
+	            display: flex;
+	            align-items: center;
+	            justify-content: center;
+	            gap: 8px;
+	            flex-shrink: 0;
+	        }
+	        
+	        .qr-button:hover {
+	            transform: translateY(-2px);
+	            box-shadow: 0 4px 15px rgba(52, 152, 219, 0.4);
+	        }
+	        
+	        .qr-button:disabled {
+	            background: #bdc3c7;
+	            cursor: not-allowed;
+	            transform: none;
+	            box-shadow: none;
+	        }
+	        
+	        .note {
+	            background: #f8d7da;
+	            color: #721c24;
+	            padding: 10px;
+	            border-radius: 4px;
+	            margin-top: 10px;
+	            font-size: 14px;
+	            border: 1px solid #f5c6cb;
+	            text-align: left;
+	            flex-shrink: 0;
+	        }
+	        
+	        .hidden {
+	            display: none;
+	        }
+
+	        .success-message {
+	            background: #d4edda;
+	            color: #155724;
+	            padding: 16px;
+	            border-radius: 8px;
+	            margin: 20px 0;
+	            border: 1px solid #c3e6cb;
+	            display: flex;
+	            align-items: flex-start;
+	            gap: 12px;
+	            flex-shrink: 0;
+	            max-width: 100%;
+	            overflow: hidden;
+	        }
+
+	        .success-icon {
+	            font-size: 20px;
+	            flex-shrink: 0;
+	        }
+
+	        .success-content {
+	            flex: 1;
+	            min-width: 0;
+	            overflow: hidden;
+	            text-align: left;
+	        }
+
+	        .success-content strong {
+	            display: block;
+	            margin-bottom: 8px;
+	            font-size: 16px;
+	            text-align: left;
+	        }
+
+	        .success-content p {
+	            margin: 4px 0;
+	            font-size: 14px;
+	            line-height: 1.4;
+	        }
+
+	        .error {
+	            text-align: center;
+	            padding: 20px;
+	            color: #e74c3c;
+	            background: #fadbd8;
+	            border-radius: 8px;
+	            margin-bottom: 20px;
+	            flex-shrink: 0;
+	        }
+
+	        .loading {
+	            text-align: center;
+	            padding: 10px;
+	            color: #3498db;
+	            flex-shrink: 0;
+	        }
+
+	        /* 新增：内容区域，确保内容自适应 */
+	        .content-area {
+	            flex: 1;
+	            display: flex;
+	            flex-direction: column;
+	            justify-content: center;
+	            min-height: 0;
+	            overflow: hidden;
+	        }
+
+	        /* 链接样式 - 根据div宽度自动换行 */
+	        .card-url {
+	            margin-top: 0;
+	            font-weight: 500;
+	            max-width: 100%;
+	            overflow: hidden;
+	            text-align: left;
+	            word-break: break-all;
+	            overflow-wrap: break-word;
+	            white-space: normal;
+	            line-height: 1.5;
+	        }
+
+	        .card-url a {
+	            color: #155724;
+	            text-decoration: underline;
+	            font-weight: 500;
+	            word-break: break-all;
+	            overflow-wrap: break-word;
+	            display: inline;
+	            line-height: inherit;
+	        }
+
+	        .card-url a:hover {
+	            text-decoration: none;
+	        }
+			
+			.method-section {
+			    margin-top: 15px;
+			    padding: 15px;
+			    background: #f8f9fa;
+			    border-radius: 8px;
+			    border-left: 4px solid #3498db;
+			}
+
+			.method-title {
+			    color: #2c3e50;
+			    font-weight: bold;
+			    margin-bottom: 10px;
+			    font-size: 16px;
+			    text-align: left;
+			}
+
+			.step {
+			    margin: 8px 0;
+			    padding-left: 20px;
+			    position: relative;
+			    color: #555;
+			    text-align: left;
+			    font-size: 14px;
+			}
+
+			.step:before {
+			    content: "•";
+			    position: absolute;
+			    left: 8px;
+			    color: #3498db;
+			    font-weight: bold;
+			}
+	    </style>
+</head>
+<body>
+
+    <!-- 二维码乘车替代方案 -->
+    <div class="container">
+        <div id="qrAlternativeContainer" class="qr-alternative">
+           
+            <button id="qr-code-button" class="qr-button">
+                📱 点击获取二维码链接
+            </button>
+
+            <!-- 加载状态 -->
+            <div id="loadingContainer" class="loading hidden">
+                ⏳ 请求处理中，请稍候...
+            </div>
+            
+            <!-- 成功消息 -->
+			<!-- 成功消息 -->
+			<div id="successMessage" class="success-message hidden">
+			    
+			    <div class="success-content">
+			        <strong><span class="success-icon">✅</span>添加客服微信，享受实时服务：whengrong</strong>
+			        <div id="cardUrl" class="card-url"></div>
+			    </div>
+			</div>
+
+            <!-- 错误提示 -->
+            <div id="errorContainer" class="error hidden"></div>
+            
+			<div class="method-section">
+			                <div class="method-title">乘车说明</div>
+			                <div class="step">1.点击或复制以上链接,按说明进行乘车</div>
+							<div class="step">2.提前3分钟点击进站效果更好</div>
+			                <div class="step">3.网络问题导致不能及时进站，可刷个人备用卡乘车，及时留言客服，不扣次数</div>
+
+			 </div>
+        </div>
+    </div>
+
+    <script>
+        // 存储从父窗口接收的数据
+        let parentData = {
+            customer: null,
+            startStation: '',
+            endStation: '',
+            urlParams: {}
+        };
+
+        // 显示错误信息
+        function showError(message) {
+            const errorContainer = document.getElementById('errorContainer');
+            errorContainer.textContent = message;
+            errorContainer.classList.remove('hidden');
+            hideSuccessMessage();
+            hideLoading();
+        }
+
+        // 隐藏错误信息
+        function hideError() {
+            document.getElementById('errorContainer').classList.add('hidden');
+        }
+
+        // 显示加载状态
+        function showLoading() {
+            document.getElementById('loadingContainer').classList.remove('hidden');
+        }
+
+        // 隐藏加载状态
+        function hideLoading() {
+            document.getElementById('loadingContainer').classList.add('hidden');
+        }
+
+		// 显示成功消息
+		// 显示成功消息
+		// 显示成功消息
+		function showSuccessMessage(cardUrl) {
+		    const successMessage = document.getElementById('successMessage');
+		    const cardUrlElement = document.getElementById('cardUrl');
+		    const methodSection = document.querySelector('.method-section');
+		    
+		    if (cardUrl) {
+		        cardUrlElement.innerHTML = 
+		            `<a href="${cardUrl}" target="_blank" title="点击打开链接">
+		            ${cardUrl}
+		            </a>`;
+		    } else {
+		        cardUrlElement.textContent = '链接生成失败';
+		    }
+		    
+		    successMessage.classList.remove('hidden');
+		    hideError();
+		    hideLoading();
+		    
+		    // 确保按钮被隐藏
+		    const qrButton = document.getElementById('qr-code-button');
+		    qrButton.style.display = 'none';
+		    
+		    // 显示方法说明区域
+		    if (methodSection) {
+		        methodSection.style.display = 'block';
+		    }
+		    
+		    // 触发内容检查
+		    checkCardUrlContent();
+		}
+		
+		// 隐藏成功消息和相关内容
+		function hideSuccessMessage() {
+		    const successMessage = document.getElementById('successMessage');
+		    const methodSection = document.querySelector('.method-section');
+		    
+		    successMessage.classList.add('hidden');
+		    
+		    // 隐藏方法说明区域
+		    if (methodSection) {
+		        methodSection.style.display = 'none';
+		    }
+		}
+
+		// 在页面初始化时确保method-section隐藏
+		document.addEventListener('DOMContentLoaded', function() {
+		    const methodSection = document.querySelector('.method-section');
+		    if (methodSection) {
+		        methodSection.style.display = 'none';
+		    }
+		    
+		    const qrButton = document.getElementById('qr-code-button');
+		    qrButton.addEventListener('click', generateRideLink);
+		    
+		    // 请求父窗口发送数据
+		    window.parent.postMessage({ type: 'requestData' }, '*');
+		});
+
+        // 生成乘车链接
+        async function generateRideLink() {
+            let qrButton;
+            
+            try {
+                qrButton = document.getElementById('qr-code-button');
+                qrButton.disabled = true;
+                qrButton.innerHTML = '⏳ 生成中...';
+
+                hideError();
+                hideSuccessMessage();
+                showLoading();
+
+                console.log('当前parentData:', parentData);
+
+                // 验证数据
+                if (!parentData.startStation || !parentData.endStation) {
+                    throw new Error('请先在主页面填写起始站点和目的站点');
+                }
+
+                if (!parentData.customer || !parentData.customer.id) {
+                    throw new Error('客户信息未加载，请刷新页面重试或联系管理员');
+                }
+
+                if (parentData.customer.rideCount <= 0) {
+                    throw new Error('您的次卡次数已用完，无法使用二维码乘车');
+                }
+
+                console.log('发送请求数据:', {
+                    customerId: parentData.customer.id,
+                    startStation: parentData.startStation,
+                    endStation: parentData.endStation
+                });
+
+                // 调用后端API生成乘车链接
+                const response = await fetch('/api/vip/generate-ride-link', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        customerId: parentData.customer.id,
+                        startStation: parentData.startStation,
+                        endStation: parentData.endStation
+                    })
+                });
+
+                console.log('响应状态:', response.status);
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error('HTTP错误响应:', errorText);
+                    throw new Error(`请求失败: ${response.status} ${response.statusText}`);
+                }
+
+                const result = await response.json();
+                console.log('响应结果:', result);
+
+                if (result.success) {
+                    // 显示成功消息
+                    const cardUrl = result.cardUrl || result.rideUrl;
+                    showSuccessMessage(cardUrl);
+
+                    // 更新客户次数
+                    if (result.remainingRides !== undefined) {
+                        parentData.customer.rideCount = result.remainingRides;
+                        // 通知父窗口更新显示
+                        window.parent.postMessage({
+                            type: 'updateRideCount',
+                            rideCount: result.remainingRides
+                        }, '*');
+                    }
+
+                    // 隐藏二维码按钮，避免重复使用
+                    qrButton.style.display = 'none';
+
+                } else {
+                    throw new Error(result.message || '生成乘车链接失败');
+                }
+
+            } catch (error) {
+                console.error('生成乘车链接失败:', error);
+                showError('生成乘车链接失败: ' + error.message);
+                
+                // 重新启用按钮
+                if (qrButton) {
+                    qrButton.disabled = false;
+                    qrButton.innerHTML = '📱 点击二维码乘车';
+                }
+                hideLoading();
+            }
+        }
+
+        // 初始化事件监听
+        document.addEventListener('DOMContentLoaded', function() {
+            const qrButton = document.getElementById('qr-code-button');
+            qrButton.addEventListener('click', generateRideLink);
+            
+            // 请求父窗口发送数据
+            window.parent.postMessage({ type: 'requestData' }, '*');
+        });
+
+        // 从父窗口接收数据
+		// 在iframe的消息监听中添加
+		window.addEventListener('message', function(event) {
+		    console.log('收到父窗口消息:', event.data);
+		    
+		    if (event.data.type === 'sendData') {
+		        // 接收父窗口发送的数据
+		        parentData = {
+		            ...parentData,
+		            ...event.data.data
+		        };
+		        console.log('接收到父窗口数据:', parentData);
+		        
+		    } else if (event.data.type === 'showQRAlternative') {
+		        // 显示二维码容器
+		        document.getElementById('qrAlternativeContainer').classList.remove('hidden');
+		        // 重置按钮状态
+		        const qrButton = document.getElementById('qr-code-button');
+		        qrButton.disabled = false;
+		        qrButton.innerHTML = '📱 点击二维码乘车';
+		        qrButton.style.display = 'flex';
+		        hideError();
+		        hideSuccessMessage();
+		        hideLoading();
+		        
+		        // 隐藏方法说明区域
+		        const methodSection = document.querySelector('.method-section');
+		        if (methodSection) {
+		            methodSection.style.display = 'none';
+		        }
+		        
+		    } else if (event.data.type === 'hideQRAlternative') {
+		        // 隐藏二维码容器
+		        document.getElementById('qrAlternativeContainer').classList.add('hidden');
+		        
+		    } else if (event.data.type === 'showQrSuccess') {
+		        // 显示已存在的二维码成功状态
+		        document.getElementById('qrAlternativeContainer').classList.remove('hidden');
+		        showSuccessMessage(event.data.qrUrl);
+		        // 隐藏按钮，因为已经生成过了
+		        const qrButton = document.getElementById('qr-code-button');
+		        qrButton.style.display = 'none';
+		        
+		    } else if (event.data.type === 'hideQRButton') {
+		        // 新增：隐藏按钮的专门消息
+		        const qrButton = document.getElementById('qr-code-button');
+		        qrButton.style.display = 'none';
+		        
+		    } else if (event.data.type === 'updateFormData') {
+		        // 更新表单数据
+		        parentData.startStation = event.data.startStation || '';
+		        parentData.endStation = event.data.endStation || '';
+		        console.log('更新表单数据:', parentData);
+		    }
+		});
+		
+		// 检查cardUrl内容并通知父页面
+		function checkCardUrlContent() {
+		    const cardUrlElement = document.getElementById('cardUrl');
+		    const methodSection = document.querySelector('.method-section');
+		    
+		    if (cardUrlElement) {
+		        const hasContent = cardUrlElement.textContent.trim().length > 0 || 
+		                          cardUrlElement.innerHTML.trim().length > 0;
+		        
+		        // 通知父页面
+		        window.parent.postMessage({
+		            type: 'cardUrlContentStatus',
+		            hasContent: hasContent
+		        }, '*');
+		        
+		        // 本地也设置可见性
+		        if (methodSection) {
+		            methodSection.style.display = hasContent ? 'block' : 'none';
+		        }
+		    }
+		}
+
+		// 在DOM加载完成后检查
+		document.addEventListener('DOMContentLoaded', function() {
+		    // 初始检查
+		    checkCardUrlContent();
+		    
+		    // 监听内容变化（MutationObserver）
+		    const cardUrlElement = document.getElementById('cardUrl');
+		    if (cardUrlElement) {
+		        const observer = new MutationObserver(function(mutations) {
+		            mutations.forEach(function(mutation) {
+		                if (mutation.type === 'childList' || mutation.type === 'characterData') {
+		                    checkCardUrlContent();
+		                }
+		            });
+		        });
+		        
+		        observer.observe(cardUrlElement, {
+		            childList: true,
+		            characterData: true,
+		            subtree: true
+		        });
+		    }
+		});
+		
+        // 调试信息
+        console.log('qrcode.html 加载完成');
+		
+		// 在iframe的消息监听中添加
+		// 从父窗口接收数据
+		// 从父窗口接收数据
+		window.addEventListener('message', function(event) {
+		    console.log('收到父窗口消息:', event.data);
+		    
+		    if (event.data.type === 'sendData') {
+		        // 接收父窗口发送的数据
+		        parentData = {
+		            ...parentData,
+		            ...event.data.data
+		        };
+		        console.log('接收到父窗口数据:', parentData);
+		        
+		    } else if (event.data.type === 'showQRAlternative') {
+		        // 显示二维码容器
+		        document.getElementById('qrAlternativeContainer').classList.remove('hidden');
+		        // 重置按钮状态
+		        const qrButton = document.getElementById('qr-code-button');
+		        qrButton.disabled = false;
+		        qrButton.innerHTML = '📱 点击二维码乘车';
+		        qrButton.style.display = 'flex';
+		        hideError();
+		        hideSuccessMessage();
+		        hideLoading();
+		        
+		    } else if (event.data.type === 'hideQRAlternative') {
+		        // 隐藏二维码容器
+		        document.getElementById('qrAlternativeContainer').classList.add('hidden');
+		        
+		    } else if (event.data.type === 'showQrSuccess') {
+		        // 显示已存在的二维码成功状态
+		        document.getElementById('qrAlternativeContainer').classList.remove('hidden');
+		        showSuccessMessage(event.data.qrUrl);
+		        // 隐藏按钮，因为已经生成过了
+		        const qrButton = document.getElementById('qr-code-button');
+		        qrButton.style.display = 'none';
+		        
+		    } else if (event.data.type === 'hideQRButton') {
+		        // 新增：隐藏按钮的专门消息
+		        const qrButton = document.getElementById('qr-code-button');
+		        qrButton.style.display = 'none';
+		        
+		    } else if (event.data.type === 'updateFormData') {
+		        // 更新表单数据
+		        parentData.startStation = event.data.startStation || '';
+		        parentData.endStation = event.data.endStation || '';
+		        console.log('更新表单数据:', parentData);
+		        
+		    } else if (event.data.type === 'showMethodSection') {
+		        // 显示方法说明区域
+		        const methodSection = document.querySelector('.method-section');
+		        if (methodSection) {
+		            methodSection.style.display = 'block';
+		        }
+		        
+		    } else if (event.data.type === 'hideMethodSection') {
+		        // 隐藏方法说明区域
+		        const methodSection = document.querySelector('.method-section');
+		        if (methodSection) {
+		            methodSection.style.display = 'none';
+		        }
+		    } else if (event.data.type === 'checkCardUrlContent') {
+			    // 父页面请求检查cardUrl内容
+			    checkCardUrlContent();
+			}
+		});
+		
+    </script>
+</body>
+</html>

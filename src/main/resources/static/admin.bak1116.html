@@ -543,11 +543,6 @@
 		.form-group:has(select:required) {
 		    position: relative;
 		}
-		
-		/* 二维码记录状态样式 */
-		.status-active { color: #27ae60; font-weight: 600; }
-		.status-used { color: #f39c12; font-weight: 600; }
-		.status-expired { color: #95a5a6; font-weight: 600; }
     </style>
 </head>
 <body>
@@ -569,14 +564,13 @@
     <!-- 主页面内容 -->
     <div id="main-content" style="display: none;">
         <div class="container">
-            <h1>信息管理系统</h1>
+            <h1>VIP卡和客户管理系统</h1>
             
             <div class="tabs">
                 <button class="tab active" onclick="switchTab('cards')">虚拟卡管理</button>
-				<button class="tab" onclick="switchTab('qrs')">二维码管理</button>
+				<button class="tab" onclick="switchTab('qrs')">二维码链接管理</button>
                 <button class="tab" onclick="switchTab('customers')">客户管理</button>
-                <button class="tab" onclick="switchTab('records')">虚拟卡记录</button>
-				<button class="tab" onclick="switchTab('qr-records')">二维码记录</button> <!-- 新增 -->
+                <button class="tab" onclick="switchTab('records')">乘车记录</button>
 				
                 <button class="tab" style="margin-left: auto; background: #95a5a6;" onclick="logout()">退出登录</button>
             </div>
@@ -653,7 +647,7 @@
 			<!-- VIP二维码管理 -->
 			<div id="qrs-tab" class="tab-content">
 			    <div class="toolbar">
-			        <h2>二维码管理</h2>
+			        <h2>VIP二维码管理</h2>
 			        <button class="btn" onclick="showQRModal()">新增二维码</button>
 			    </div>
 
@@ -819,70 +813,6 @@
                     </table>
                 </div>
             </div>
-			
-			<!-- VIP二维码记录管理 -->
-			<div id="qr-records-tab" class="tab-content">
-			    <div class="toolbar">
-			        <h2>VIP二维码记录管理</h2>
-			        <button class="btn" onclick="showQrRecordModal()">新增二维码记录</button>
-			    </div>
-
-			    <!-- 统计信息 -->
-			    <div class="stats" id="qr-records-stats">
-			        <div class="stat-card">
-			            <div class="stat-number" id="total-qr-records">0</div>
-			            <div class="stat-label">总记录数</div>
-			        </div>
-			        <div class="stat-card">
-			            <div class="stat-number" id="active-qr-records">0</div>
-			            <div class="stat-label">活跃</div>
-			        </div>
-			        <div class="stat-card">
-			            <div class="stat-number" id="used-qr-records">0</div>
-			            <div class="stat-label">已使用</div>
-			        </div>
-			        <div class="stat-card">
-			            <div class="stat-number" id="expired-qr-records">0</div>
-			            <div class="stat-label">已过期</div>
-			        </div>
-			    </div>
-			    
-			    <div class="search-box">
-			        <input type="text" id="qr-record-search" placeholder="搜索URL、站点..." onkeyup="searchQrRecords()">
-			        <select id="qr-record-status-filter" onchange="filterQrRecords()">
-			            <option value="">所有状态</option>
-			            <option value="ACTIVE">活跃</option>
-			            <option value="USED">已使用</option>
-			            <option value="EXPIRED">已过期</option>
-			        </select>
-			    </div>
-			    
-			    <div id="qr-records-message"></div>
-			    
-			    <div class="table-container">
-			        <table id="qr-records-table">
-			            <thead>
-							<tr>
-					           <th>ID</th>
-					           <th>客户ID</th>
-					           <th>用户名</th>          <!-- 新增 -->
-					           <th>昵称</th>            <!-- 新增 -->
-					           <th>起始站点</th>
-					           <th>目的站点</th>
-					           <th>二维码URL</th>
-					           <th>状态</th>
-					           <th>创建时间</th>
-					           <th>更新时间</th>
-					           <th>操作</th>
-							       </tr>
-			            </thead>
-			            <tbody id="qr-records-tbody">
-			                <!-- 动态加载数据 -->
-			            </tbody>
-			        </table>
-			    </div>
-			</div>
-			
         </div>
         
         <!-- VIP卡编辑模态框 -->
@@ -1035,61 +965,6 @@
             </div>
         </div>
         
-		<!-- VIP二维码记录编辑模态框 -->
-		<!-- 修改二维码记录编辑模态框 -->
-		<div id="qr-record-modal" class="modal">
-		    <div class="modal-content">
-		        <div class="modal-header">
-		            <h3 id="qr-record-modal-title">新增二维码记录</h3>
-		            <span class="close" onclick="closeQrRecordModal()">&times;</span>
-		        </div>
-		        <form id="qr-record-form">
-		            <input type="hidden" id="qr-record-id">
-		            <div class="form-row">
-		                <div class="form-group">
-		                    <label for="qr-record-customer-id">客户ID *</label>
-		                    <input type="number" id="qr-record-customer-id" required>
-		                </div>
-		                <div class="form-group">
-		                    <label for="qr-record-status">状态 *</label>
-		                    <select id="qr-record-status" required>
-		                        <option value="ACTIVE">活跃</option>
-		                        <option value="USED">已使用</option>
-		                        <option value="EXPIRED">已过期</option>
-		                    </select>
-		                </div>
-		            </div>
-		            <div class="form-row">
-		                <div class="form-group">
-		                    <label for="qr-record-user-name">用户名</label>          <!-- 新增 -->
-		                    <input type="text" id="qr-record-user-name" placeholder="输入用户名">
-		                </div>
-		                <div class="form-group">
-		                    <label for="qr-record-nick-name">昵称</label>            <!-- 新增 -->
-		                    <input type="text" id="qr-record-nick-name" placeholder="输入昵称">
-		                </div>
-		            </div>
-		            <div class="form-row">
-		                <div class="form-group">
-		                    <label for="qr-record-start-station">起始站点</label>
-		                    <input type="text" id="qr-record-start-station" placeholder="输入起始站点">
-		                </div>
-		                <div class="form-group">
-		                    <label for="qr-record-end-station">目的站点</label>
-		                    <input type="text" id="qr-record-end-station" placeholder="输入目的站点">
-		                </div>
-		            </div>
-		            <div class="form-group">
-		                <label for="qr-record-url">二维码URL *</label>
-		                <input type="text" id="qr-record-url" required placeholder="输入二维码URL">
-		            </div>
-		            <div style="text-align: right; margin-top: 20px;">
-		                <button type="button" class="btn" onclick="closeQrRecordModal()">取消</button>
-		                <button type="submit" class="btn btn-success">保存</button>
-		            </div>
-		        </form>
-		    </div>
-		</div>
 		<!-- VIP二维码编辑模态框 -->
 		<div id="qr-modal" class="modal">
 		    <div class="modal-content">
@@ -1273,10 +1148,6 @@
 		
 		let allQRs = [];
 		let currentEditingQR = null;
-		
-		// 全局变量
-		let allQrRecords = [];
-		let currentEditingQrRecord = null;
         // 认证管理
 		
         const auth = {
@@ -1630,75 +1501,7 @@
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
                 return await response.json();
-            },
-			// VIP二维码记录相关API
-			    async getQrRecords() {
-			        const response = await this.makeAuthenticatedRequest('/api/admin/vip/qr-records');
-			        if (!response.ok) {
-			            throw new Error(`HTTP error! status: ${response.status}`);
-			        }
-			        return await response.json();
-			    },
-			    
-			    async getQrRecord(id) {
-			        const response = await this.makeAuthenticatedRequest(`/api/admin/vip/qr-records/${id}`);
-			        if (!response.ok) {
-			            throw new Error(`HTTP error! status: ${response.status}`);
-			        }
-			        return await response.json();
-			    },
-			    
-			    async createQrRecord(qrRecordData) {
-			        const response = await this.makeAuthenticatedRequest('/api/admin/vip/qr-records', {
-			            method: 'POST',
-			            headers: { 'Content-Type': 'application/json' },
-			            body: JSON.stringify(qrRecordData)
-			        });
-			        if (!response.ok) {
-			            const error = await response.text();
-			            throw new Error(error || `HTTP error! status: ${response.status}`);
-			        }
-			        return await response.json();
-			    },
-			    
-			    async updateQrRecord(id, qrRecordData) {
-			        const response = await this.makeAuthenticatedRequest(`/api/admin/vip/qr-records/${id}`, {
-			            method: 'PUT',
-			            headers: { 'Content-Type': 'application/json' },
-			            body: JSON.stringify(qrRecordData)
-			        });
-			        if (!response.ok) {
-			            const error = await response.text();
-			            throw new Error(error || `HTTP error! status: ${response.status}`);
-			        }
-			        return await response.json();
-			    },
-			    
-			    async deleteQrRecord(id) {
-			        const response = await this.makeAuthenticatedRequest(`/api/admin/vip/qr-records/${id}`, {
-			            method: 'DELETE'
-			        });
-			        if (!response.ok) {
-			            throw new Error(`HTTP error! status: ${response.status}`);
-			        }
-			        return true;
-			    },
-			    
-			    async searchQrRecords(keyword) {
-			        const response = await this.makeAuthenticatedRequest(`/api/admin/vip/qr-records/search?keyword=${encodeURIComponent(keyword)}`);
-			        if (!response.ok) {
-			            throw new Error(`HTTP error! status: ${response.status}`);
-			        }
-			        return await response.json();
-			    },
-			    
-			    async getQrRecordStats() {
-			        const response = await this.makeAuthenticatedRequest('/api/admin/vip/qr-records/stats');
-			        if (!response.ok) {
-			            throw new Error(`HTTP error! status: ${response.status}`);
-			        }
-			        return await response.json();
-			    }
+            }
         };
 
         // 页面显示控制
@@ -1870,7 +1673,6 @@
 		}
 		
         // 标签切换
-		// 标签切换函数更新
 		function switchTab(tabName) {
 		    // 更新标签
 		    document.querySelectorAll('.tab').forEach(tab => {
@@ -1892,8 +1694,6 @@
 		        loadRecords();
 		    } else if (tabName === 'qrs') {
 		        loadQRs();
-		    } else if (tabName === 'qr-records') {
-		        loadQrRecords();
 		    }
 		}
 
@@ -2391,227 +2191,6 @@
 		    }
 		});
 		
-		// 二维码记录管理功能
-		async function loadQrRecords() {
-		    try {
-		        showMessage('qr-records-message', '正在加载二维码记录数据...', 'success');
-		        allQrRecords = await apiClient.getQrRecords();
-		        displayQrRecords(allQrRecords);
-		        await updateQrRecordStats();
-		    } catch (error) {
-		        console.error('加载二维码记录失败:', error);
-		        showMessage('qr-records-message', '加载二维码记录失败: ' + error.message);
-		    }
-		}
-
-		function displayQrRecords(qrRecords) {
-		    const tbody = document.getElementById('qr-records-tbody');
-		    tbody.innerHTML = '';
-		    
-		    if (qrRecords.length === 0) {
-		        tbody.innerHTML = '<tr><td colspan="11" style="text-align: center; color: #666;">暂无二维码记录数据</td></tr>'; // colspan改为11
-		        return;
-		    }
-		    
-		    qrRecords.forEach(qrRecord => {
-		        const row = document.createElement('tr');
-		        row.innerHTML = `
-		            <td>${qrRecord.id}</td>
-		            <td>${qrRecord.customerId}</td>
-		            <td>${qrRecord.userName || '<span class="empty-cell">-</span>'}</td>          <!-- 新增 -->
-		            <td>${qrRecord.nickName || '<span class="empty-cell">-</span>'}</td>          <!-- 新增 -->
-		            <td>${qrRecord.startStation || '<span class="empty-cell">-</span>'}</td>
-		            <td>${qrRecord.endStation || '<span class="empty-cell">-</span>'}</td>
-		            <td><a href="${qrRecord.qrUrl}" target="_blank" title="点击访问" style="color: #3498db; text-decoration: none;">${qrRecord.qrUrl}</a></td>
-		            <td class="${getQrRecordStatusClass(qrRecord.status)}">${getQrRecordStatusText(qrRecord.status)}</td>
-		            <td>${formatShortDateTime(qrRecord.createTime)}</td>
-		            <td>${formatShortDateTime(qrRecord.updateTime)}</td>
-		            <td class="action-buttons">
-		                <button class="action-btn btn-warning" onclick="editQrRecord(${qrRecord.id})">编辑</button>
-		                <button class="action-btn btn-danger" onclick="deleteQrRecord(${qrRecord.id})">删除</button>
-		            </td>
-		        `;
-		        tbody.appendChild(row);
-		    });
-		}
-
-		async function updateQrRecordStats() {
-		    try {
-		        const stats = await apiClient.getQrRecordStats();
-		        document.getElementById('total-qr-records').textContent = stats.total || 0;
-		        document.getElementById('active-qr-records').textContent = stats.active || 0;
-		        document.getElementById('used-qr-records').textContent = stats.used || 0;
-		        document.getElementById('expired-qr-records').textContent = stats.expired || 0;
-		    } catch (error) {
-		        console.error('加载二维码记录统计失败:', error);
-		    }
-		}
-
-		function searchQrRecords() {
-		    const searchTerm = document.getElementById('qr-record-search').value.toLowerCase();
-		    const statusFilter = document.getElementById('qr-record-status-filter').value;
-		    
-		    let filteredQrRecords = allQrRecords;
-		    
-		    if (searchTerm) {
-		        filteredQrRecords = filteredQrRecords.filter(qrRecord => 
-		            qrRecord.qrUrl.toLowerCase().includes(searchTerm) ||
-		            (qrRecord.startStation && qrRecord.startStation.toLowerCase().includes(searchTerm)) ||
-		            (qrRecord.endStation && qrRecord.endStation.toLowerCase().includes(searchTerm)) ||
-		            (qrRecord.userName && qrRecord.userName.toLowerCase().includes(searchTerm)) ||      // 新增
-		            (qrRecord.nickName && qrRecord.nickName.toLowerCase().includes(searchTerm))        // 新增
-		        );
-		    }
-		    
-		    if (statusFilter) {
-		        filteredQrRecords = filteredQrRecords.filter(qrRecord => qrRecord.status === statusFilter);
-		    }
-		    
-		    displayQrRecords(filteredQrRecords);
-		}
-
-		function filterQrRecords() {
-		    searchQrRecords();
-		}
-
-		function showQrRecordModal() {
-		    currentEditingQrRecord = null;
-		    document.getElementById('qr-record-modal-title').textContent = '新增二维码记录';
-		    document.getElementById('qr-record-form').reset();
-		    document.getElementById('qr-record-id').value = '';
-		    document.getElementById('qr-record-status').value = 'ACTIVE';
-		    document.getElementById('qr-record-modal').style.display = 'block';
-		}
-
-		function closeQrRecordModal() {
-		    document.getElementById('qr-record-modal').style.display = 'none';
-		}
-
-		async function editQrRecord(id) {
-		    try {
-		        const qrRecord = await apiClient.getQrRecord(id);
-		        currentEditingQrRecord = qrRecord;
-		        
-		        document.getElementById('qr-record-modal-title').textContent = '编辑二维码记录';
-		        document.getElementById('qr-record-id').value = qrRecord.id;
-		        document.getElementById('qr-record-customer-id').value = qrRecord.customerId;
-		        document.getElementById('qr-record-user-name').value = qrRecord.userName || '';          // 新增
-		        document.getElementById('qr-record-nick-name').value = qrRecord.nickName || '';          // 新增
-		        document.getElementById('qr-record-start-station').value = qrRecord.startStation || '';
-		        document.getElementById('qr-record-end-station').value = qrRecord.endStation || '';
-		        document.getElementById('qr-record-url').value = qrRecord.qrUrl;
-		        document.getElementById('qr-record-status').value = qrRecord.status;
-		        
-		        document.getElementById('qr-record-modal').style.display = 'block';
-		    } catch (error) {
-		        console.error('加载二维码记录详情失败:', error);
-		        showMessage('qr-records-message', '加载二维码记录详情失败: ' + error.message);
-		    }
-		}
-
-		document.getElementById('qr-record-form').addEventListener('submit', async function(e) {
-		    e.preventDefault();
-		    
-		    const qrRecordData = {
-		        customerId: parseInt(document.getElementById('qr-record-customer-id').value),
-		        userName: document.getElementById('qr-record-user-name').value.trim() || null,          // 新增
-		        nickName: document.getElementById('qr-record-nick-name').value.trim() || null,          // 新增
-		        startStation: document.getElementById('qr-record-start-station').value.trim() || null,
-		        endStation: document.getElementById('qr-record-end-station').value.trim() || null,
-		        qrUrl: document.getElementById('qr-record-url').value.trim(),
-		        status: document.getElementById('qr-record-status').value
-		    };
-		    
-		    if (!qrRecordData.customerId || !qrRecordData.qrUrl) {
-		        showMessage('qr-records-message', '请填写客户ID和二维码URL');
-		        return;
-		    }
-		    
-		    try {
-		        if (currentEditingQrRecord) {
-		            await apiClient.updateQrRecord(currentEditingQrRecord.id, qrRecordData);
-		            showMessage('qr-records-message', '更新成功', 'success');
-		        } else {
-		            await apiClient.createQrRecord(qrRecordData);
-		            showMessage('qr-records-message', '创建成功', 'success');
-		        }
-		        
-		        closeQrRecordModal();
-		        await loadQrRecords();
-		    } catch (error) {
-		        console.error('保存二维码记录失败:', error);
-		        showMessage('qr-records-message', '操作失败: ' + error.message);
-		    }
-		});
-
-		async function deleteQrRecord(id) {
-		    if (!confirm('确定要删除这个二维码记录吗？此操作不可恢复！')) return;
-		    
-		    try {
-		        const success = await apiClient.deleteQrRecord(id);
-		        if (success) {
-		            showMessage('qr-records-message', '删除成功', 'success');
-		            await loadQrRecords();
-		        } else {
-		            showMessage('qr-records-message', '删除失败');
-		        }
-		    } catch (error) {
-		        console.error('删除二维码记录失败:', error);
-		        showMessage('qr-records-message', '删除失败: ' + error.message);
-		    }
-		}
-
-		document.getElementById('qr-record-form').addEventListener('submit', async function(e) {
-		    e.preventDefault();
-		    
-		    const qrRecordData = {
-		        customerId: parseInt(document.getElementById('qr-record-customer-id').value),
-		        startStation: document.getElementById('qr-record-start-station').value.trim() || null,
-		        endStation: document.getElementById('qr-record-end-station').value.trim() || null,
-		        qrUrl: document.getElementById('qr-record-url').value.trim(),
-		        status: document.getElementById('qr-record-status').value
-		    };
-		    
-		    if (!qrRecordData.customerId || !qrRecordData.qrUrl) {
-		        showMessage('qr-records-message', '请填写客户ID和二维码URL');
-		        return;
-		    }
-		    
-		    try {
-		        if (currentEditingQrRecord) {
-		            await apiClient.updateQrRecord(currentEditingQrRecord.id, qrRecordData);
-		            showMessage('qr-records-message', '更新成功', 'success');
-		        } else {
-		            await apiClient.createQrRecord(qrRecordData);
-		            showMessage('qr-records-message', '创建成功', 'success');
-		        }
-		        
-		        closeQrRecordModal();
-		        await loadQrRecords();
-		    } catch (error) {
-		        console.error('保存二维码记录失败:', error);
-		        showMessage('qr-records-message', '操作失败: ' + error.message);
-		    }
-		});
-
-		// 状态文本和样式函数
-		function getQrRecordStatusText(status) {
-		    const statusMap = {
-		        'ACTIVE': '活跃',
-		        'USED': '已使用',
-		        'EXPIRED': '已过期'
-		    };
-		    return statusMap[status] || status;
-		}
-
-		function getQrRecordStatusClass(status) {
-		    const statusClassMap = {
-		        'ACTIVE': 'status-available',
-		        'USED': 'status-reserved',
-		        'EXPIRED': 'status-unavailable'
-		    };
-		    return statusClassMap[status] || '';
-		}
 		
         function updateNicknameDisplay(userNames) {
             const nicknamesDiv = document.getElementById('reserved-user-nicknames');
