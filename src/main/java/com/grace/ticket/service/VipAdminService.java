@@ -308,6 +308,17 @@ public class VipAdminService {
         customer.setRemark(customerDTO.getRemark());
         customer.setNickName(customerDTO.getNickName());
         
+        // 生成访问码和URL
+        String accessCode = secureUrlService.generateSimpleFixedAccessCode(
+            customerDTO.getUserName(), 
+            customerDTO.getGroupId().toString()
+        );
+        String vipUrl = String.format("svip.html?uId=%s&gId=%s&code=%s", 
+            customerDTO.getUserName(), customerDTO.getGroupId(), accessCode);
+        customer.setVipUrl(vipUrl);
+        
+        
+        customer.setVipUrl(null);
         VipCustomer updatedCustomer = vipCustomerRepository.save(customer);
         return new VipCustomerDTO(updatedCustomer);
     }
