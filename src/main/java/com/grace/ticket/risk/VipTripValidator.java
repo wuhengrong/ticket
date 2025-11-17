@@ -33,7 +33,6 @@ import com.grace.ticket.dto.TicketInfoDTO;
 	    // 时间常量配置
 	    private static final int DEFAULT_WALK_TIME = 10; // 默认步行时间（分钟）
 	    private static final int DEFAULT_WAIT_TIME = 5;  // 默认候车时间（分钟）
-	    private static final int TRANSFER_WALK_TIME = 8; // 换乘步行时间（分钟）
 	    private static final int TAXI_SPEED = 30;        // 出租车平均速度 km/h
 
 	    // 模拟地铁站间距离数据（公里）
@@ -56,7 +55,11 @@ import com.grace.ticket.dto.TicketInfoDTO;
 	    
 	    
 	    /**
-	     * 验证票卡行程 - 主要业务方法
+	     * 验证逻辑 1. 出发目的站是否相同  2.地铁最小时间  3.的士最小时间 4.相隔最大时间
+	     * @param boardingStation
+	     * @param boardingTime
+	     * @param tickets
+	     * @return
 	     */
 	    public List<TicketInfoDTO> validateTicketTripsForVIP(String boardingStation, LocalDateTime boardingTime, 
 	                                                   List<TicketInfoDTO> tickets) {
@@ -70,60 +73,75 @@ import com.grace.ticket.dto.TicketInfoDTO;
 	            }
 	        }    
 	        
-	        for (TicketInfoDTO ticket : tickets) {
-	        	 //相隔90分钟以上也返回
-	            if (ticket.getAlightingTime()!=null && ticket.getAlightingTime().isBefore(boardingTime.minusMinutes(Constants.INTERVAL_MINUTE))) {
-	            	validatedTickets.add(ticket);
-	            	return validatedTickets;
-	            }
-	        }    
+	        
 	        
 	     // 1. 标记 subwayTravelTime 最小的 validatedTicket
 	        List<TicketInfoDTO> sublist = tickets.subList(0, tickets.size()/2+1);
-	        TicketInfoDTO minSubwayDto = null;
+	        TicketInfoDTO minDto = null;
 	        int minSubwayTime = Integer.MAX_VALUE;
 
 	        for(TicketInfoDTO ticket : tickets) {
-	            TicketInfoDTO dto = validateSingleTicketTrip(boardingStation, boardingTime, ticket);
+	            TicketInfoDTO dto = validateSingleTicketTripForSubwayVIP(boardingStation, boardingTime, ticket);
 	            
 	            // 行程符合，检查并更新最小值
 	            if (Constants.GREEN_LIGHT.equals(dto.getGreeLight())) {
 	            	if(dto.getSubwayTravelTime() < minSubwayTime) {
 		                minSubwayTime = dto.getSubwayTravelTime();
-		                minSubwayDto = dto;
+		                minDto = dto;
 		            }
 				}
 	           
 	        }
-	        if(minSubwayDto!=null) {
-	        	validatedTickets.add(minSubwayDto);
+	        if(minDto!=null) {
+	        	validatedTickets.add(minDto);
+	        	return validatedTickets;
 	        }
 	        
-	        /*
-			// 2. 标记 subwayTravelTime + taxiTime 最小的 validatedTicket
-			if (validatedTickets.size() == 0) {
-				TicketInfoDTO minTotalTimeTicket = tickets.subList(tickets.size() / 2, tickets.size()).stream()
-						.map(ticket -> validateSingleTicketTrip(boardingStation, boardingTime, ticket))
-						.min(Comparator.comparing(ticket -> ticket.getSubwayTravelTime() + ticket.getTaxiTime()))
-						.orElse(null);
-				validatedTickets.add(minTotalTimeTicket);
-			}
-			
 	        
-	     	// 3. 取第一条返回
-			if (validatedTickets.size() == 0) {
-				for (TicketInfoDTO ticket : tickets) {
-					TicketInfoDTO validatedTicket = validateSingleTicketTrip(boardingStation, boardingTime, ticket);
-
-					// 获取到第一条就返回，也可以加上第一条如果小于 30分钟，或大于90分钟，则返回
-					if (Constants.GREEN_LIGHT.equals(validatedTicket.getGreeLight())) {
-						validatedTickets.add(validatedTicket);
-						return validatedTickets;
-					}
-
+	     // 1. 标记 taxiTravelTime 最小的 validatedTicket
+	        for(TicketInfoDTO ticket : tickets) {
+	            TicketInfoDTO dto = validateSingleTicketTripForTaxiVIP(boardingStation, boardingTime, ticket);
+	            
+	            // 行程符合，检查并更新最小值
+	            if (Constants.GREEN_LIGHT.equals(dto.getGreeLight())) {
+	            	if(dto.getSubwayTravelTime() < minSubwayTime) {
+		                minSubwayTime = dto.getSubwayTravelTime();
+		                minDto = dto;
+		            }
 				}
-			}
-			*/
+	           
+	        }
+	        if(minDto!=null) {
+	        	validatedTickets.add(minDto);
+	        	return validatedTickets;
+	        }
+	        
+	        
+	        
+	        TicketInfoDTO maxDiffTicket = null;
+	        Duration maxDuration = Duration.ZERO;
+
+	        for (TicketInfoDTO ticket : tickets) {
+	            if (ticket.getAlightingTime() != null && boardingTime != null && 
+	                ticket.getAlightingTime().isBefore(boardingTime.minusMinutes(Constants.INTERVAL_MINUTE))) {
+	                
+	                // 计算时间差
+	                Duration duration = Duration.between(ticket.getAlightingTime(), boardingTime.minusMinutes(Constants.INTERVAL_MINUTE));
+	                
+	                // 更新最大时间差记录
+	                if (duration.compareTo(maxDuration) > 0) {
+	                    maxDuration = duration;
+	                    maxDiffTicket = ticket;
+	                }
+	            }
+	        }
+
+	        // 如果只需要时间差最大的那个，而不是所有符合条件的
+	        if (maxDiffTicket != null) {
+	            validatedTickets.add(maxDiffTicket);
+	            return validatedTickets;
+	        }
+
 	        return validatedTickets;
 	    }
 
@@ -153,7 +171,179 @@ import com.grace.ticket.dto.TicketInfoDTO;
 	        
 	        return ticket;
 	    }
+	    
+	    /**
+	     * 验证单个票卡行程
+	     */
+	    private TicketInfoDTO validateSingleTicketTripForTaxiVIP(String boardingStation, LocalDateTime boardingTime, 
+	                                                   TicketInfoDTO ticket) {
+	        String alightingStation = ticket.getAlightingStation();
+	        LocalDateTime alightingTime = ticket.getAlightingTime();
+	         
+	        // 计算行程时间
+	        TravelTimeResult timeResult = calculateTravelTimesTaxi(boardingStation, boardingTime, 
+	                                                          alightingStation, alightingTime);
+	        
+	        Duration duration = Duration.between(alightingTime, boardingTime);
+	        // 更新票卡信息
+	        ticket.setBoardingStation(boardingStation);
+	        ticket.setBoardingTime(boardingTime);
+	        ticket.setSubwayTravelTime(timeResult.getSubwayTravelTime());
+	        ticket.setSubwayWalkTime(timeResult.getSubwayWithWalkTime());
+	        ticket.setSubwayWaitTime(timeResult.getSubwayWithWalkAndWaitTime());
+	        ticket.setTaxiTime(timeResult.getTaxiTime());
+	        ticket.setTimeInterval(Integer.valueOf(""+ duration.toMinutes()));
+	        ticket.setTravelSuggestion(timeResult.getSuggestion());
+	        if(timeResult.isFeasible()) ticket.setGreeLight(Constants.GREEN_LIGHT);
+	        
+	        return ticket;
+	    }
+	    
+	    /**
+	     * 验证单个票卡行程
+	     */
+	    private TicketInfoDTO validateSingleTicketTripForSubwayVIP(String boardingStation, LocalDateTime boardingTime, 
+	                                                   TicketInfoDTO ticket) {
+	        String alightingStation = ticket.getAlightingStation();
+	        LocalDateTime alightingTime = ticket.getAlightingTime();
+	         
+	        // 计算行程时间
+	        TravelTimeResult timeResult = calculateTravelTimesSubway(boardingStation, boardingTime, 
+	                                                          alightingStation, alightingTime);
+	        
+	        Duration duration = Duration.between(alightingTime, boardingTime);
+	        // 更新票卡信息
+	        ticket.setBoardingStation(boardingStation);
+	        ticket.setBoardingTime(boardingTime);
+	        ticket.setSubwayTravelTime(timeResult.getSubwayTravelTime());
+	        ticket.setSubwayWalkTime(timeResult.getSubwayWithWalkTime());
+	        ticket.setSubwayWaitTime(timeResult.getSubwayWithWalkAndWaitTime());
+	        ticket.setTaxiTime(timeResult.getTaxiTime());
+	        ticket.setTimeInterval(Integer.valueOf(""+ duration.toMinutes()));
+	        ticket.setTravelSuggestion(timeResult.getSuggestion());
+	        if(timeResult.isFeasible()) ticket.setGreeLight(Constants.GREEN_LIGHT);
+	        
+	        return ticket;
+	    }
+	    
+	    /**
+	     * 计算单次行程的各类时间
+	     */
+	    public TravelTimeResult calculateTravelTimesSubway(String boardingStation, LocalDateTime boardingTime,
+	                                                String alightingStation, LocalDateTime alightingTime) {
+	        TravelTimeResult result = new TravelTimeResult();
+	        
+	        List<RouteResult> routes = new ArrayList<>();
+	        
+	        try {
+	            // 获取各种交通方式的路线规划 
+	        	// 1. 获取地铁站的地理坐标
+	            String fromLocation = getStationLocation(boardingStation);
+	            String toLocation = getStationLocation(alightingStation);
 
+	            if (fromLocation != null && toLocation != null) {
+	                System.out.println(
+	                        "获取到坐标: " + boardingStation + " -> " + fromLocation + ", " + alightingStation + " -> " + toLocation);
+
+	                // 1. 获取地铁路线
+	                RouteResult subwayRoute = getSubwayRoute(fromLocation, toLocation);
+	                if (subwayRoute != null) {
+	                    routes.add(subwayRoute);
+	                    System.out.println("地铁路线: " + subwayRoute.getDuration() + "分钟, " + subwayRoute.getCost() + "元");
+	                }
+	          
+	            } else {
+	                System.out.println("无法获取站点坐标，使用降级方案");
+	                routes.addAll(getFallbackRoutes(boardingStation, alightingStation));
+	            }
+	            
+	            // 提取地铁和打车路线
+	            RouteResult subwayRoute = routes.stream().filter(r -> "subway".equals(r.getMode())).findFirst()
+	                    .orElse(null);
+	            
+	            
+	            // 计算地铁相关时间
+	            if (subwayRoute != null) {
+	                // 纯地铁运行时间
+	                result.setSubwayTravelTime(subwayRoute.getDuration()); 
+	                
+	                // 地铁+步行时间
+	                int subwayWithWalkTime = subwayRoute.getDuration() + calculateWalkTime(subwayRoute);
+	                result.setSubwayWithWalkTime(subwayWithWalkTime);
+	                
+	                // 地铁+步行+候车时间
+	                int subwayWithWalkAndWaitTime = subwayWithWalkTime + DEFAULT_WAIT_TIME;
+	                result.setSubwayWithWalkAndWaitTime(subwayWithWalkAndWaitTime);
+	                
+	                // 设置地铁距离和费用
+	                result.setSubwayDistance(subwayRoute.getDistance());
+	                result.setSubwayCost(subwayRoute.getCost());
+	            } else {
+	                // 使用降级方案计算地铁时间
+	                int subwayTime = calculateSubwayTime(boardingStation, alightingStation);
+	                result.setSubwayTravelTime(subwayTime);
+	                result.setSubwayWithWalkTime(subwayTime + DEFAULT_WALK_TIME);
+	                result.setSubwayWithWalkAndWaitTime(subwayTime + DEFAULT_WALK_TIME + DEFAULT_WAIT_TIME);
+	            }
+	            
+	            // 验证行程可能性并生成建议
+	            validateAndSetSuggestionForSubwayVIP(result, alightingTime, boardingTime);
+	            
+	        } catch (Exception e) {
+	            System.err.println("计算行程时间失败: " + e.getMessage());
+	            // 使用降级方案
+	            applyFallbackCalculation(result, boardingStation, alightingStation, boardingTime, alightingTime);
+	        }
+	        
+	        return result;
+	    }
+	    
+	    /**
+	     * 计算单次行程的各类时间
+	     */
+	    public TravelTimeResult calculateTravelTimesTaxi(String boardingStation, LocalDateTime boardingTime,
+	                                                String alightingStation, LocalDateTime alightingTime) {
+	        TravelTimeResult result = new TravelTimeResult();
+	        
+	        List<RouteResult> routes = new ArrayList<>();
+	        
+	        try {
+	        	// 1. 获取地铁站的地理坐标
+	            String fromLocation = getStationLocation(boardingStation);
+	            String toLocation = getStationLocation(alightingStation);
+
+	            if (fromLocation != null && toLocation != null) {
+	                System.out.println(
+	                        "获取到坐标: " + boardingStation + " -> " + fromLocation + ", " + alightingStation + " -> " + toLocation);
+
+	                RouteResult taxiRoute = getTaxiRoute(fromLocation, toLocation);
+	                if (taxiRoute != null) {
+		                result.setTaxiTime(taxiRoute.getDuration());
+		                result.setTaxiDistance(taxiRoute.getDistance());
+		                result.setTaxiCost(taxiRoute.getCost());
+		            } else {
+		                // 使用降级方案计算打车时间
+		                int taxiTime = calculateTaxiTime(boardingStation, alightingStation);
+		                result.setTaxiTime(taxiTime);
+		            }
+	          
+	            } else {
+	                System.out.println("无法获取站点坐标，使用降级方案");
+	                routes.addAll(getFallbackRoutes(boardingStation, alightingStation));
+	            }
+	            
+	            // 验证行程可能性并生成建议
+	            validateAndSetSuggestionForTaxiVIP(result, alightingTime, boardingTime);
+	            
+	        } catch (Exception e) {
+	            System.err.println("计算行程时间失败: " + e.getMessage());
+	            // 使用降级方案
+	            applyFallbackCalculation(result, boardingStation, alightingStation, boardingTime, alightingTime);
+	        }
+	        
+	        return result;
+	    }
+	    
 	    /**
 	     * 计算单次行程的各类时间
 	     */
@@ -380,7 +570,7 @@ import com.grace.ticket.dto.TicketInfoDTO;
 	                double cost = calculateTaxiCost(distance); // 使用打车费用计算
 
 	                // 考虑交通拥堵，增加20%的时间缓冲
-	                duration = (int) (duration * 1.2);
+	                //duration = (int) (duration * 1.2);
 
 	                return new RouteResult("taxi", duration,0, distance, cost);
 	            } else {
@@ -475,6 +665,63 @@ import com.grace.ticket.dto.TicketInfoDTO;
 	        }
 	        
 	        result.setFeasible(subwayPossible || taxiPossible);
+	    }
+	    
+	    
+	    /**
+	     * 验证行程可能性并设置建议
+	     */
+	    private void validateAndSetSuggestionForSubwayVIP(TravelTimeResult result, LocalDateTime boardingTime, 
+	                                         LocalDateTime alightingTime) {
+	        if (boardingTime == null || alightingTime == null) {
+	            result.setSuggestion("时间信息不完整");
+	            return;
+	        }
+	        
+	        long availableMinutes = Duration.between(boardingTime, alightingTime).toMinutes();
+	        
+	        if (availableMinutes <= 0) {
+	            result.setSuggestion("下车时间必须晚于上车时间");
+	            return;
+	        }
+	        
+	        boolean subwayPossible = availableMinutes >= result.getSubwayTravelTime();
+	        
+	       if (subwayPossible) {
+	            result.setSuggestion(String.format("建议乘坐地铁，时间充足，费用%.1f元", result.getSubwayCost()));
+	        } else {
+	            result.setSuggestion("时间不足，建议调整行程");
+	        }
+	        
+	        result.setFeasible(subwayPossible);
+	    }
+	    
+	    /**
+	     * 验证行程可能性并设置建议
+	     */
+	    private void validateAndSetSuggestionForTaxiVIP(TravelTimeResult result, LocalDateTime boardingTime, 
+	                                         LocalDateTime alightingTime) {
+	        if (boardingTime == null || alightingTime == null) {
+	            result.setSuggestion("时间信息不完整");
+	            return;
+	        }
+	        
+	        long availableMinutes = Duration.between(boardingTime, alightingTime).toMinutes();
+	        
+	        if (availableMinutes <= 0) {
+	            result.setSuggestion("下车时间必须晚于上车时间");
+	            return;
+	        }
+	        
+	        boolean taxiPossible = availableMinutes >= result.getTaxiTime();
+	        
+	        if (taxiPossible) {
+	            result.setSuggestion(String.format("建议打车，地铁时间不足，费用%.1f元", result.getTaxiCost()));
+	        } else {
+	            result.setSuggestion("时间不足，建议调整行程");
+	        }
+	        
+	        result.setFeasible(taxiPossible);
 	    }
 
 	    /**

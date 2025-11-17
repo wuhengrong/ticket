@@ -18,5 +18,5 @@ public class Constants {
     
     //行程是否运行
     public static final String GREEN_LIGHT = "1";
-    public static final int INTERVAL_MINUTE = 90;
+    public static final int INTERVAL_MINUTE = 75;
 }

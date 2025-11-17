@@ -274,6 +274,7 @@ public class VipAdminService {
         
         VipCustomer customer = new VipCustomer();
         customer.setUserName(customerDTO.getUserName());
+        customer.setNickName(customerDTO.getNickName());
         customer.setGroupId(customerDTO.getGroupId());
         customer.setGroupName(customerDTO.getGroupName());
         customer.setRideCount(customerDTO.getRideCount());
@@ -284,7 +285,7 @@ public class VipAdminService {
             customerDTO.getUserName(), 
             customerDTO.getGroupId().toString()
         );
-        String vipUrl = String.format("vip.html?uId=%s&gId=%s&code=%s", 
+        String vipUrl = String.format("svip.html?uId=%s&gId=%s&code=%s", 
             customerDTO.getUserName(), customerDTO.getGroupId(), accessCode);
         customer.setVipUrl(vipUrl);
         

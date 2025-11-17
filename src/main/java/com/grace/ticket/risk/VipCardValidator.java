@@ -109,7 +109,7 @@ public class VipCardValidator {
 				usedTickets);
 
 		if (validatedTickets != null && !validatedTickets.isEmpty()) {
-			TicketInfoDTO selectedTicket = pickTicket(validatedTickets);
+			TicketInfoDTO selectedTicket = validatedTickets.get(0);
 			return findCardByNumber(validCards, selectedTicket.getTicketNumber());
 		}
 
@@ -135,18 +135,7 @@ public class VipCardValidator {
 		return validCards.stream().filter(card -> Objects.equals(card.getCardNumber(), ticketNumber)).findFirst();
 	}
 
-	/**
-	 * 挑选ticket的业务逻辑，选择时间最接近的dto
-	 * 
-	 * @param tickets
-	 * @return
-	 */
-	private TicketInfoDTO pickTicket(List<TicketInfoDTO> tickets) {
-		for (TicketInfoDTO ticketDTO : tickets) {
-			ticketDTO.getSubwayTravelTime();
-		}
-		return tickets.get(0);
-	}
+	
 
 	/**
 	 * 计算预估出站时间

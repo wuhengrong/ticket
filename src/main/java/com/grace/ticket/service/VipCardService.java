@@ -59,6 +59,7 @@ public class VipCardService {
                 // 找到用户预定的卡片，直接返回第一个
             	
             	for(VipCard reservedCard:reservedCards) {
+            		//保留票非新票
             		if(null!=reservedCard.getExpiryTime() && null!= request.getBoardingTime() && reservedCard.getExpiryTime().isAfter(request.getBoardingTime())) {
             			 // 计算预估出站时间
                         LocalDateTime estimatedTime = vipCardValidator.calculateEstimatedAlightingTime(
@@ -72,6 +73,18 @@ public class VipCardService {
                             estimatedTime,
                             customer.getRideCount()
                         );
+            		} else if(null==reservedCard.getExpiryTime()) { //新票
+            			LocalDateTime estimatedTime = vipCardValidator.calculateEstimatedAlightingTime(
+                                request.getBoardingStation(),
+                                request.getAlightingStation(),
+                                request.getBoardingTime()
+                            );
+                            
+                            return TicketSearchResponse.success(
+                                new com.grace.ticket.dto.VipCardDTO(reservedCard),
+                                estimatedTime,
+                                customer.getRideCount()
+                            );
             		}
             	}
                 
