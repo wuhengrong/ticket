@@ -2561,38 +2561,6 @@
 		    }
 		}
 
-		document.getElementById('qr-record-form').addEventListener('submit', async function(e) {
-		    e.preventDefault();
-		    
-		    const qrRecordData = {
-		        customerId: parseInt(document.getElementById('qr-record-customer-id').value),
-		        startStation: document.getElementById('qr-record-start-station').value.trim() || null,
-		        endStation: document.getElementById('qr-record-end-station').value.trim() || null,
-		        qrUrl: document.getElementById('qr-record-url').value.trim(),
-		        status: document.getElementById('qr-record-status').value
-		    };
-		    
-		    if (!qrRecordData.customerId || !qrRecordData.qrUrl) {
-		        showMessage('qr-records-message', '请填写客户ID和二维码URL');
-		        return;
-		    }
-		    
-		    try {
-		        if (currentEditingQrRecord) {
-		            await apiClient.updateQrRecord(currentEditingQrRecord.id, qrRecordData);
-		            showMessage('qr-records-message', '更新成功', 'success');
-		        } else {
-		            await apiClient.createQrRecord(qrRecordData);
-		            showMessage('qr-records-message', '创建成功', 'success');
-		        }
-		        
-		        closeQrRecordModal();
-		        await loadQrRecords();
-		    } catch (error) {
-		        console.error('保存二维码记录失败:', error);
-		        showMessage('qr-records-message', '操作失败: ' + error.message);
-		    }
-		});
 
 		// 状态文本和样式函数
 		function getQrRecordStatusText(status) {
