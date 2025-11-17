@@ -316,9 +316,6 @@ public class VipAdminService {
         String vipUrl = String.format("svip.html?uId=%s&gId=%s&code=%s", 
             customerDTO.getUserName(), customerDTO.getGroupId(), accessCode);
         customer.setVipUrl(vipUrl);
-        
-        
-        customer.setVipUrl(null);
         VipCustomer updatedCustomer = vipCustomerRepository.save(customer);
         return new VipCustomerDTO(updatedCustomer);
     }
