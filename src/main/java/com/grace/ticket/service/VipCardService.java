@@ -402,6 +402,40 @@ public class VipCardService {
      */
     @Transactional(readOnly = true)
     public Optional<VipCustomer> getCustomerByVipUrl(String vipUrl) {
-        return vipCustomerRepository.findByVipUrl(vipUrl);
+        System.out.println("原始VIP URL: " + vipUrl);
+        
+        // 先尝试直接查询
+        Optional<VipCustomer> customer = vipCustomerRepository.findByVipUrl(vipUrl);
+        if (customer.isPresent()) {
+            System.out.println("直接查询找到客户");
+            return customer;
+        }
+        
+        // 如果找不到，尝试将 svip.html 转换为 vip.html
+        if (vipUrl.contains("svip.html")) {
+            String convertedUrl = vipUrl.replace("svip.html", "vip.html");
+            System.out.println("转换后的URL: " + convertedUrl);
+            
+            customer = vipCustomerRepository.findByVipUrl(convertedUrl);
+            if (customer.isPresent()) {
+                System.out.println("通过 svip.html -> vip.html 转换找到客户");
+                return customer;
+            }
+        }
+        
+        // 如果还是找不到，尝试将 vip.html 转换为 svip.html
+        if (vipUrl.contains("vip.html")) {
+            String convertedUrl = vipUrl.replace("vip.html", "svip.html");
+            System.out.println("转换后的URL: " + convertedUrl);
+            
+            customer = vipCustomerRepository.findByVipUrl(convertedUrl);
+            if (customer.isPresent()) {
+                System.out.println("通过 vip.html -> svip.html 转换找到客户");
+                return customer;
+            }
+        }
+        
+        System.out.println("未找到匹配的客户");
+        return Optional.empty();
     }
 }

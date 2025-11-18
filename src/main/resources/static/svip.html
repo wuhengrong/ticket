@@ -585,18 +585,18 @@
         // API调用函数
         const apiClient = {
             // 获取客户信息
-            async getCustomerInfo(vipUrl) {
-                try {
-                    const response = await fetch(`/api/vip/customerv2/${encodeURIComponent(vipUrl)}`);
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! status: ${response.status}`);
-                    }
-                    return await response.json();
-                } catch (error) {
-                    console.error('获取客户信息失败:', error);
-                    throw error;
-                }
-            },
+			async getCustomerInfo(uId, gId, code) {
+			    try {
+			        const response = await fetch(`/api/vip/customerv2?uId=${encodeURIComponent(uId)}&gId=${encodeURIComponent(gId)}&code=${encodeURIComponent(code)}`);
+			        if (!response.ok) {
+			            throw new Error(`HTTP error! status: ${response.status}`);
+			        }
+			        return await response.json();
+			    } catch (error) {
+			        console.error('获取客户信息失败:', error);
+			        throw error;
+			    }
+			},
             
             // 搜索票卡
             async searchTickets(searchData) {
@@ -900,8 +900,8 @@
 		            return;
 		        }
 		        
-		        const vipUrl = buildVipUrl(urlParams.uId, urlParams.gId, urlParams.code);
-		        const customerData = await apiClient.getCustomerInfo(vipUrl);
+		        // 直接传递参数给API
+		        const customerData = await apiClient.getCustomerInfo(urlParams.uId, urlParams.gId, urlParams.code);
 		        
 		        if (customerData && customerData.customer) {
 		            currentCustomer = customerData.customer;
@@ -917,7 +917,7 @@
 		                hideInUseSection();
 		            }
 		            
-		            // 新增：检查是否有活跃的二维码记录
+		            // 检查是否有活跃的二维码记录
 		            await checkActiveQrRecord();
 		            
 		            // 通知iframe数据已准备好
