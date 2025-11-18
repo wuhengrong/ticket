@@ -292,6 +292,48 @@ public class VipTicketController {
         }
     }
     
+    @GetMapping("/customerv2")
+    public ResponseEntity<?> getCustomerInfoV2(
+        @RequestParam String uId, 
+        @RequestParam String gId, 
+        @RequestParam String code) {
+        
+        try {
+            // 使用现有的 getCustomerByVipUrl 方法，但构建正确的URL格式
+            String vipUrl = String.format("vip.html?uId=%s&gId=%s&code=%s", uId, gId, code);
+            Optional<VipCustomer> customerOpt = vipCardService.getCustomerByVipUrl(vipUrl);
+            
+            if (customerOpt.isEmpty()) {
+                return ResponseEntity.badRequest().body("VIP客户不存在");
+            }
+            
+            VipCustomer customer = customerOpt.get();
+            List<VipRecord> history = vipCardService.getCustomerHistory(customer.getId());
+            
+            // 检查客户是否有进行中的票务
+            Map<String, Object> activeTicketInfo = getActiveTicketInfo(customer.getId()); 
+            
+            // 检查客户是否有活跃的二维码记录
+            Map<String, Object> activeQrInfo = getActiveQrInfo(customer.getId());
+            
+            Map<String, Object> response = new HashMap<>();
+            response.put("customer", customer);
+            response.put("history", history);
+            
+            if((boolean)activeTicketInfo.get("hasActiveTicket")) {
+                response.put("activeTicket", activeTicketInfo);
+            }
+            
+            if((boolean)activeQrInfo.get("hasActiveQr")) {
+                response.put("activeQr", activeQrInfo);
+            }
+            
+            return ResponseEntity.ok(response);
+            
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("获取客户信息失败: " + e.getMessage());
+        }
+    }
     @GetMapping("/customerv2/{vipUrl}")
     public ResponseEntity<?> getCustomerInfoV2(@PathVariable String vipUrl) {
         try {

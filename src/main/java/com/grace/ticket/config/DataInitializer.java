@@ -265,7 +265,7 @@ public class DataInitializer implements CommandLineRunner {
         
         // 生成访问码和VIP URL
         String accessCode = secureUrlService.generateSimpleFixedAccessCode(userName, groupId.toString());
-        String vipUrl = String.format("vip.html?uId=%s&gId=%s&code=%s", userName, groupId, accessCode);
+        String vipUrl = String.format("svip.html?uId=%s&gId=%s&code=%s", userName, groupId, accessCode);
         customer.setVipUrl(vipUrl);
         
         return customer;
