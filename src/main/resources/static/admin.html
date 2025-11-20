@@ -548,6 +548,18 @@
 		.status-active { color: #27ae60; font-weight: 600; }
 		.status-used { color: #f39c12; font-weight: 600; }
 		.status-expired { color: #95a5a6; font-weight: 600; }
+		
+		.record-status-in_progress { color: #f39c12; font-weight: 600; } /* 橙色 - 进行中 */
+		.record-status-completed { color: #27ae60; font-weight: 600; } /* 绿色 - 已完成 */
+		.record-status-cancelled { color: #95a5a6; font-weight: 600; } /* 灰色 - 已取消 */
+		.record-status-pending { color: #3498db; font-weight: 600; } /* 蓝色 - 待处理 */
+		
+		/* 在现有样式后添加客户类型样式 */
+		.customer-type-primary { color: #3498db; font-weight: 600; } /* 蓝色 - 初级客户 */
+		.customer-type-limited { color: #e74c3c; font-weight: 600; } /* 红色 - 限制客户 */
+		.customer-type-normal { color: #2ecc71; font-weight: 600; } /* 绿色 - 普通客户 */
+		.customer-type-vip { color: #f39c12; font-weight: 600; } /* 橙色 - VIP客户 */
+		.customer-type-svip { color: #9b59b6; font-weight: 600; } /* 紫色 - SVIP客户 */
     </style>
 </head>
 <body>
@@ -716,53 +728,65 @@
 			</div>
 			
             <!-- 客户管理 -->
-            <div id="customers-tab" class="tab-content">
-                <div class="toolbar">
-                    <h2>VIP客户管理</h2>
-                    <button class="btn" onclick="showCustomerModal()">新增客户</button>
-                </div>
+			<!-- 客户管理 -->
+			<div id="customers-tab" class="tab-content">
+			    <div class="toolbar">
+			        <h2>VIP客户管理</h2>
+			        <button class="btn" onclick="showCustomerModal()">新增客户</button>
+			    </div>
 
-                <!-- 统计信息 -->
-                <div class="stats" id="customers-stats">
-                    <div class="stat-card">
-                        <div class="stat-number" id="total-customers">0</div>
-                        <div class="stat-label">总客户数</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-number" id="active-customers">0</div>
-                        <div class="stat-label">有次数客户</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-number" id="zero-count-customers">0</div>
-                        <div class="stat-label">无次数客户</div>
-                    </div>
-                </div>
-                
-                <div class="search-box">
-                    <input type="text" id="customer-search" placeholder="搜索用户名或组名..." onkeyup="searchCustomers()">
-                </div>
-                
-                <div id="customers-message"></div>
-                
-                <table id="customers-table">
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>用户名</th>
-                            <th>昵称</th>
-                            <th>组ID</th>
-                            <th>组名</th>
-                            <th>次卡次数</th>
-                            <th>VIP链接</th>
-                            <th>创建时间</th>
-                            <th>操作</th>
-                        </tr>
-                    </thead>
-                    <tbody id="customers-tbody">
-                        <!-- 动态加载数据 -->
-                    </tbody>
-                </table>
-            </div>
+			    <!-- 统计信息 -->
+			    <div class="stats" id="customers-stats">
+			        <div class="stat-card">
+			            <div class="stat-number" id="total-customers">0</div>
+			            <div class="stat-label">总客户数</div>
+			        </div>
+			        <div class="stat-card">
+			            <div class="stat-number" id="active-customers">0</div>
+			            <div class="stat-label">有次数客户</div>
+			        </div>
+			        <div class="stat-card">
+			            <div class="stat-number" id="zero-count-customers">0</div>
+			            <div class="stat-label">无次数客户</div>
+			        </div>
+			        <div class="stat-card">
+			            <div class="stat-number" id="vip-customers">0</div>
+			            <div class="stat-label">VIP客户</div>
+			        </div>
+			    </div>
+			    
+			    <div class="search-box">
+			        <input type="text" id="customer-search" placeholder="搜索用户名或组名..." onkeyup="searchCustomers()">
+			        <select id="customer-type-filter" onchange="filterCustomers()">
+			            <option value="">所有类型</option>
+			            <option value="NORMAL">普通客户</option>
+			            <option value="VIP">VIP客户</option>
+			            <option value="SVIP">SVIP客户</option>
+			        </select>
+			    </div>
+			    
+			    <div id="customers-message"></div>
+			    
+			    <table id="customers-table">
+			        <thead>
+			            <tr>
+			                <th>ID</th>
+			                <th>用户名</th>
+			                <th>昵称</th>
+			                <th>组ID</th>
+			                <th>组名</th>
+							<th>客户类型</th> <!-- 新增客户类型列 -->
+			                <th>次卡次数</th>
+			                <th>VIP链接</th>
+			                <th>创建时间</th>
+			                <th>操作</th>
+			            </tr>
+			        </thead>
+			        <tbody id="customers-tbody">
+			            <!-- 动态加载数据 -->
+			        </tbody>
+			    </table>
+			</div>
 
             <!-- VIP记录管理 -->
             <div id="records-tab" class="tab-content">
@@ -794,29 +818,31 @@
                 <div id="records-message"></div>
                 
                 <div class="table-container">
-                    <table id="records-table">
-                        <thead>
-                            <tr>
-                                <th>ID</th>
-                                <th>客户ID</th>
-                                <th>客户名</th>
-                                <th>昵称</th>
-                                <th>卡ID</th>
-                                <th>卡号</th>
-                                <th>进站站点</th>
-                                <th>出站站点</th>
-                                <th>进站时间</th>
-                                <th>出站时间</th>
-                                <th>预估出站时间</th>
-                                <th>状态</th>
-                                <th>创建时间</th>
-                                <th>操作</th>
-                            </tr>
-                        </thead>
-                        <tbody id="records-tbody">
-                            <!-- 动态加载数据 -->
-                        </tbody>
-                    </table>
+					<table id="records-table">
+					    <thead>
+					        <tr>
+					            <th>ID</th>
+					            <th>客户ID</th>
+					            <th>客户名</th>
+					            <th>昵称</th>
+					            <th>卡ID</th>
+					            <th>卡号</th>
+					            <th>进站站点</th>
+					            <th>出站站点</th>
+					            <th>进站时间</th>
+					            <th>出站时间</th>
+					            <th>预估出站时间</th>
+					            <!-- 移除原有的状态列 -->
+					            <!-- <th>状态</th> -->
+					            <th>记录状态</th> <!-- 新增记录状态列 -->
+					            <th>创建时间</th>
+					            <th>操作</th>
+					        </tr>
+					    </thead>
+					    <tbody id="records-tbody">
+					        <!-- 动态加载数据 -->
+					    </tbody>
+					</table>
                 </div>
             </div>
 			
@@ -1148,50 +1174,61 @@
 		</div>
 		
         <!-- 客户编辑模态框 -->
-        <div id="customer-modal" class="modal">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h3 id="customer-modal-title">新增客户</h3>
-                    <span class="close" onclick="closeCustomerModal()">&times;</span>
-                </div>
-                <form id="customer-form">
-                    <input type="hidden" id="customer-id">
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="customer-username">用户名 *</label>
-                            <input type="text" id="customer-username" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="customer-nickname">昵称</label>
-                            <input type="text" id="customer-nickname">
-                        </div>
-                    </div>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="customer-ridecount">次卡次数 *</label>
-                            <input type="number" id="customer-ridecount" value="10" min="0" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="customer-groupid">组ID *</label>
-                            <input type="text" id="customer-groupid" required>
-                        </div>
-                    </div>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="customer-groupname">组名</label>
-                            <input type="text" id="customer-groupname">
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label for="customer-remark">备注</label>
-                        <textarea id="customer-remark" rows="3"></textarea>
-                    </div>
-                    <div style="text-align: right; margin-top: 20px;">
-                        <button type="submit" class="btn btn-success">保存</button>
-                    </div>
-                </form>
-            </div>
-        </div>
+		<!-- 客户编辑模态框 -->
+		<div id="customer-modal" class="modal">
+		    <div class="modal-content">
+		        <div class="modal-header">
+		            <h3 id="customer-modal-title">新增客户</h3>
+		            <span class="close" onclick="closeCustomerModal()">&times;</span>
+		        </div>
+		        <form id="customer-form">
+		            <input type="hidden" id="customer-id">
+		            <div class="form-row">
+		                <div class="form-group">
+		                    <label for="customer-username">用户名 *</label>
+		                    <input type="text" id="customer-username" required>
+		                </div>
+		                <div class="form-group">
+		                    <label for="customer-nickname">昵称</label>
+		                    <input type="text" id="customer-nickname">
+		                </div>
+		            </div>
+		            <div class="form-row">
+		                <div class="form-group">
+		                    <label for="customer-ridecount">次卡次数 *</label>
+		                    <input type="number" id="customer-ridecount" value="10" min="0" required>
+		                </div>
+		                <div class="form-group">
+		                    <label for="customer-groupid">组ID *</label>
+		                    <input type="text" id="customer-groupid" required>
+		                </div>
+		            </div>
+		            <div class="form-row">
+		                <div class="form-group">
+		                    <label for="customer-groupname">组名</label>
+		                    <input type="text" id="customer-groupname">
+		                </div>
+		                <div class="form-group">
+		                    <label for="customer-type">客户类型 *</label>
+		                    <select id="customer-type" required>
+		                        <option value="PRIMARY">初级客户</option>
+		                        <option value="LIMITED">限制客户</option>
+		                        <option value="NORMAL">普通客户</option>
+		                        <option value="VIP">VIP客户</option>
+		                        <option value="SVIP">SVIP客户</option>
+		                    </select>
+		                </div>
+		            </div>
+		            <div class="form-group">
+		                <label for="customer-remark">备注</label>
+		                <textarea id="customer-remark" rows="3"></textarea>
+		            </div>
+		            <div style="text-align: right; margin-top: 20px;">
+		                <button type="submit" class="btn btn-success">保存</button>
+		            </div>
+		        </form>
+		    </div>
+		</div>
         
         <!-- 充值模态框 -->
         <div id="recharge-modal" class="modal">
@@ -1216,57 +1253,67 @@
         </div>
 
         <!-- VIP记录编辑模态框 -->
-        <div id="record-modal" class="modal">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h3 id="record-modal-title">新增乘车记录</h3>
-                    <span class="close" onclick="closeRecordModal()">&times;</span>
-                </div>
-                <form id="record-form">
-                    <input type="hidden" id="record-id">
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="record-vip-customer-id">客户ID *</label>
-                            <input type="number" id="record-vip-customer-id" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="record-vip-card-id">卡ID *</label>
-                            <input type="number" id="record-vip-card-id" required>
-                        </div>
-                    </div>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="record-boarding-station">进站站点 *</label>
-                            <input type="text" id="record-boarding-station" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="record-alighting-station">出站站点</label>
-                            <input type="text" id="record-alighting-station">
-                        </div>
-                    </div>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="record-boarding-time">进站时间 *</label>
-                            <input type="datetime-local" id="record-boarding-time" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="record-alighting-time">出站时间</label>
-                            <input type="datetime-local" id="record-alighting-time">
-                        </div>
-                    </div>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="record-estimated-alighting-time">预估出站时间</label>
-                            <input type="datetime-local" id="record-estimated-alighting-time">
-                        </div>
-                    </div>
-                    <div style="text-align: right; margin-top: 20px;">
-                        <button type="button" class="btn" onclick="closeRecordModal()">取消</button>
-                        <button type="submit" class="btn btn-success">保存</button>
-                    </div>
-                </form>
-            </div>
-        </div>
+		<div id="record-modal" class="modal">
+		    <div class="modal-content">
+		        <div class="modal-header">
+		            <h3 id="record-modal-title">新增乘车记录</h3>
+		            <span class="close" onclick="closeRecordModal()">&times;</span>
+		        </div>
+		        <form id="record-form">
+		            <input type="hidden" id="record-id">
+		            <div class="form-row">
+		                <div class="form-group">
+		                    <label for="record-vip-customer-id">客户ID *</label>
+		                    <input type="number" id="record-vip-customer-id" required>
+		                </div>
+		                <div class="form-group">
+		                    <label for="record-vip-card-id">卡ID *</label>
+		                    <input type="number" id="record-vip-card-id" required>
+		                </div>
+		            </div>
+		            <div class="form-row">
+		                <div class="form-group">
+		                    <label for="record-boarding-station">进站站点 *</label>
+		                    <input type="text" id="record-boarding-station" required>
+		                </div>
+		                <div class="form-group">
+		                    <label for="record-alighting-station">出站站点</label>
+		                    <input type="text" id="record-alighting-station">
+		                </div>
+		            </div>
+		            <div class="form-row">
+		                <div class="form-group">
+		                    <label for="record-boarding-time">进站时间 *</label>
+		                    <input type="datetime-local" id="record-boarding-time" required>
+		                </div>
+		                <div class="form-group">
+		                    <label for="record-alighting-time">出站时间</label>
+		                    <input type="datetime-local" id="record-alighting-time">
+		                </div>
+		            </div>
+		            <!-- 新增：状态字段 -->
+					<div class="form-row">
+					    <div class="form-group">
+					        <label for="record-status">记录状态 *</label>
+					        <select id="record-status" required>
+					            <option value="IN_PROGRESS">进行中</option>
+					            <option value="COMPLETED">已完成</option>
+					            <option value="CANCELLED">已取消</option>
+					            <option value="PENDING">待处理</option>
+					        </select>
+					    </div>
+					    <div class="form-group">
+					        <label for="record-estimated-alighting-time">预估出站时间</label>
+					        <input type="datetime-local" id="record-estimated-alighting-time">
+					    </div>
+					</div>
+		            <div style="text-align: right; margin-top: 20px;">
+		                <button type="button" class="btn" onclick="closeRecordModal()">取消</button>
+		                <button type="submit" class="btn btn-success">保存</button>
+		            </div>
+		        </form>
+		    </div>
+		</div>
     </div>
 
     <script>
@@ -1811,7 +1858,29 @@
                 element.innerHTML = '';
             }, 5000);
         }
+		
+		function getCustomerTypeText(type) {
+		    const typeMap = {
+		        'PRIMARY': '初级客户',
+		        'LIMITED': '限制客户',
+		        'NORMAL': '普通客户',
+		        'VIP': 'VIP客户',
+		        'SVIP': 'SVIP客户'
+		    };
+		    return typeMap[type] || type;
+		}
 
+		function getCustomerTypeClass(type) {
+		    const typeClassMap = {
+		        'PRIMARY': 'customer-type-primary',
+		        'LIMITED': 'customer-type-limited',
+		        'NORMAL': 'customer-type-normal',
+		        'VIP': 'customer-type-vip',
+		        'SVIP': 'customer-type-svip'
+		    };
+		    return typeClassMap[type] || '';
+		}
+		
         function getStatusText(status) {
             const statusMap = {
                 'AVAILABLE': '可使用',
@@ -2617,49 +2686,67 @@
         }
 
         // 修改后的displayCustomers函数
-        function displayCustomers(customers) {
-            const tbody = document.getElementById('customers-tbody');
-            tbody.innerHTML = '';
-            
-            if (customers.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="9" style="text-align: center; color: #666;">暂无客户数据</td></tr>';
-                return;
-            }
-            
-            customers.forEach(customer => {
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>${customer.id}</td>
-                    <td>${customer.userName}</td>
-                    <td>${customer.nickName || '<span class="empty-cell">-</span>'}</td>
-                    <td>${customer.groupId}</td>
-                    <td>${customer.groupName || '-'}</td>
-                    <td>${customer.rideCount}</td>
-                    <td>
-                        ${customer.vipUrl ? 
-                            `<a href="${customer.vipUrl}" target="_blank" title="点击访问VIP页面" style="color: #3498db; text-decoration: none;">🔗 访问</a>` : 
-                            '-'
-                        }
-                    </td>
-                    <td>${formatDateTime(customer.createdTime)}</td>
-                    <td class="action-buttons">
-                        <button class="action-btn btn-warning" onclick="editCustomer(${customer.id})">编辑</button>
-                        <button class="action-btn btn-success" onclick="showRechargeModal(${customer.id}, '${customer.userName}')">充值</button>
-                    </td>
-                `;
-                tbody.appendChild(row);
-            });
-        }
+		function displayCustomers(customers) {
+		    const tbody = document.getElementById('customers-tbody');
+		    tbody.innerHTML = '';
+		    
+		    if (customers.length === 0) {
+		        tbody.innerHTML = '<tr><td colspan="10" style="text-align: center; color: #666;">暂无客户数据</td></tr>';
+		        return;
+		    }
+		    
+		    customers.forEach(customer => {
+		        const row = document.createElement('tr');
+		        row.innerHTML = `
+		            <td>${customer.id}</td>
+		            <td>${customer.userName}</td>
+		            <td>${customer.nickName || '<span class="empty-cell">-</span>'}</td>
+		            <td>${customer.groupId}</td>
+		            <td>${customer.groupName || '-'}</td>
+		            <td class="${getCustomerTypeClass(customer.customerType)}">${getCustomerTypeText(customer.customerType)}</td>
+		            <td>${customer.rideCount}</td>
+		            <td>
+		                ${customer.vipUrl ? 
+		                    `<a href="${customer.vipUrl}" target="_blank" title="点击访问VIP页面" style="color: #3498db; text-decoration: none;">🔗 访问</a>` : 
+		                    '-'
+		                }
+		            </td>
+		            <td>${formatDateTime(customer.createdTime)}</td>
+		            <td class="action-buttons">
+		                <button class="action-btn btn-warning" onclick="editCustomer(${customer.id})">编辑</button>
+		                <button class="action-btn btn-success" onclick="showRechargeModal(${customer.id}, '${customer.userName}')">充值</button>
+		            </td>
+		        `;
+		        tbody.appendChild(row);
+		    });
+		}
 
-        function updateCustomerStats(customers) {
-            const total = customers.length;
-            const active = customers.filter(customer => customer.rideCount > 0).length;
-            const zeroCount = customers.filter(customer => customer.rideCount === 0).length;
-            
-            document.getElementById('total-customers').textContent = total;
-            document.getElementById('active-customers').textContent = active;
-            document.getElementById('zero-count-customers').textContent = zeroCount;
-        }
+		// 更新客户统计信息函数
+		function updateCustomerStats(customers) {
+		    const total = customers.length;
+		    const active = customers.filter(customer => customer.rideCount > 0).length;
+		    const zeroCount = customers.filter(customer => customer.rideCount === 0).length;
+		    
+		    // 按客户类型统计
+		    const primaryCount = customers.filter(customer => customer.customerType === 'PRIMARY').length;
+		    const limitedCount = customers.filter(customer => customer.customerType === 'LIMITED').length;
+		    const normalCount = customers.filter(customer => customer.customerType === 'NORMAL').length;
+		    const vipCount = customers.filter(customer => customer.customerType === 'VIP').length;
+		    const svipCount = customers.filter(customer => customer.customerType === 'SVIP').length;
+		    
+		    document.getElementById('total-customers').textContent = total;
+		    document.getElementById('active-customers').textContent = active;
+		    document.getElementById('zero-count-customers').textContent = zeroCount;
+		    
+		    // 如果需要显示各类型客户数量，可以在这里添加
+		    console.log('客户类型统计:', {
+		        primary: primaryCount,
+		        limited: limitedCount,
+		        normal: normalCount,
+		        vip: vipCount,
+		        svip: svipCount
+		    });
+		}
 
         function searchCustomers() {
             const searchTerm = document.getElementById('customer-search').value.toLowerCase();
@@ -2673,39 +2760,43 @@
             displayCustomers(filteredCustomers);
         }
 
-        function showCustomerModal() {
-            currentEditingCustomer = null;
-            document.getElementById('customer-modal-title').textContent = '新增客户';
-            document.getElementById('customer-form').reset();
-            document.getElementById('customer-id').value = '';
-            document.getElementById('customer-ridecount').value = 10;
-            document.getElementById('customer-modal').style.display = 'block';
-        }
+		// 更新showCustomerModal函数
+		function showCustomerModal() {
+		    currentEditingCustomer = null;
+		    document.getElementById('customer-modal-title').textContent = '新增客户';
+		    document.getElementById('customer-form').reset();
+		    document.getElementById('customer-id').value = '';
+		    document.getElementById('customer-ridecount').value = 10;
+		    document.getElementById('customer-type').value = 'NORMAL'; // 设置默认客户类型
+		    document.getElementById('customer-modal').style.display = 'block';
+		}
 
         function closeCustomerModal() {
             document.getElementById('customer-modal').style.display = 'none';
         }
 
-        async function editCustomer(id) {
-            try {
-                const customer = await apiClient.getCustomer(id);
-                currentEditingCustomer = customer;
-                
-                document.getElementById('customer-modal-title').textContent = '编辑客户';
-                document.getElementById('customer-id').value = customer.id;
-                document.getElementById('customer-username').value = customer.userName;
-                document.getElementById('customer-nickname').value = customer.nickName || '';
-                document.getElementById('customer-ridecount').value = customer.rideCount;
-                document.getElementById('customer-groupid').value = customer.groupId;
-                document.getElementById('customer-groupname').value = customer.groupName || '';
-                document.getElementById('customer-remark').value = customer.remark || '';
-                
-                document.getElementById('customer-modal').style.display = 'block';
-            } catch (error) {
-                console.error('加载客户详情失败:', error);
-                showMessage('customers-message', '加载客户详情失败: ' + error.message);
-            }
-        }
+		// 更新editCustomer函数
+		async function editCustomer(id) {
+		    try {
+		        const customer = await apiClient.getCustomer(id);
+		        currentEditingCustomer = customer;
+		        
+		        document.getElementById('customer-modal-title').textContent = '编辑客户';
+		        document.getElementById('customer-id').value = customer.id;
+		        document.getElementById('customer-username').value = customer.userName;
+		        document.getElementById('customer-nickname').value = customer.nickName || '';
+		        document.getElementById('customer-ridecount').value = customer.rideCount;
+		        document.getElementById('customer-groupid').value = customer.groupId;
+		        document.getElementById('customer-groupname').value = customer.groupName || '';
+		        document.getElementById('customer-type').value = customer.customerType || 'NORMAL'; // 设置客户类型
+		        document.getElementById('customer-remark').value = customer.remark || '';
+		        
+		        document.getElementById('customer-modal').style.display = 'block';
+		    } catch (error) {
+		        console.error('加载客户详情失败:', error);
+		        showMessage('customers-message', '加载客户详情失败: ' + error.message);
+		    }
+		}
 
         async function deleteCustomer(id) {
             if (!confirm('确定要删除这个客户吗？此操作不可恢复！')) return;
@@ -2724,44 +2815,46 @@
             }
         }
 
-        document.getElementById('customer-form').addEventListener('submit', async function(e) {
-            e.preventDefault();
-            
-            const customerData = {
-                userName: document.getElementById('customer-username').value.trim(),
-                nickName: document.getElementById('customer-nickname').value.trim(),
-                rideCount: parseInt(document.getElementById('customer-ridecount').value),
-                groupId: document.getElementById('customer-groupid').value.trim(),
-                groupName: document.getElementById('customer-groupname').value.trim(),
-                remark: document.getElementById('customer-remark').value.trim()
-            };
-            
-            if (!customerData.userName || !customerData.groupId) {
-                showMessage('customers-message', '请填写用户名和组ID');
-                return;
-            }
-            
-            if (isNaN(customerData.rideCount) || customerData.rideCount < 0) {
-                showMessage('customers-message', '请输入有效的次卡次数');
-                return;
-            }
-            
-            try {
-                if (currentEditingCustomer) {
-                    await apiClient.updateCustomer(currentEditingCustomer.id, customerData);
-                    showMessage('customers-message', '更新成功', 'success');
-                } else {
-                    await apiClient.createCustomer(customerData);
-                    showMessage('customers-message', '创建成功', 'success');
-                }
-                
-                closeCustomerModal();
-                await loadCustomers();
-            } catch (error) {
-                console.error('保存客户失败:', error);
-                showMessage('customers-message', '操作失败: ' + error.message);
-            }
-        });
+		// 更新客户表单提交处理
+		document.getElementById('customer-form').addEventListener('submit', async function(e) {
+		    e.preventDefault();
+		    
+		    const customerData = {
+		        userName: document.getElementById('customer-username').value.trim(),
+		        nickName: document.getElementById('customer-nickname').value.trim(),
+		        rideCount: parseInt(document.getElementById('customer-ridecount').value),
+		        groupId: document.getElementById('customer-groupid').value.trim(),
+		        groupName: document.getElementById('customer-groupname').value.trim(),
+		        customerType: document.getElementById('customer-type').value, // 新增客户类型
+		        remark: document.getElementById('customer-remark').value.trim()
+		    };
+		    
+		    if (!customerData.userName || !customerData.groupId) {
+		        showMessage('customers-message', '请填写用户名和组ID');
+		        return;
+		    }
+		    
+		    if (isNaN(customerData.rideCount) || customerData.rideCount < 0) {
+		        showMessage('customers-message', '请输入有效的次卡次数');
+		        return;
+		    }
+		    
+		    try {
+		        if (currentEditingCustomer) {
+		            await apiClient.updateCustomer(currentEditingCustomer.id, customerData);
+		            showMessage('customers-message', '更新成功', 'success');
+		        } else {
+		            await apiClient.createCustomer(customerData);
+		            showMessage('customers-message', '创建成功', 'success');
+		        }
+		        
+		        closeCustomerModal();
+		        await loadCustomers();
+		    } catch (error) {
+		        console.error('保存客户失败:', error);
+		        showMessage('customers-message', '操作失败: ' + error.message);
+		    }
+		});
 
         // 充值功能
         function showRechargeModal(customerId, customerName) {
@@ -2807,50 +2900,77 @@
                 showMessage('records-message', '加载乘车记录失败: ' + error.message);
             }
         }
+		
+		// 添加记录状态文本映射函数
+		function getRecordStatusText(status) {
+		    const statusMap = {
+		        'IN_PROGRESS': '进行中',
+		        'COMPLETED': '已完成',
+		        'CANCELLED': '已取消',
+		        'PENDING': '待处理'
+		    };
+		    return statusMap[status] || status;
+		}
 
-        function displayRecords(records) {
-            const tbody = document.getElementById('records-tbody');
-            tbody.innerHTML = '';
-            
-            if (records.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="14" style="text-align: center; color: #666;">暂无乘车记录</td></tr>';
-                return;
-            }
-            
-            records.forEach(record => {
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>${record.id}</td>
-                    <td>${record.vipCustomerId}</td>
-                    <td>${record.customerName || '<span class="empty-cell">-</span>'}</td>
-                    <td>${record.customerNickName || '<span class="empty-cell">-</span>'}</td>
-                    <td>${record.vipCardId}</td>
-                    <td>${record.cardNumber || '<span class="empty-cell">-</span>'}</td>
-                    <td>${record.boardingStation}</td>
-                    <td>${record.alightingStation || '<span class="empty-cell">-</span>'}</td>
-                    <td>${formatShortDateTime(record.boardingTime)}</td>
-                    <td>${formatShortDateTime(record.alightingTime)}</td>
-                    <td>${formatShortDateTime(record.estimatedAlightingTime)}</td>
-                    <td class="${getRecordStatusClass(record.alightingTime)}">${getRecordStatus(record.alightingTime)}</td>
-                    <td>${formatShortDateTime(record.createdTime)}</td>
-                    <td class="action-buttons">
-                        <button class="action-btn btn-warning" onclick="editRecord(${record.id})">编辑</button>
-                        <button class="action-btn btn-danger" onclick="deleteRecord(${record.id})">删除</button>
-                    </td>
-                `;
-                tbody.appendChild(row);
-            });
-        }
+		function getRecordStatusClass(status) {
+		    const statusClassMap = {
+		        'IN_PROGRESS': 'record-status-in_progress',
+		        'COMPLETED': 'record-status-completed',
+		        'CANCELLED': 'record-status-cancelled',
+		        'PENDING': 'record-status-pending'
+		    };
+		    return statusClassMap[status] || '';
+		}
 
-        function updateRecordStats(records) {
-            const total = records.length;
-            const inProgress = records.filter(record => !record.alightingTime).length;
-            const completed = records.filter(record => record.alightingTime).length;
-            
-            document.getElementById('total-records').textContent = total;
-            document.getElementById('in-progress-records').textContent = inProgress;
-            document.getElementById('completed-records').textContent = completed;
-        }
+		// 修改displayRecords函数
+		function displayRecords(records) {
+		    const tbody = document.getElementById('records-tbody');
+		    tbody.innerHTML = '';
+		    
+		    if (records.length === 0) {
+		        tbody.innerHTML = '<tr><td colspan="14" style="text-align: center; color: #666;">暂无乘车记录</td></tr>';
+		        return;
+		    }
+		    
+		    records.forEach(record => {
+		        const row = document.createElement('tr');
+		        row.innerHTML = `
+		            <td>${record.id}</td>
+		            <td>${record.vipCustomerId}</td>
+		            <td>${record.customerName || '<span class="empty-cell">-</span>'}</td>
+		            <td>${record.customerNickName || '<span class="empty-cell">-</span>'}</td>
+		            <td>${record.vipCardId}</td>
+		            <td>${record.cardNumber || '<span class="empty-cell">-</span>'}</td>
+		            <td>${record.boardingStation}</td>
+		            <td>${record.alightingStation || '<span class="empty-cell">-</span>'}</td>
+		            <td>${formatShortDateTime(record.boardingTime)}</td>
+		            <td>${formatShortDateTime(record.alightingTime)}</td>
+		            <td>${formatShortDateTime(record.estimatedAlightingTime)}</td>
+		            <!-- 修改状态显示，使用record.status而不是alightingTime -->
+		            <td class="${getRecordStatusClass(record.status)}">${getRecordStatusText(record.status)}</td>
+		            <td>${formatShortDateTime(record.createdTime)}</td>
+		            <td class="action-buttons">
+		                <button class="action-btn btn-warning" onclick="editRecord(${record.id})">编辑</button>
+		                <button class="action-btn btn-danger" onclick="deleteRecord(${record.id})">删除</button>
+		            </td>
+		        `;
+		        tbody.appendChild(row);
+		    });
+		}
+
+		function updateRecordStats(records) {
+		    const total = records.length;
+		    const inProgress = records.filter(record => record.status === 'IN_PROGRESS').length;
+		    const completed = records.filter(record => record.status === 'COMPLETED').length;
+		    const cancelled = records.filter(record => record.status === 'CANCELLED').length;
+		    
+		    document.getElementById('total-records').textContent = total;
+		    document.getElementById('in-progress-records').textContent = inProgress;
+		    document.getElementById('completed-records').textContent = completed;
+		    
+		    // 如果需要显示已取消的记录数，可以添加对应的HTML元素
+		    // document.getElementById('cancelled-records').textContent = cancelled;
+		}
 
         function searchRecords() {
             const searchTerm = document.getElementById('record-search').value.trim();
@@ -2882,27 +3002,30 @@
             document.getElementById('record-modal').style.display = 'none';
         }
 
-        async function editRecord(id) {
-            try {
-                const record = await apiClient.getRecord(id);
-                currentEditingRecord = record;
-                
-                document.getElementById('record-modal-title').textContent = '编辑乘车记录';
-                document.getElementById('record-id').value = record.id;
-                document.getElementById('record-vip-customer-id').value = record.vipCustomerId;
-                document.getElementById('record-vip-card-id').value = record.vipCardId;
-                document.getElementById('record-boarding-station').value = record.boardingStation;
-                document.getElementById('record-alighting-station').value = record.alightingStation || '';
-                document.getElementById('record-boarding-time').value = formatDateTimeForInput(record.boardingTime);
-                document.getElementById('record-alighting-time').value = formatDateTimeForInput(record.alightingTime);
-                document.getElementById('record-estimated-alighting-time').value = formatDateTimeForInput(record.estimatedAlightingTime);
-                
-                document.getElementById('record-modal').style.display = 'block';
-            } catch (error) {
-                console.error('加载记录详情失败:', error);
-                showMessage('records-message', '加载记录详情失败: ' + error.message);
-            }
-        }
+		// 更新editRecord函数，设置状态值
+		// 更新editRecord函数
+		async function editRecord(id) {
+		    try {
+		        const record = await apiClient.getRecord(id);
+		        currentEditingRecord = record;
+		        
+		        document.getElementById('record-modal-title').textContent = '编辑乘车记录';
+		        document.getElementById('record-id').value = record.id;
+		        document.getElementById('record-vip-customer-id').value = record.vipCustomerId;
+		        document.getElementById('record-vip-card-id').value = record.vipCardId;
+		        document.getElementById('record-boarding-station').value = record.boardingStation;
+		        document.getElementById('record-alighting-station').value = record.alightingStation || '';
+		        document.getElementById('record-boarding-time').value = formatDateTimeForInput(record.boardingTime);
+		        document.getElementById('record-alighting-time').value = formatDateTimeForInput(record.alightingTime);
+		        document.getElementById('record-estimated-alighting-time').value = formatDateTimeForInput(record.estimatedAlightingTime);
+		        document.getElementById('record-status').value = record.status; // 设置状态
+		        
+		        document.getElementById('record-modal').style.display = 'block';
+		    } catch (error) {
+		        console.error('加载记录详情失败:', error);
+		        showMessage('records-message', '加载记录详情失败: ' + error.message);
+		    }
+		}
 
         async function deleteRecord(id) {
             if (!confirm('确定要删除这条乘车记录吗？此操作不可恢复！')) return;
@@ -2921,40 +3044,41 @@
             }
         }
 
-        document.getElementById('record-form').addEventListener('submit', async function(e) {
-            e.preventDefault();
-            
-            const recordData = {
-                vipCustomerId: parseInt(document.getElementById('record-vip-customer-id').value),
-                vipCardId: parseInt(document.getElementById('record-vip-card-id').value),
-                boardingStation: document.getElementById('record-boarding-station').value.trim(),
-                alightingStation: document.getElementById('record-alighting-station').value.trim() || null,
-                boardingTime: document.getElementById('record-boarding-time').value,
-                alightingTime: document.getElementById('record-alighting-time').value || null,
-                estimatedAlightingTime: document.getElementById('record-estimated-alighting-time').value || null
-            };
-            
-            if (!recordData.vipCustomerId || !recordData.vipCardId || !recordData.boardingStation || !recordData.boardingTime) {
-                showMessage('records-message', '请填写完整的必填字段');
-                return;
-            }
-            
-            try {
-                if (currentEditingRecord) {
-                    await apiClient.updateRecord(currentEditingRecord.id, recordData);
-                    showMessage('records-message', '更新成功', 'success');
-                } else {
-                    await apiClient.createRecord(recordData);
-                    showMessage('records-message', '创建成功', 'success');
-                }
-                
-                closeRecordModal();
-                await loadRecords();
-            } catch (error) {
-                console.error('保存记录失败:', error);
-                showMessage('records-message', '操作失败: ' + error.message);
-            }
-        });
+		document.getElementById('record-form').addEventListener('submit', async function(e) {
+		    e.preventDefault();
+		    
+		    const recordData = {
+		        vipCustomerId: parseInt(document.getElementById('record-vip-customer-id').value),
+		        vipCardId: parseInt(document.getElementById('record-vip-card-id').value),
+		        boardingStation: document.getElementById('record-boarding-station').value.trim(),
+		        alightingStation: document.getElementById('record-alighting-station').value.trim() || null,
+		        boardingTime: document.getElementById('record-boarding-time').value,
+		        alightingTime: document.getElementById('record-alighting-time').value || null,
+		        estimatedAlightingTime: document.getElementById('record-estimated-alighting-time').value || null,
+		         status: document.getElementById('record-status').value // 新增状态字段
+		    };
+		    
+		    if (!recordData.vipCustomerId || !recordData.vipCardId || !recordData.boardingStation || !recordData.boardingTime) {
+		        showMessage('records-message', '请填写完整的必填字段');
+		        return;
+		    }
+		    
+		    try {
+		        if (currentEditingRecord) {
+		            await apiClient.updateRecord(currentEditingRecord.id, recordData);
+		            showMessage('records-message', '更新成功', 'success');
+		        } else {
+		            await apiClient.createRecord(recordData);
+		            showMessage('records-message', '创建成功', 'success');
+		        }
+		        
+		        closeRecordModal();
+		        await loadRecords();
+		    } catch (error) {
+		        console.error('保存记录失败:', error);
+		        showMessage('records-message', '操作失败: ' + error.message);
+		    }
+		});
 
         // 初始化页面
         document.addEventListener('DOMContentLoaded', function() {
