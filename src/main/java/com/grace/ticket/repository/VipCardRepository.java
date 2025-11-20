@@ -54,4 +54,23 @@ public interface VipCardRepository extends JpaRepository<VipCard, Long> {
            "vc.reservedUser LIKE CONCAT('%,', :userName, ',%') OR " +
            "vc.reservedUser LIKE CONCAT('%,', :userName))")
     List<VipCard> findReservedCardsByUserName(@Param("userName") String userName);
+    
+    
+    // 新增：查找已使用过的次卡（expiryTime不为空）
+    @Query("SELECT vc FROM VipCard vc WHERE vc.status = 'AVAILABLE' AND vc.expiryTime IS NOT NULL AND (vc.expiryTime IS NULL OR vc.expiryTime > :currentTime) ORDER BY vc.expiryTime ASC NULLS LAST")
+    List<VipCard> findUsedCards(@Param("currentTime") LocalDateTime currentTime);
+    
+    // 新增：查找新的次卡（expiryTime为空）
+    @Query("SELECT vc FROM VipCard vc WHERE vc.status = 'AVAILABLE' AND vc.expiryTime IS NULL ORDER BY vc.createdTime ASC")
+    List<VipCard> findNewCards();
+    
+    // 新增：查找备用卡（RESERVED状态）
+    @Query("SELECT vc FROM VipCard vc WHERE vc.status = 'RESERVED' ORDER BY vc.expiryTime ASC NULLS LAST")
+    List<VipCard> findReservedCards();
+    
+    // 新增：查找备用卡（STANDBY状态）
+    @Query("SELECT vc FROM VipCard vc WHERE vc.status = 'STANDBY' ORDER BY vc.expiryTime ASC NULLS LAST")
+    List<VipCard> findStandbyCards();
+    
+    
 }

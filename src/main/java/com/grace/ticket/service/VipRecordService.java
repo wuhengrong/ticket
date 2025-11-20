@@ -38,7 +38,7 @@ public class VipRecordService {
     }
     
     public VipRecordDTO createVipRecord(VipRecord record) {
-        VipRecord savedRecord = vipRecordRepository.save(record);
+        VipRecord savedRecord = vipRecordRepository.saveAndFlush(record);
         return convertToDTO(savedRecord);
     }
     
@@ -53,8 +53,8 @@ public class VipRecordService {
         record.setBoardingTime(recordDetails.getBoardingTime());
         record.setAlightingTime(recordDetails.getAlightingTime());
         record.setEstimatedAlightingTime(recordDetails.getEstimatedAlightingTime());
-        
-        VipRecord updatedRecord = vipRecordRepository.save(record);
+        record.setStatus(recordDetails.getStatus());
+        VipRecord updatedRecord = vipRecordRepository.saveAndFlush(record);
         return convertToDTO(updatedRecord);
     }
     
@@ -81,6 +81,7 @@ public class VipRecordService {
         dto.setEstimatedAlightingTime(record.getEstimatedAlightingTime());
         dto.setCreatedTime(record.getCreatedTime());
         dto.setUpdatedTime(record.getUpdatedTime());
+        dto.setStatus(record.getStatus());
         
         // 获取客户信息
         VipCustomer customer = vipCustomerRepository.findById(record.getVipCustomerId()).orElse(null);

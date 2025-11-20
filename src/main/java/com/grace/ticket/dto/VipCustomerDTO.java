@@ -1,11 +1,18 @@
 package com.grace.ticket.dto;
 
-import com.grace.ticket.entity.VipCustomer;
-
 import java.time.LocalDateTime;
 
+import com.grace.ticket.entity.VipCustomer;
+
 public class VipCustomerDTO {
-    private Long id;
+    public String getCustomerType() {
+		return customerType;
+	}
+
+	public void setCustomerType(String customerType) {
+		this.customerType = customerType;
+	}
+	private Long id;
     private String userName;
     private Long groupId;
     private String groupName;
@@ -14,7 +21,7 @@ public class VipCustomerDTO {
     private String remark;
     private LocalDateTime createdTime;
     private LocalDateTime updatedTime;
-    
+    private String customerType;
     
     // 新增昵称字段
     private String nickName;
@@ -43,6 +50,7 @@ public class VipCustomerDTO {
         this.createdTime = customer.getCreatedTime();
         this.updatedTime = customer.getUpdatedTime();
         this.nickName = customer.getNickName();
+        this.customerType =customer.getCustomerType();
     }
     
     // Getters and Setters

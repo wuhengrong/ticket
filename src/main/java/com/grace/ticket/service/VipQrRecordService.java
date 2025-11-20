@@ -21,7 +21,7 @@ public class VipQrRecordService {
     private VipQrRecordRepository vipQrRecordRepository;
 
     public VipQrRecord save(VipQrRecord qrRecord) {
-        return vipQrRecordRepository.save(qrRecord);
+        return vipQrRecordRepository.saveAndFlush(qrRecord);
     }
 
     public VipQrRecord findActiveByCustomerId(Long customerId) {
@@ -34,7 +34,7 @@ public class VipQrRecordService {
         if (record != null) {
             record.setStatus(status);
             record.setUpdateTime(LocalDateTime.now());
-            vipQrRecordRepository.save(record);
+            vipQrRecordRepository.saveAndFlush(record);
         }
     }
     
@@ -49,7 +49,7 @@ public class VipQrRecordService {
     public VipQrRecord createVipQrRecord(VipQrRecord vipQrRecord) {
         vipQrRecord.setCreateTime(LocalDateTime.now());
         vipQrRecord.setUpdateTime(LocalDateTime.now());
-        return vipQrRecordRepository.save(vipQrRecord);
+        return vipQrRecordRepository.saveAndFlush(vipQrRecord);
     }
     
     public VipQrRecord updateVipQrRecord(Long id, VipQrRecord vipQrRecordDetails) {
@@ -67,7 +67,7 @@ public class VipQrRecordService {
             vipQrRecord.setStatus(vipQrRecordDetails.getStatus());
             vipQrRecord.setUpdateTime(LocalDateTime.now());
             
-            return vipQrRecordRepository.save(vipQrRecord);
+            return vipQrRecordRepository.saveAndFlush(vipQrRecord);
         }
         return null;
     }

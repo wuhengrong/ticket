@@ -45,7 +45,19 @@ public class VipRecord {
     @Column(name = "updated_time")
     private LocalDateTime updatedTime;
     
-    @PrePersist
+ // 添加状态字段，允许为空
+    @Column(name = "status")
+    private String status;
+    
+    public String getStatus() {
+		return status;
+	}
+
+	public void setStatus(String status) {
+		this.status = status;
+	}
+
+	@PrePersist
     protected void onCreate() {
         createdTime = LocalDateTime.now();
         updatedTime = LocalDateTime.now();
@@ -59,13 +71,14 @@ public class VipRecord {
     // Constructors, Getters and Setters
     public VipRecord() {}
     
-    public VipRecord(Long vipCustomerId, Long vipCardId, String boardingStation, LocalDateTime boardingTime, String alightingStation, LocalDateTime estimatedAlightingTime) {
+    public VipRecord(Long vipCustomerId, Long vipCardId, String boardingStation, LocalDateTime boardingTime, String alightingStation, LocalDateTime estimatedAlightingTime,String status) {
         this.vipCustomerId = vipCustomerId;
         this.vipCardId = vipCardId;
         this.boardingStation = boardingStation;
         this.boardingTime = boardingTime;
         this.alightingStation = alightingStation;
         this.estimatedAlightingTime=estimatedAlightingTime;
+        this.status = status;
     }
     
     // Getters and Setters

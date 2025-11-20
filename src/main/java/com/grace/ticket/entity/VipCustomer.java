@@ -10,7 +10,6 @@ import jakarta.persistence.Id;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
-
 @Entity
 @Table(name = "vip_customer")
 public class VipCustomer {
@@ -45,14 +44,17 @@ public class VipCustomer {
     @Column(name = "nick_name")
     private String nickName;
     
-    // 构造方法、getter、setter...
+ // 修改为简单的字段配置
+    @Column(name = "customer_type", nullable = false, length = 20)
+    private String customerType = "VIP"; // 只在Java层面设置默认值
     
-    public String getNickName() {
-        return nickName;
-    }
-    
-    public void setNickName(String nickName) {
-        this.nickName = nickName;
+    // 客户类别枚举值
+    public static class CustomerType {
+        public static final String GENERAL = "PRIMARY";      // 只能使用链接次卡
+        public static final String LIMITED = "LIMITED";      // 特定时间用过的次卡 + 链接次卡
+        public static final String NORMAL = "NORMAL";       // 只能用已经用过的次卡
+        public static final String PLATINUM = "VIP";     // 用过的次卡 + 新的次卡
+        public static final String BLACK = "SVIP";        // 白金 + 备用卡
     }
     
     @PrePersist
@@ -94,4 +96,8 @@ public class VipCustomer {
     public void setCreatedTime(LocalDateTime createdTime) { this.createdTime = createdTime; }
     public LocalDateTime getUpdatedTime() { return updatedTime; }
     public void setUpdatedTime(LocalDateTime updatedTime) { this.updatedTime = updatedTime; }
+    public String getNickName() { return nickName; }
+    public void setNickName(String nickName) { this.nickName = nickName; }
+    public String getCustomerType() { return customerType; }
+    public void setCustomerType(String customerType) { this.customerType = customerType; }
 }

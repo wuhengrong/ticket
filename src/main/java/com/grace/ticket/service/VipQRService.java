@@ -36,7 +36,7 @@ public class VipQRService {
         }
         vipQR.setCreatedTime(LocalDateTime.now());
         vipQR.setUpdatedTime(LocalDateTime.now());
-        return vipQRRepository.save(vipQR);
+        return vipQRRepository.saveAndFlush(vipQR);
     }
 
     public VipQR updateVipQR(Long id, VipQR vipQRDetails) {
@@ -61,7 +61,7 @@ public class VipQRService {
             vipQR.setRemark(vipQRDetails.getRemark());
             vipQR.setUpdatedTime(LocalDateTime.now());
             
-            return vipQRRepository.save(vipQR);
+            return vipQRRepository.saveAndFlush(vipQR);
         }
         throw new RuntimeException("VIP QR码未找到，ID: " + id);
     }

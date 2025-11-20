@@ -70,7 +70,7 @@ public class VipAdminService {
             	vipQR.setUpdatedTime(DateTimeUtils.now());
             	vipQR.setUserName(customer.getNickName());
             	vipQR.setStatus(VipQR.QRStatus.USED);
-            	vipQRRepository.save(vipQR);
+            	vipQRRepository.saveAndFlush(vipQR);
             	
             	  VipRecord record = new VipRecord( 
             			  customerId,
@@ -78,13 +78,15 @@ public class VipAdminService {
                           startStation, 
                           DateTimeUtils.now(),
                           endStation,
-                          DateTimeUtils.now()
+                          DateTimeUtils.now(),
+                          "IN_PROGRESS"
+                         
                       );
-                  vipRecordRepository.save(record);
+                  vipRecordRepository.saveAndFlush(record);
                   
                   // 扣除次数
                   customer.setRideCount(customer.getRideCount() - 1);
-                  vipCustomerRepository.save(customer);
+                  vipCustomerRepository.saveAndFlush(customer);
                   
                       
             	return GenerateRideLinkResponse.success(vipQR.getCardUrl(), customer.getRideCount());
@@ -128,7 +130,7 @@ public class VipAdminService {
                 vipQR.setUpdatedTime(DateTimeUtils.now());
                 vipQR.setUserName(customer.getNickName());
                 vipQR.setStatus(VipQR.QRStatus.USED);
-                vipQRRepository.save(vipQR);
+                vipQRRepository.saveAndFlush(vipQR);
                 
                 // 创建并保存 VipQrRecord
                 VipQrRecord qrRecord = new VipQrRecord();
@@ -279,6 +281,7 @@ public class VipAdminService {
         customer.setGroupName(customerDTO.getGroupName());
         customer.setRideCount(customerDTO.getRideCount());
         customer.setRemark(customerDTO.getRemark());
+        customer.setCustomerType(customerDTO.getCustomerType());
         
         // 生成访问码和URL
         String accessCode = secureUrlService.generateSimpleFixedAccessCode(
@@ -307,7 +310,7 @@ public class VipAdminService {
         customer.setRideCount(customerDTO.getRideCount());
         customer.setRemark(customerDTO.getRemark());
         customer.setNickName(customerDTO.getNickName());
-        
+        customer.setCustomerType(customerDTO.getCustomerType());
         // 生成访问码和URL
         String accessCode = secureUrlService.generateSimpleFixedAccessCode(
             customerDTO.getUserName(), 
@@ -316,7 +319,7 @@ public class VipAdminService {
         String vipUrl = String.format("svip.html?uId=%s&gId=%s&code=%s", 
             customerDTO.getUserName(), customerDTO.getGroupId(), accessCode);
         customer.setVipUrl(vipUrl);
-        VipCustomer updatedCustomer = vipCustomerRepository.save(customer);
+        VipCustomer updatedCustomer = vipCustomerRepository.saveAndFlush(customer);
         return new VipCustomerDTO(updatedCustomer);
     }
     
@@ -338,7 +341,7 @@ public class VipAdminService {
         VipCustomer customer = customerOpt.get();
         customer.setRideCount(customer.getRideCount() + rideCount);
         
-        VipCustomer updatedCustomer = vipCustomerRepository.save(customer);
+        VipCustomer updatedCustomer = vipCustomerRepository.saveAndFlush(customer);
         return new VipCustomerDTO(updatedCustomer);
     }
 }

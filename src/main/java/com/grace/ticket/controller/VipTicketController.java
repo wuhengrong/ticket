@@ -256,7 +256,10 @@ public class VipTicketController {
             VipRecord record = activeRecords.get(0);
             record.setAlightingStation(alightingStation);
             record.setAlightingTime(DateTimeUtils.now());
+            record.setStatus(alightingStation);
+            record.setStatus("COMPLETED");
             vipRecordRepository.save(record);
+            
             
             // 构建成功响应
             VipCardDTO cardDTO = new VipCardDTO(card);
