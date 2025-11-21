@@ -208,6 +208,27 @@ public class VipTicketController {
             @RequestParam String alightingStation,
             @RequestParam Long customerId) {
         try {
+        	TicketSearchResponse response = vipCardService.returnTicket(cardId, customerId, alightingStation);
+            return ResponseEntity.ok(response);
+            
+        } catch (Exception e) {
+            System.out.println("归还票卡异常: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.badRequest().body(TicketSearchResponse.failure("归还票卡失败: " + e.getMessage()));
+        }
+    }
+    
+    
+    /**
+     * 归还票卡
+     */
+    @PostMapping("/tickets/return2/{cardId}")
+    @Transactional
+    public ResponseEntity<TicketSearchResponse> returnTicket2(
+            @PathVariable Long cardId,
+            @RequestParam String alightingStation,
+            @RequestParam Long customerId) {
+        try {
             System.out.println("收到归还票卡请求 - cardId: " + cardId + ", customerId: " + customerId + ", alightingStation: " + alightingStation);
             
             if (alightingStation == null || alightingStation.trim().isEmpty()) {
@@ -256,7 +277,6 @@ public class VipTicketController {
             VipRecord record = activeRecords.get(0);
             record.setAlightingStation(alightingStation);
             record.setAlightingTime(DateTimeUtils.now());
-            record.setStatus(alightingStation);
             record.setStatus("COMPLETED");
             vipRecordRepository.save(record);
             

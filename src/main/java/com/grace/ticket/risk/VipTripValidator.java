@@ -246,7 +246,7 @@ import com.grace.ticket.dto.TicketInfoDTO;
 	                        "获取到坐标: " + boardingStation + " -> " + fromLocation + ", " + alightingStation + " -> " + toLocation);
 
 	                // 1. 获取地铁路线
-	                RouteResult subwayRoute = getSubwayRoute(fromLocation, toLocation);
+	                RouteResult subwayRoute = getSubwayRoute(toLocation, fromLocation);
 	                if (subwayRoute != null) {
 	                    routes.add(subwayRoute);
 	                    System.out.println("地铁路线: " + subwayRoute.getDuration() + "分钟, " + subwayRoute.getCost() + "元");

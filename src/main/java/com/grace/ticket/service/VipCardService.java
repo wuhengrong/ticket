@@ -723,6 +723,7 @@ public class VipCardService {
             }
             
             VipCard card = cardOpt.get();
+            VipCustomer customer = customerOpt.get();
             if (card.getStatus() != VipCard.CardStatus.IN_USE) {
                 return TicketSearchResponse.failure("票卡未在使用中");
             }
@@ -737,12 +738,18 @@ public class VipCardService {
                 return TicketSearchResponse.failure("未找到该客户使用此票卡的记录");
             }
             
-            // 更新票卡状态
-            card.setStatus(VipCard.CardStatus.AVAILABLE);
+            // 更新票卡状态,判断是否预约客户，恢复预约状态
+            if(card.getReservedUser()!=null && card.getReservedUser().contains(customer.getUserName())) {
+            	card.setStatus(VipCard.CardStatus.RESERVED);
+            } else {
+            	card.setStatus(VipCard.CardStatus.AVAILABLE);
+            }
+           
             card.setInOutStatus(VipCard.InOutStatus.OUT);
             card.setAlightingStation(alightingStation);
-            card.setAlightingTime(DateTimeUtils.now());
-            vipCardRepository.saveAndFlush(card);
+            card.setAlightingTime(DateTimeUtils.now()); 
+            card.setEstimatedAlightingTime(null);
+            vipCardRepository.save(card);
             
             // 更新使用记录
             VipRecord record = activeRecords.get(0);
