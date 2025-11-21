@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>手机批量自动化管理</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .section {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #333;
+        }
+        textarea {
+            width: 100%;
+            height: 120px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            resize: vertical;
+            font-size: 14px;
+        }
+        .hint {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+        }
+        .btn {
+            background: linear-gradient(135deg, #1890ff, #096dd9);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-right: 10px;
+            transition: all 0.3s ease;
+        }
+        .btn:hover {
+            background: linear-gradient(135deg, #40a9ff, #1890ff);
+            transform: translateY(-1px);
+        }
+        .btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .btn-danger {
+            background: linear-gradient(135deg, #ff4d4f, #cf1322);
+        }
+        .btn-danger:hover {
+            background: linear-gradient(135deg, #ff7875, #ff4d4f);
+        }
+        .result-section {
+            margin-top: 20px;
+        }
+        .log-container {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 5px;
+            padding: 15px;
+            height: 300px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            white-space: pre-wrap;
+        }
+        .status-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 5px;
+        }
+        .status-running {
+            background: #1890ff;
+            animation: pulse 1.5s infinite;
+        }
+        .status-success {
+            background: #52c41a;
+        }
+        .status-error {
+            background: #ff4d4f;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+        .phone-list {
+            margin-top: 10px;
+        }
+        .phone-item {
+            padding: 5px 10px;
+            margin: 2px 0;
+            background: #f0f8ff;
+            border-radius: 3px;
+            border-left: 3px solid #1890ff;
+        }
+    </style>
+</head>
+<body>
+    <div class="section">
+        <h1>📱 手机批量自动化管理</h1>
+        <p>批量执行手机APP的自动登录和退出操作</p>
+        
+        <div class="form-group">
+            <label for="phoneNumbers">手机号码列表：</label>
+            <textarea id="phoneNumbers" placeholder="请输入手机号码，多个号码用逗号分隔&#10;例如：17820635357,13800138000,13912345678"></textarea>
+            <div class="hint">支持多个手机号码，用逗号、分号或换行分隔</div>
+        </div>
+        
+        <div class="form-group">
+            <label for="password">密码：</label>
+            <input type="password" id="password" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px;" 
+                   placeholder="请输入登录密码" value="1Test12345">
+        </div>
+        
+        <div class="form-group">
+            <button class="btn" id="startBtn" onclick="startAutomation()">
+                <span class="status-indicator status-running" style="display: none;"></span>
+                开始执行自动登录
+            </button>
+            <button class="btn btn-danger" id="logoutBtn" onclick="startLogout()">
+                <span class="status-indicator status-running" style="display: none;"></span>
+                开始执行自动退出
+            </button>
+            <button class="btn" onclick="clearLog()">清空日志</button>
+        </div>
+        
+        <div id="phoneList" class="phone-list" style="display: none;"></div>
+    </div>
+    
+    <div class="section result-section">
+        <h3>执行日志：</h3>
+        <div class="log-container" id="logContainer">
+等待执行...
+        </div>
+    </div>
+
+    <script>
+        let isRunning = false;
+        const logContainer = document.getElementById('logContainer');
+        const startBtn = document.getElementById('startBtn');
+        const logoutBtn = document.getElementById('logoutBtn');
+        
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const prefix = type === 'error' ? '❌' : type === 'success' ? '✅' : '📝';
+            const logEntry = `[${timestamp}] ${prefix} ${message}\n`;
+            logContainer.innerHTML += logEntry;
+            logContainer.scrollTop = logContainer.scrollHeight;
+        }
+        
+        function clearLog() {
+            logContainer.innerHTML = '日志已清空\n';
+        }
+        
+        function updateButtonState(running) {
+            isRunning = running;
+            startBtn.disabled = running;
+            logoutBtn.disabled = running;
+            
+            const startIndicator = startBtn.querySelector('.status-indicator');
+            const logoutIndicator = logoutBtn.querySelector('.status-indicator');
+            
+            if (running) {
+                startIndicator.style.display = 'inline-block';
+                logoutIndicator.style.display = 'inline-block';
+            } else {
+                startIndicator.style.display = 'none';
+                logoutIndicator.style.display = 'none';
+            }
+        }
+        
+        function parsePhoneNumbers(input) {
+            return input.split(/[,;\n]/)
+                .map(phone => phone.trim())
+                .filter(phone => phone.length > 0)
+                .filter(phone => /^1[3-9]\d{9}$/.test(phone));
+        }
+        
+        function displayPhoneList(phones) {
+            const phoneList = document.getElementById('phoneList');
+            if (phones.length > 0) {
+                phoneList.innerHTML = '<strong>检测到的手机号码：</strong>' + 
+                    phones.map(phone => `<div class="phone-item">${phone}</div>`).join('');
+                phoneList.style.display = 'block';
+            } else {
+                phoneList.style.display = 'none';
+            }
+        }
+        
+        async function startAutomation() {
+            const phoneInput = document.getElementById('phoneNumbers').value;
+            const password = document.getElementById('password').value;
+            
+            if (!phoneInput.trim()) {
+                alert('请输入手机号码');
+                return;
+            }
+            
+            if (!password.trim()) {
+                alert('请输入密码');
+                return;
+            }
+            
+            const phones = parsePhoneNumbers(phoneInput);
+            if (phones.length === 0) {
+                alert('未检测到有效的手机号码');
+                return;
+            }
+            
+            displayPhoneList(phones);
+            updateButtonState(true);
+            clearLog();
+            
+            log(`开始执行自动登录，共 ${phones.length} 个手机号码`);
+            
+            try {
+                const response = await fetch('/automation/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        phoneNumbers: phones,
+                        password: password
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    log('自动登录执行完成！', 'success');
+                    data.results.forEach(result => {
+                        if (result.success) {
+                            log(`手机 ${result.phoneNumber}: 登录成功`, 'success');
+                        } else {
+                            log(`手机 ${result.phoneNumber}: 登录失败 - ${result.error}`, 'error');
+                        }
+                    });
+                } else {
+                    log(`执行失败: ${data.message}`, 'error');
+                }
+                
+            } catch (error) {
+                log(`请求失败: ${error.message}`, 'error');
+            } finally {
+                updateButtonState(false);
+            }
+        }
+        
+        async function startLogout() {
+            const phoneInput = document.getElementById('phoneNumbers').value;
+            const phones = parsePhoneNumbers(phoneInput);
+            
+            if (phones.length === 0) {
+                alert('请输入手机号码');
+                return;
+            }
+            
+            displayPhoneList(phones);
+            updateButtonState(true);
+            clearLog();
+            
+            log(`开始执行自动退出，共 ${phones.length} 个手机号码`);
+            
+            try {
+                const response = await fetch('/automation/logout', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        phoneNumbers: phones
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    log('自动退出执行完成！', 'success');
+                    data.results.forEach(result => {
+                        if (result.success) {
+                            log(`手机 ${result.phoneNumber}: 退出成功`, 'success');
+                        } else {
+                            log(`手机 ${result.phoneNumber}: 退出失败 - ${result.error}`, 'error');
+                        }
+                    });
+                } else {
+                    log(`执行失败: ${data.message}`, 'error');
+                }
+                
+            } catch (error) {
+                log(`请求失败: ${error.message}`, 'error');
+            } finally {
+                updateButtonState(false);
+            }
+        }
+        
+        // 实时显示手机号码列表
+        document.getElementById('phoneNumbers').addEventListener('input', function() {
+            const phones = parsePhoneNumbers(this.value);
+            displayPhoneList(phones);
+        });
+    </script>
+</body>
+</html>

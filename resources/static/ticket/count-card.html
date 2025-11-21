@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>地铁乘车服务</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .section {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .wechat-section {
+            text-align: center;
+            background: linear-gradient(135deg, #07c160, #05a050);
+            color: white;
+        }
+        .wechat-id {
+            font-size: 24px;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        .iframe-container {
+            width: 100%;
+            height: 600px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            overflow: hidden;
+            margin: 0;
+        }
+        .iframe-container iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+        .iframe-title {
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 8px;
+            color: #333;
+        }
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+        }
+        .error-message {
+            text-align: center;
+            padding: 20px;
+            color: #e74c3c;
+            background: #f8d7da;
+            border-radius: 6px;
+            margin: 10px 0;
+        }
+        .debug-info {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 6px;
+            margin: 10px 0;
+            font-size: 12px;
+            color: #666;
+        }
+        .retry-btn {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <!-- 第一部分：微信联系方式 -->
+    <div class="section wechat-section">
+        <h2>请联系客服微信</h2>
+        <div class="wechat-id">whengrong</div>
+        <p>如有问题请添加微信咨询</p>
+    </div>
+    
+    <!-- 第二部分：动态加载票卡信息 -->
+    <div class="section">
+        <div class="iframe-title">票卡信息：</div>
+        <div class="debug-info" id="debug-info">
+            调试信息加载中...
+        </div>
+        <div class="iframe-container">
+            <div id="loading" class="loading">
+                <p>正在加载票卡信息...</p>
+            </div>
+            <div id="error-message" class="error-message" style="display: none;">
+                <p id="error-text">加载票卡信息失败，请稍后重试</p>
+                <button class="retry-btn" onclick="loadTicketCardByCode()">重新加载</button>
+            </div>
+            <iframe src="" title="地铁票卡信息" id="ticket-frame" style="display: none;"></iframe>
+        </div>
+    </div>
+    
+    <script>
+        // 更新调试信息
+        function updateDebugInfo(message) {
+            const debugEl = document.getElementById('debug-info');
+            const timestamp = new Date().toLocaleTimeString();
+            debugEl.innerHTML += `<div>[${timestamp}] ${message}</div>`;
+        }
+
+        // 动态获取API基础路径
+        function getApiBaseUrl() {
+            const currentProtocol = window.location.protocol;
+            const currentHost = window.location.host;
+            const apiBase = `${currentProtocol}//${currentHost}/api`;
+            updateDebugInfo(`API基础路径: ${apiBase}`);
+            return apiBase;
+        }
+
+        const API_BASE = getApiBaseUrl();
+
+        // 获取URL参数中的code
+        function getUrlParameter(name) {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get(name);
+        }
+
+        // 根据code获取票卡信息
+        async function loadTicketCardByCode() {
+            const code = getUrlParameter('code');
+            
+            updateDebugInfo(`开始加载票卡，code: ${code}`);
+            
+            // 显示loading，隐藏错误信息和iframe
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('error-message').style.display = 'none';
+            document.getElementById('ticket-frame').style.display = 'none';
+
+            if (!code) {
+                showError('未找到票卡代码');
+                return;
+            }
+
+            try {
+                const apiUrl = `${API_BASE}/ticket-cards/code/${code}`;
+                updateDebugInfo(`请求API: ${apiUrl}`);
+                
+                const response = await fetch(apiUrl, {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json',
+                    },
+                    mode: 'cors'
+                });
+                
+                updateDebugInfo(`API响应状态: ${response.status} ${response.statusText}`);
+                
+                if (response.ok) {
+                    const ticketCard = await response.json();
+                    updateDebugInfo(`获取票卡成功: ${JSON.stringify(ticketCard)}`);
+                    
+                    if (ticketCard && ticketCard.cardUrl) {
+                        // 设置iframe的src
+                        const iframe = document.getElementById('ticket-frame');
+                        iframe.src = ticketCard.cardUrl;
+                        updateDebugInfo(`设置iframe src: ${ticketCard.cardUrl}`);
+                        
+                        // 显示iframe，隐藏loading
+                        document.getElementById('loading').style.display = 'none';
+                        iframe.style.display = 'block';
+                        
+                    } else {
+                        showError('票卡信息不完整');
+                    }
+                } else {
+                    const errorText = await response.text();
+                    updateDebugInfo(`API错误响应: ${errorText}`);
+                    showError(`服务器错误: ${response.status} ${response.statusText}`);
+                }
+            } catch (error) {
+                updateDebugInfo(`请求异常: ${error.message}`);
+                console.error('加载票卡失败:', error);
+                showError('网络错误: ' + error.message);
+            }
+        }
+
+        // 显示错误信息
+        function showError(message) {
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('error-message').style.display = 'block';
+            document.getElementById('error-text').textContent = message;
+            updateDebugInfo(`显示错误: ${message}`);
+        }
+
+        // 页面加载完成后执行
+        document.addEventListener('DOMContentLoaded', function() {
+            updateDebugInfo('页面加载完成');
+            updateDebugInfo(`当前URL: ${window.location.href}`);
+            updateDebugInfo(`User Agent: ${navigator.userAgent}`);
+            loadTicketCardByCode();
+        });
+
+        // 监听iframe事件
+        document.getElementById('ticket-frame').addEventListener('load', function() {
+            updateDebugInfo('iframe加载完成');
+        });
+
+        document.getElementById('ticket-frame').addEventListener('error', function(e) {
+            updateDebugInfo('iframe加载失败');
+            console.error('iframe加载失败:', e);
+        });
+    </script>
+</body>
+</html>

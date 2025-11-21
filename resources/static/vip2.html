@@ -1,0 +1,1167 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>次数信息</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+        }
+        
+        body {
+            background-color: #f5f5f5;
+            color: #333;
+            line-height: 1.6;
+            padding: 15px;
+            max-width: 500px;
+            margin: 0 auto;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        h1, h2 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 20px;
+        }
+        
+        .user-info {
+            background: #e8f4fc;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .guide-section {
+            background: #fff8e1;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            border-left: 4px solid #ffc107;
+        }
+        
+        .guide-title {
+            font-size: 16px;
+            font-weight: bold;
+            color: #e65100;
+            margin-bottom: 10px;
+        }
+        
+        .guide-step {
+            margin-bottom: 8px;
+            padding-left: 15px;
+            position: relative;
+            font-size: 14px;
+        }
+		
+		.guide-step-red {
+		    margin-bottom: 8px;
+		    padding-left: 15px;
+		    position: relative;
+		    font-size: 14px;
+		    color: #ff0000; /* 添加红色字体 */
+		    font-weight: bold; /* 可选：加粗字体更醒目 */
+		}
+        
+        .guide-step:before {
+            content: "•";
+            position: absolute;
+            left: 0;
+            color: #ff9800;
+            font-weight: bold;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #555;
+        }
+        
+        input, select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border 0.3s;
+        }
+        
+        input:focus, select:focus {
+            border-color: #3498db;
+            outline: none;
+        }
+        
+        .btn {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 14px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            transition: background 0.3s;
+            margin-top: 10px;
+        }
+        
+        .btn:hover {
+            background: #2980b9;
+        }
+        
+        .btn-success {
+            background: #2ecc71;
+        }
+        
+        .btn-success:hover {
+            background: #27ae60;
+        }
+        
+        .btn-danger {
+            background: #e74c3c;
+        }
+        
+        .btn-danger:hover {
+            background: #c0392b;
+        }
+        
+        .btn:disabled {
+            background: #bdc3c7;
+            cursor: not-allowed;
+        }
+        
+        .result {
+            display: none;
+            margin-top: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #3498db;
+        }
+        
+        .ticket-info {
+            margin-bottom: 15px;
+        }
+        
+        .ticket-info p {
+            margin-bottom: 8px;
+            padding: 5px 0;
+        }
+        
+        .card-details {
+            background: #e8f4fc;
+            padding: 12px;
+            border-radius: 8px;
+            margin: 10px 0;
+        }
+        
+        .status {
+            padding: 8px 12px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+            display: inline-block;
+            margin-bottom: 10px;
+        }
+        
+        .status-available {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .status-in-use {
+            background: #fff3cd;
+            color: #856404;
+        }
+        
+        .history-item {
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .history-item:hover {
+            background: #f9f9f9;
+        }
+        
+        .no-tickets {
+            text-align: center;
+            padding: 20px;
+            color: #7f8c8d;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #3498db;
+        }
+        
+        .error {
+            text-align: center;
+            padding: 20px;
+            color: #e74c3c;
+            background: #fadbd8;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        .time-suggestion {
+            display: flex;
+            gap: 10px;
+            margin-top: 5px;
+        }
+        
+        .time-btn {
+            flex: 1;
+            background: #ecf0f1;
+            border: none;
+            padding: 8px;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+        
+        .time-btn:hover {
+            background: #d5dbdb;
+        }
+
+        .card-display {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin: 15px 0;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .card-title {
+            font-size: 16px;
+            margin-bottom: 15px;
+            opacity: 0.9;
+        }
+
+		.info-row {
+		    display: flex;
+		    justify-content: space-between;
+		    align-items: center;
+		    margin: 12px 0;
+		    padding: 10px;
+		    background: rgba(255, 255, 255, 0.1);
+		    border-radius: 8px;
+		}
+
+		.info-label {
+		    font-size: 14px;
+		    opacity: 0.9;
+		    min-width: 80px;
+		    text-align: left;
+		}
+
+		.info-value {
+		    font-size: 16px;
+		    font-weight: bold;
+		    font-family: monospace;
+		    flex: 1;
+		    text-align: center;
+		    margin: 0 10px;
+		}
+
+
+        .user-name {
+            font-size: 20px;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+
+        .ride-count {
+            font-size: 18px;
+            color: #e74c3c;
+            font-weight: bold;
+        }
+		
+		.toast {
+		    position: fixed;
+		    top: 20px;
+		    left: 50%;
+		    transform: translateX(-50%);
+		    background: rgba(0, 0, 0, 0.8);
+		    color: white;
+		    padding: 12px 20px;
+		    border-radius: 6px;
+		    font-size: 14px;
+		    z-index: 1000;
+		    opacity: 0;
+		    transition: opacity 0.3s;
+		    pointer-events: none;
+		}
+
+		.toast.show {
+		    opacity: 1;
+		}
+
+        .debug-info {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 10px;
+            margin-top: 10px;
+            font-size: 12px;
+            color: #6c757d;
+        }
+		
+		/* 或者为错误容器添加上部间距 */
+		#errorContainer {
+		    margin-top: 20px;
+		}
+
+        /* 新增：二维码乘车替代方案样式 */
+        .qr-alternative {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .method-title {
+            color: #856404;
+            font-weight: bold;
+            margin-bottom: 15px;
+            font-size: 16px;
+            text-align: left;
+        }
+
+        .step {
+            margin: 8px 0;
+            padding-left: 20px;
+            position: relative;
+            color: #856404;
+            text-align: left;
+        }
+
+        .step:before {
+            content: "•";
+            position: absolute;
+            left: 8px;
+            color: #856404;
+        }
+
+        .qr-button {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 15px 0;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .qr-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(52, 152, 219, 0.4);
+        }
+
+        .note {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 10px;
+            font-size: 14px;
+            border: 1px solid #f5c6cb;
+            text-align: left;
+        }
+    </style>
+</head>
+<body>
+   
+    <!-- 用户信息显示 -->
+    <div class="container" id="userInfoContainer">
+        <div class="user-info">
+            <h2>次卡信息</h2>
+            <div class="user-name" id="vipCustomerName">-</div>
+            <p>剩余乘车次数: <span class="ride-count" id="rideCount">-</span> 次</p>
+        </div>
+        
+        <!-- 添加的使用指南 -->
+        <div class="guide-section">
+            <div class="guide-title">使用指南</div>
+            
+            <div style="margin-bottom: 15px;">
+                <div style="font-weight: bold; color: #2c3e50; margin-bottom: 8px;">获取账号：</div>
+                <div class="guide-step">输入起始站点和目的站点，查询可用票</div>
+                <div class="guide-step">点击"使用此票卡"获取账号密码</div>
+                <div class="guide-step-red">乘车结束后点击"归还票卡",否则超时将导致次数异常</div>
+            </div>
+            
+            <div>
+                <div style="font-weight: bold; color: #2c3e50; margin-bottom: 8px;">登录扫码：</div>
+                <div class="guide-step">打开'深圳地铁'app，点击'立即登录-切换账号-密码登录'</div>
+                <div class="guide-step">登录后选择'首页-虚拟票-我的票卡-使用'</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 票务查询 -->
+    <div class="container" id="ticketQueryContainer">
+        <h2>乘车查询</h2>
+        
+        <form id="ticketForm">
+            <div class="form-group">
+                <label for="startStation">起始站点</label>
+                <input type="text" id="startStation" placeholder="输入起始站点">
+              
+            </div>
+            
+            <div class="form-group">
+                <label for="endStation">目的站点</label>
+                <input type="text" id="endStation" placeholder="输入目的站点" >
+            </div>
+            
+            <div class="form-group">
+                <label for="travelTime">乘车时间</label>
+                <input type="datetime-local" id="travelTime">
+                <div class="time-suggestion">
+                    <button type="button" class="time-btn" onclick="setTime('now')">现在</button>
+                    <button type="button" class="time-btn" onclick="setTime('15min')">15分钟后</button>
+                    <button type="button" class="time-btn" onclick="setTime('30min')">30分钟后</button>
+                </div>
+            </div>
+            
+            <button type="button" class="btn" id="searchBtn" onclick="searchTickets()">查询可用票</button>
+        </form>
+		<!-- 错误提示 -->
+		<div id="errorContainer" class="error hidden"></div>
+
+        <!-- 二维码乘车替代方案 - 初始隐藏 -->
+        <div id="qrAlternativeContainer" class="qr-alternative hidden">
+            <div class="method-title">🔗 二维码乘车：</div>
+            <div class="step">点击"准备乘车"按钮</div>
+            <div class="step">点击"确认"</div>
+            <div class="step">点击"进站 扣除一次乘车次数"</div>
+            <button id="qr-code-button" class="qr-button" onclick="openQRCodePage()">
+                📱 点击二维码乘车
+            </button>
+            <div class="note">
+                💡 备注：提前2分钟点击进站再扫码进站更好(最多只能提前10分钟占票)
+            </div>
+        </div>
+
+		<!-- 修改后的票务查询结果显示 -->
+		<div id="searchResult" style="display: none;">
+		    <div class="card-display">
+		        <div class="card-title">为您找到最佳匹配票卡</div>
+		        
+		        <!-- 票卡号码行 - 默认显示带掩码的信息 -->
+		        <div class="info-row">
+		            <span class="info-label">登录号</span>
+		            <span class="info-value" id="displayCardNumber">-</span>
+		        </div>
+		        
+		        <!-- 票卡密码行 - 默认显示带掩码的信息 -->
+		        <div class="info-row">
+		            <span class="info-label">登录码</span>
+		            <span class="info-label" id="displayCardPassword">-</span>
+		        </div>
+		    </div>
+
+		    <button class="btn btn-success" id="useTicketBtn" onclick="useTicket()">使用此票卡</button>
+		</div>
+		
+    </div>
+    
+    <!-- 当前使用中 -->
+	<div class="container" id="inUseContainer">
+	    <h2>当前使用中</h2>
+	    <div class="status status-in-use">票务使用中</div>
+	    <div class="ticket-info">
+	        <div class="card-details">
+	            <!-- 在使用中界面完整显示卡号和密码 -->
+	            <p><strong>票卡号码：</strong><span id="currentCardNumber">-</span></p>
+	            <p><strong>票卡密码：</strong><span id="currentCardPassword">-</span></p>
+	        </div>
+	        <p><strong>起始站：</strong><span id="currentStart">-</span></p>
+	        <p><strong>目的站：</strong><span id="currentEnd">-</span></p>
+	        <p><strong>乘车时间：</strong><span id="currentTime">-</span></p>
+	        <p><strong>预估出站时间：</strong><span id="currentEstimatedTime">-</span></p>
+	    </div>
+	    
+	    <button class="btn btn-danger" id="returnTicketBtn" onclick="returnTicket()">归还票卡</button>
+	    <div class="debug-info" id="returnDebugInfo" style="display: none;"></div>
+	</div>
+    
+    <!-- 乘车历史 -->
+    <div class="container" id="historyContainer">
+        <h2>乘车历史记录</h2>
+        <div id="historyList">
+            <!-- 动态生成历史记录 -->
+        </div>
+    </div>
+
+    <script>
+        // 全局变量
+        let currentTicket = null;
+        let currentCustomer = null;
+        let urlParams = {};
+        let activeTicketInfo = null;
+        let currentTicketCard = null;
+
+        // 字符串掩码函数 - 中间3位替换为***
+        function maskString(str) {
+            if (!str || str.length < 6) return str;
+            
+            const length = str.length;
+            const maskCount = 3; // 固定替换3位
+            const startIndex = Math.floor((length - maskCount) / 2);
+            const endIndex = startIndex + maskCount;
+            
+            const prefix = str.substring(0, startIndex);
+            const suffix = str.substring(endIndex);
+            const stars = '*'.repeat(maskCount);
+            
+            return prefix + stars + suffix;
+        }
+        
+        // API调用函数
+        const apiClient = {
+            // 获取客户信息
+            async getCustomerInfo(vipUrl) {
+                try {
+                    const response = await fetch(`/api/vip/customer/${encodeURIComponent(vipUrl)}`);
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return await response.json();
+                } catch (error) {
+                    console.error('获取客户信息失败:', error);
+                    throw error;
+                }
+            },
+            
+            // 搜索票卡
+            async searchTickets(searchData) {
+                try {
+                    const response = await fetch('/api/vip/tickets/search', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(searchData)
+                    });
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return await response.json();
+                } catch (error) {
+                    console.error('搜索票卡失败:', error);
+                    throw error;
+                }
+            },
+            
+            // 使用票卡
+            async useTicket(useData) {
+                try {
+                    const response = await fetch('/api/vip/tickets/use', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(useData)
+                    });
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return await response.json();
+                } catch (error) {
+                    console.error('使用票卡失败:', error);
+                    throw error;
+                }
+            },
+            
+            // 归还票卡
+            async returnTicket(cardId, alightingStation, customerId) {
+                try {
+                    console.log('归还票卡请求参数:', {
+                        cardId: cardId,
+                        customerId: customerId,
+                        alightingStation: alightingStation
+                    });
+
+                    const url = `/api/vip/tickets/return/${cardId}?alightingStation=${encodeURIComponent(alightingStation)}&customerId=${customerId}`;
+                    console.log('请求URL:', url);
+
+                    const response = await fetch(url, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        }
+                    });
+                    
+                    console.log('响应状态:', response.status);
+                    
+                    if (!response.ok) {
+                        let errorMessage = `HTTP error! status: ${response.status}`;
+                        try {
+                            const errorResponse = await response.json();
+                            errorMessage = errorResponse.message || errorMessage;
+                        } catch (e) {
+                            // 忽略JSON解析错误
+                        }
+                        throw new Error(errorMessage);
+                    }
+                    
+                    const result = await response.json();
+                    console.log('响应结果:', result);
+                    return result;
+                    
+                } catch (error) {
+                    console.error('归还票卡失败:', error);
+                    throw error;
+                }
+            },
+
+            // 获取客户当前进行中的票务
+            async getActiveTicket(customerId) {
+                try {
+                    const response = await fetch(`/api/vip/customer/${customerId}/active-ticket`);
+                    if (!response.ok) {
+                        if (response.status === 404) {
+                            return null;
+                        }
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return await response.json();
+                } catch (error) {
+                    console.error('获取进行中票务失败:', error);
+                    return null;
+                }
+            },
+
+            // 根据code获取票卡信息
+            async getTicketCardByCode(code) {
+                try {
+                    const response = await fetch(`/api/ticket-cards/code/${code}`);
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return await response.json();
+                } catch (error) {
+                    console.error('获取票卡信息失败:', error);
+                    throw error;
+                }
+            }
+        };
+
+        // 工具函数
+        function showError(message) {
+            const errorContainer = document.getElementById('errorContainer');
+            errorContainer.textContent = message;
+            errorContainer.classList.remove('hidden');
+        }
+
+        function hideError() {
+            document.getElementById('errorContainer').classList.add('hidden');
+        }
+
+        function showDebugInfo(info) {
+            const debugInfo = document.getElementById('returnDebugInfo');
+            debugInfo.textContent = info;
+            debugInfo.style.display = 'block';
+        }
+
+        function hideDebugInfo() {
+            document.getElementById('returnDebugInfo').style.display = 'none';
+        }
+
+        // 显示二维码乘车替代方案
+        function showQRAlternative() {
+            document.getElementById('qrAlternativeContainer').classList.remove('hidden');
+        }
+
+        // 隐藏二维码乘车替代方案
+        function hideQRAlternative() {
+            document.getElementById('qrAlternativeContainer').classList.add('hidden');
+        }
+
+		function setTime(type) {
+		    const now = new Date();
+		    let timeInput = document.getElementById('travelTime');
+		    
+		    const beijingOffset = 8 * 60 * 60 * 1000;
+		    const beijingTime = new Date(now.getTime() + beijingOffset);
+		    
+		    if (type === 'now') {
+		        beijingTime.setMinutes(beijingTime.getMinutes() + 5);
+		    } else if (type === '15min') {
+		        beijingTime.setMinutes(beijingTime.getMinutes() + 15);
+		    } else if (type === '30min') {
+		        beijingTime.setMinutes(beijingTime.getMinutes() + 30);
+		    }
+		    
+		    const formatted = beijingTime.toISOString().slice(0, 16);
+		    timeInput.value = formatted;
+		    
+		    document.querySelectorAll('.time-btn').forEach(btn => {
+		        btn.classList.remove('active');
+		    });
+		    
+		    const buttons = document.querySelectorAll('.time-btn');
+		    buttons.forEach(btn => {
+		        if (btn.textContent === getButtonText(type)) {
+		            btn.classList.add('active');
+		        }
+		    });
+		}
+
+		function getButtonText(type) {
+		    const textMap = {
+		        'now': '现在',
+		        '15min': '15分钟后',
+		        '30min': '30分钟后'
+		    };
+		    return textMap[type] || type;
+		}
+
+        function formatDateTime(datetimeStr) {
+            if (!datetimeStr) return '-';
+            const date = new Date(datetimeStr);
+            return `${date.getFullYear()}-${padZero(date.getMonth()+1)}-${padZero(date.getDate())} ${padZero(date.getHours())}:${padZero(date.getMinutes())}`;
+        }
+
+        function padZero(num) {
+            return num < 10 ? '0' + num : num;
+        }
+
+		// Toast提示函数
+		function showToast(message) {
+		    let toast = document.getElementById('toast');
+		    if (!toast) {
+		        toast = document.createElement('div');
+		        toast.id = 'toast';
+		        toast.style.cssText = `
+		            position: fixed;
+		            top: 20px;
+		            left: 50%;
+		            transform: translateX(-50%);
+		            background: rgba(0, 0, 0, 0.8);
+		            color: white;
+		            padding: 12px 20px;
+		            border-radius: 6px;
+		            font-size: 14px;
+		            z-index: 1000;
+		            opacity: 0;
+		            transition: opacity 0.3s;
+		            pointer-events: none;
+		        `;
+		        document.body.appendChild(toast);
+		    }
+		    
+		    toast.textContent = message;
+		    toast.style.opacity = '1';
+		    
+		    setTimeout(() => {
+		        toast.style.opacity = '0';
+		    }, 2000);
+		}
+
+        // 解析URL参数
+        function parseUrlParams() {
+            const urlParams = new URLSearchParams(window.location.search);
+            return {
+                uId: urlParams.get('uId'),
+                gId: urlParams.get('gId'),
+                code: urlParams.get('code')
+            };
+        }
+
+        // 验证URL参数
+        function validateUrlParams(params) {
+            if (!params.uId || !params.gId || !params.code) {
+                return false;
+            }
+            return params.uId.length > 0 && params.gId.length > 0 && params.code.length > 0;
+        }
+
+        // 构建VIP URL
+        function buildVipUrl(uId, gId, code) {
+            return `vip.html?uId=${uId}&gId=${gId}&code=${code}`;
+        }
+
+        // 打开二维码乘车页面
+        function openQRCodePage() {
+            if (currentTicketCard && currentTicketCard.cardUrl) {
+                window.open(currentTicketCard.cardUrl, '_blank');
+            } else {
+                showError('票卡链接无效');
+            }
+        }
+
+		// 初始化页面
+		async function initializePage() {
+		    try {
+		        hideError();
+		        hideDebugInfo();
+		        hideQRAlternative();
+		        
+		        urlParams = parseUrlParams();
+		        
+		        if (!validateUrlParams(urlParams)) {
+		            showError('无效的访问链接，请检查URL参数是否正确');
+		            disableAllFeatures();
+		            return;
+		        }
+		        
+		        const vipUrl = buildVipUrl(urlParams.uId, urlParams.gId, urlParams.code);
+		        const customerData = await apiClient.getCustomerInfo(vipUrl);
+		        
+		        if (customerData && customerData.customer) {
+		            currentCustomer = customerData.customer;
+		            displayCustomerInfo(currentCustomer);
+		            
+		            if (customerData.history) {
+		                displayHistory(customerData.history);
+		            }
+		            
+		            if (customerData.activeTicket && customerData.activeTicket.hasActiveTicket) {
+		                showInUseSection(customerData.activeTicket);
+		            } else {
+		                hideInUseSection();
+		            }
+		            
+		            // 加载票卡信息用于二维码乘车
+		            try {
+		                currentTicketCard = await apiClient.getTicketCardByCode(urlParams.code);
+		            } catch (error) {
+		                console.warn('加载票卡信息失败，二维码乘车功能可能不可用:', error);
+		            }
+		            
+		        } else {
+		            showError('无法获取客户信息，请检查URL参数');
+		            disableAllFeatures();
+		        }
+		        
+		    } catch (error) {
+		        console.error('初始化页面失败:', error);
+		        showError('页面初始化失败: ' + error.message);
+		        disableAllFeatures();
+		    }
+		}
+
+        // 显示客户信息
+        function displayCustomerInfo(customer) {
+            document.getElementById('vipCustomerName').textContent = customer.userName || '-';
+            document.getElementById('rideCount').textContent = customer.rideCount || 0;
+            updateUIByRideCount(customer.rideCount);
+        }
+
+        // 根据次卡次数更新界面
+        function updateUIByRideCount(rideCount) {
+            const searchBtn = document.getElementById('searchBtn');
+            if (rideCount <= 0) {
+                searchBtn.disabled = true;
+                searchBtn.textContent = '次卡次数不足';
+                showError('您的次卡次数已用完，无法查询票务');
+            } else {
+                searchBtn.disabled = false;
+                searchBtn.textContent = '查询可用票';
+                hideError();
+            }
+        }
+
+        // 显示历史记录
+        function displayHistory(history) {
+            const historyList = document.getElementById('historyList');
+            
+            if (!history || history.length === 0) {
+                historyList.innerHTML = '<div class="no-tickets"><p>暂无乘车记录</p></div>';
+                return;
+            }
+            
+            let html = '';
+            history.forEach(record => {
+                const boardingTime = formatDateTime(record.boardingTime);
+                const alightingTime = record.alightingTime ? formatDateTime(record.alightingTime) : '使用中';
+                const status = record.alightingTime ? '已完成' : '进行中';
+                
+                html += `
+                    <div class="history-item">
+                        <p><strong>${record.boardingStation} → ${record.alightingStation || '未出站'}</strong></p>
+                        <p>进站: ${boardingTime} | 出站: ${alightingTime}</p>
+                        <p>状态: ${status}</p>
+                    </div>
+                `;
+            });
+            
+            historyList.innerHTML = html;
+        }
+
+		// 显示使用中界面
+		function showInUseSection(ticketInfo) {
+		    console.log('显示使用中界面，接收到的数据:', ticketInfo);
+		    
+		    document.getElementById('ticketQueryContainer').style.display = 'none';
+		    document.getElementById('inUseContainer').style.display = 'block';
+		    document.getElementById('historyContainer').style.display = 'block';
+		    
+		    if (ticketInfo) {
+		        const cardPassword = ticketInfo.cardPassword || 
+		                           (currentTicket && currentTicket.cardPassword) || 
+		                           '-';
+		        
+		        // 在使用中界面显示完整信息
+		        document.getElementById('currentCardNumber').textContent = ticketInfo.cardNumber || '-';
+		        document.getElementById('currentCardPassword').textContent = cardPassword;
+		        document.getElementById('currentStart').textContent = ticketInfo.boardingStation || '-';
+		        document.getElementById('currentEnd').textContent = ticketInfo.alightingStation || '-';
+		        document.getElementById('currentTime').textContent = formatDateTime(ticketInfo.boardingTime) || '-';
+		        document.getElementById('currentEstimatedTime').textContent = formatDateTime(ticketInfo.estimatedAlightingTime) || '-';
+		        
+		        currentTicket = {
+		            id: ticketInfo.cardId || currentTicket?.id,
+		            cardNumber: ticketInfo.cardNumber || currentTicket?.cardNumber,
+		            cardPassword: cardPassword
+		        };
+		    }
+		}
+
+		// 隐藏使用中界面
+		function hideInUseSection() {
+		    document.getElementById('ticketQueryContainer').style.display = 'block';
+		    document.getElementById('inUseContainer').style.display = 'none';
+		    document.getElementById('historyContainer').style.display = 'block';
+		    
+		    currentTicket = null;
+		    activeTicketInfo = null;
+		    hideSearchResult();
+		}
+
+        // 禁用所有功能
+        function disableAllFeatures() {
+            document.getElementById('ticketQueryContainer').style.display = 'none';
+            document.getElementById('inUseContainer').style.display = 'none';
+            document.getElementById('historyContainer').style.display = 'none';
+        }
+
+        // 显示查询结果
+        function showSearchResult() {
+            document.getElementById('searchResult').style.display = 'block';
+        }
+
+        // 隐藏查询结果
+        function hideSearchResult() {
+            document.getElementById('searchResult').style.display = 'none';
+        }
+
+        // 搜索票务
+        async function searchTickets() {
+            const startStation = document.getElementById('startStation').value;
+            const endStation = document.getElementById('endStation').value;
+            const travelTime = document.getElementById('travelTime').value;
+            
+            if (!startStation || !endStation || !travelTime) {
+                showError('请填写完整的查询信息');
+                hideQRAlternative();
+                return;
+            }
+            
+            if (!currentCustomer) {
+                showError('客户信息未加载，请刷新页面重试');
+                hideQRAlternative();
+                return;
+            }
+            
+            try {
+                hideError();
+                hideSearchResult();
+                hideQRAlternative();
+                
+                document.getElementById('searchBtn').disabled = true;
+                document.getElementById('searchBtn').textContent = '查询中...';
+                
+                const searchData = {
+                    boardingStation: startStation,
+                    alightingStation: endStation,
+                    boardingTime: travelTime,
+                    vipCustomerId: currentCustomer.id
+                };
+                
+                const response = await apiClient.searchTickets(searchData);
+                
+                document.getElementById('searchBtn').disabled = false;
+                document.getElementById('searchBtn').textContent = '查询可用票';
+                
+                if (response.success) {
+                    currentTicket = {
+                        id: response.matchedCard.id,
+                        cardNumber: response.matchedCard.cardNumber,
+                        cardPassword: response.matchedCard.cardPassword
+                    };
+                    
+                    console.log('搜索后设置的 currentTicket:', currentTicket);
+                    
+                    // 显示带掩码的卡号和密码
+                    displayTicketResult(response);
+                    showSearchResult();
+                } else {
+                    // 查询失败时显示错误信息和二维码乘车替代方案
+                    showError(response.message || '查询失败，暂无可用票');
+                    showQRAlternative();
+                }
+            } catch (error) {
+                document.getElementById('searchBtn').disabled = false;
+                document.getElementById('searchBtn').textContent = '查询可用票';
+                showError('查询失败: ' + error.message);
+                showQRAlternative(); // 网络错误时也显示二维码替代方案
+                console.error('搜索票务失败:', error);
+            }
+        }
+
+        // 显示票务结果 - 修改为默认显示带掩码的信息
+        function displayTicketResult(response) {
+            const ticket = response.matchedCard;
+            
+            // 显示带掩码的卡号和密码
+            const maskedCardNumber = maskString(ticket.cardNumber);
+            const maskedCardPassword = maskString(ticket.cardPassword);
+            
+            document.getElementById('displayCardNumber').textContent = maskedCardNumber || '-';
+            document.getElementById('displayCardPassword').textContent = maskedCardPassword || '-';
+        }
+
+        // 使用票务
+		async function useTicket() {
+		    if (!currentTicket || !currentCustomer) {
+		        showError('票务信息或客户信息不完整');
+		        return;
+		    }
+		    
+		    try {
+		        hideError();
+		        document.getElementById('useTicketBtn').disabled = true;
+		        document.getElementById('useTicketBtn').textContent = '处理中...';
+		        
+		        const useData = {
+		            vipCustomerId: currentCustomer.id,
+		            vipCardId: currentTicket.id,
+		            boardingStation: document.getElementById('startStation').value,
+		            alightingStation: document.getElementById('endStation').value
+		        };
+		        
+		        const response = await apiClient.useTicket(useData);
+		        
+		        if (response.success) {
+		            currentCustomer.rideCount = response.remainingRides;
+		            displayCustomerInfo(currentCustomer);
+		            showToast('票卡信息获取成功！次卡次数将在行程结束后扣除');
+		            hideSearchResult();
+		            
+		            showInUseSection({
+		                cardId: currentTicket.id,
+		                cardNumber: currentTicket.cardNumber,
+		                cardPassword: currentTicket.cardPassword,
+		                boardingStation: useData.boardingStation,
+		                alightingStation: useData.alightingStation,
+		                boardingTime: new Date().toISOString(),
+		                estimatedAlightingTime: response.estimatedAlightingTime
+		            });
+		            
+		        } else {
+		            showError('使用票务失败: ' + response.message);
+		            document.getElementById('useTicketBtn').disabled = false;
+		            document.getElementById('useTicketBtn').textContent = '使用此票卡';
+		        }
+		    } catch (error) {
+		        console.error('使用票务失败:', error);
+		        showError('使用票务失败: ' + error.message);
+		        document.getElementById('useTicketBtn').disabled = false;
+		        document.getElementById('useTicketBtn').textContent = '使用此票卡';
+		    }
+		}
+
+		// 归还票卡
+		async function returnTicket() {
+		    if (!currentTicket || !currentCustomer) {
+		        showError('没有正在使用的票卡或客户信息');
+		        return;
+		    }
+		    
+		    try {
+		        hideError();
+		        const returnBtn = document.getElementById('returnTicketBtn');
+		        returnBtn.disabled = true;
+		        returnBtn.textContent = '处理中...';
+		        
+		        const alightingStation = document.getElementById('currentEnd').textContent;
+		        if (!alightingStation || alightingStation === '-') {
+		            showError('出站点信息不完整');
+		            returnBtn.disabled = false;
+		            returnBtn.textContent = '归还票卡';
+		            return;
+		        }
+
+		        const result = await apiClient.returnTicket(currentTicket.id, alightingStation, currentCustomer.id);
+		        
+		        if (result.success) {
+		            showToast('票卡已成功归还！');
+		            hideInUseSection();
+		            hideSearchResult();
+		            document.getElementById('ticketForm').reset();
+		            setTime('now');
+		            await initializePage();
+		            
+		        } else {
+		            showError('归还票卡失败: ' + result.message);
+		            returnBtn.disabled = false;
+		            returnBtn.textContent = '归还票卡';
+		        }
+		    } catch (error) {
+		        console.error('归还票卡失败:', error);
+		        const debugInfo = `请求详情:
+URL: /api/vip/tickets/return/${currentTicket?.id}
+参数: alightingStation=${document.getElementById('currentEnd').textContent}&customerId=${currentCustomer?.id}
+错误: ${error.message}`;
+		        showDebugInfo(debugInfo);
+		        showError('归还票卡失败: ' + error.message);
+		        document.getElementById('returnTicketBtn').disabled = false;
+		        document.getElementById('returnTicketBtn').textContent = '归还票卡';
+		    }
+		}
+
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            setTime('now');
+            initializePage();
+        });
+    </script>
+</body>
+</html>

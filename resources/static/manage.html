@@ -1,0 +1,2039 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>数据管理后台</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
+        }
+        
+        body {
+            background: #f5f7fa;
+            color: #333;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1800px;
+            margin: 0 auto;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+        
+        .subtitle {
+            color: #7f8c8d;
+            font-size: 16px;
+        }
+        
+        /* 登录模态框样式 */
+        .login-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        }
+        
+        .login-content {
+            background: white;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 400px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+        
+        .login-title {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #2c3e50;
+            font-size: 24px;
+        }
+        
+        .login-form {
+            margin-bottom: 20px;
+        }
+        
+        .login-input {
+            width: 100%;
+            padding: 12px 15px;
+            margin-bottom: 15px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 16px;
+            transition: border 0.3s ease;
+        }
+        
+        .login-input:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+        }
+        
+        .login-btn {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .login-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(52, 152, 219, 0.4);
+        }
+        
+        .login-btn:disabled {
+            background: #bdc3c7;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .login-error {
+            color: #e74c3c;
+            text-align: center;
+            margin-top: 10px;
+            font-size: 14px;
+            display: none;
+        }
+        
+        .tabs {
+            display: flex;
+            margin-bottom: 20px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        
+        .tab {
+            flex: 1;
+            padding: 15px 20px;
+            text-align: center;
+            background: #f8f9fa;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            color: #6c757d;
+            transition: all 0.3s ease;
+        }
+        
+        .tab.active {
+            background: #3498db;
+            color: white;
+        }
+        
+        .tab:hover:not(.active) {
+            background: #e9ecef;
+        }
+        
+        .tab-content {
+            display: none;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+        
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .card-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        
+        .btn {
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(52, 152, 219, 0.4);
+        }
+        
+        .btn-success {
+            background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+        }
+        
+        .btn-danger {
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+        }
+        
+        .btn-warning {
+            background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+        }
+        
+        .btn-small {
+            padding: 4px 8px;
+            font-size: 12px;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+        
+        th {
+            background: #f8f9fa;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        
+        tr:hover {
+            background: #f8f9fa;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        
+        input, select, textarea {
+            width: 100%;
+            padding: 10px 15px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: border 0.3s ease;
+        }
+        
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+        }
+        
+        .form-row {
+            display: flex;
+            gap: 15px;
+        }
+        
+        .form-row .form-group {
+            flex: 1;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal.active {
+            display: flex;
+        }
+        
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 900px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+        
+        .modal-header {
+            padding: 20px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .modal-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        
+        .close {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #7f8c8d;
+        }
+        
+        .modal-body {
+            padding: 20px;
+        }
+        
+        .modal-footer {
+            padding: 15px 20px;
+            border-top: 1px solid #eee;
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+        
+        .alert {
+            padding: 12px 16px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            display: none;
+        }
+        
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .alert-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .status-active {
+            color: #2ecc71;
+            font-weight: 600;
+        }
+        
+        .status-inactive {
+            color: #e74c3c;
+            font-weight: 600;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 5px;
+            flex-wrap: wrap;
+        }
+        
+        .action-btn {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+        
+        .edit-btn {
+            background: #3498db;
+            color: white;
+        }
+        
+        .delete-btn {
+            background: #e74c3c;
+            color: white;
+        }
+        
+        .reset-btn {
+            background: #f39c12;
+            color: white;
+        }
+        
+        .copy-btn {
+            background: #f39c12;
+            color: white;
+        }
+        
+        .access-code {
+            font-family: 'Courier New', monospace;
+            background: #f8f9fa;
+            padding: 4px 8px;
+            border-radius: 4px;
+            border: 1px solid #e9ecef;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        
+        .url-display {
+            max-width: 300px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            font-size: 12px;
+            color: #666;
+            background: #f8f9fa;
+            padding: 6px 10px;
+            border-radius: 4px;
+            border: 1px solid #e9ecef;
+        }
+        
+        /* 虚拟卡表格简化样式 */
+        .account-info {
+            background: #f8f9fa;
+            border-radius: 6px;
+            padding: 8px 12px;
+            margin: 2px 0;
+            font-family: monospace;
+            font-size: 13px;
+        }
+        
+        .account-label {
+            color: #7f8c8d;
+            font-size: 12px;
+            margin-bottom: 2px;
+        }
+        
+        .current-user {
+            background: #e8f4fd;
+            border-left: 3px solid #3498db;
+            padding: 8px 12px;
+            border-radius: 4px;
+        }
+        
+        .usage-time {
+            color: #7f8c8d;
+            font-size: 12px;
+            margin-top: 4px;
+        }
+        
+        .expandable-row {
+            cursor: pointer;
+        }
+        
+        .expanded-details {
+            background: #f8f9fa;
+            padding: 15px;
+            border-top: 1px solid #e9ecef;
+        }
+        
+        .detail-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+        
+        .detail-item {
+            background: white;
+            padding: 12px;
+            border-radius: 6px;
+            border-left: 3px solid #3498db;
+        }
+        
+        .detail-label {
+            color: #7f8c8d;
+            font-size: 12px;
+            margin-bottom: 4px;
+        }
+        
+        .detail-value {
+            color: #2c3e50;
+            font-weight: 500;
+            font-family: monospace;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        @media (max-width: 768px) {
+            .form-row {
+                flex-direction: column;
+                gap: 0;
+            }
+            
+            th, td {
+                padding: 8px 10px;
+                font-size: 14px;
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+            }
+            
+            .container {
+                max-width: 100%;
+                overflow-x: auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 登录模态框 -->
+    <div class="login-modal" id="loginModal">
+        <div class="login-content">
+            <h2 class="login-title">🚌 管理后台登录</h2>
+            <form class="login-form" id="loginForm">
+                <input type="password" class="login-input" id="adminPassword" placeholder="请输入管理员密码" required>
+                <button type="submit" class="login-btn" id="loginBtn">登录</button>
+            </form>
+            <div class="login-error" id="loginError">密码错误，请重试</div>
+        </div>
+    </div>
+    
+    <div class="container" id="mainContainer" style="display: none;">
+        <header>
+            <h1>🚌 数据管理后台</h1>
+            <div style="margin-top: 10px;">
+                <button class="btn btn-warning" onclick="logout()">
+                    <i class="fas fa-sign-out-alt"></i> 退出登录
+                </button>
+            </div>
+        </header>
+        
+        <div class="alert" id="alertMessage"></div>
+        
+        <div class="tabs">
+            <button class="tab active" data-tab="virtualCards">虚拟卡管理</button>
+            <button class="tab" data-tab="groups">分组管理</button>
+            <button class="tab" data-tab="groupMembers">成员管理</button>
+        </div>
+        
+        <!-- 虚拟卡管理 - 简化版 -->
+        <div class="tab-content active" id="virtualCardsContent">
+            <div class="card-header">
+                <h2 class="card-title">虚拟卡列表</h2>
+                <button class="btn" onclick="openModal('virtualCard')">
+                    <i class="fas fa-plus"></i> 添加虚拟卡
+                </button>
+            </div>
+            <table id="virtualCardsTable">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>名称</th>
+                        <th>状态</th>
+                        <th>账号池</th>
+                        <th>今日账号</th>
+                        <th>当前使用</th>
+                        <th>使用日期</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody id="virtualCardsBody">
+                    <!-- 数据将通过JavaScript动态加载 -->
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- 分组管理 -->
+        <div class="tab-content" id="groupsContent">
+            <div class="card-header">
+                <h2 class="card-title">分组列表</h2>
+                <button class="btn" onclick="openModal('group')">
+                    <i class="fas fa-plus"></i> 添加分组
+                </button>
+            </div>
+            <table id="groupsTable">
+                <thead>
+                    <tr>
+                        <th>分组ID</th>
+                        <th>分组名称</th>
+                        <th>默认间隔</th>
+                        <th>虚拟卡ID</th>
+                        <th>状态</th>
+                        <th>创建时间</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody id="groupsBody">
+                    <!-- 数据将通过JavaScript动态加载 -->
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- 成员管理 -->
+        <div class="tab-content" id="groupMembersContent">
+            <div class="card-header">
+                <h2 class="card-title">成员列表</h2>
+                <button class="btn" onclick="openModal('groupMember')">
+                    <i class="fas fa-plus"></i> 添加成员
+                </button>
+            </div>
+            <table id="groupMembersTable">
+                <thead>
+                    <tr>
+                        <th>用户ID</th>
+                        <th>用户名称</th>
+                        <th>状态</th>
+                        <th>密码特殊时间</th>
+                        <th>分组ID</th>
+                        <th>使用顺序</th>
+                        <th>自定义间隔</th>
+                        <th>开始时间</th>
+                        <th>结束时间</th>
+                        <th>个人URL</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody id="groupMembersBody">
+                    <!-- 数据将通过JavaScript动态加载 -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <!-- 虚拟卡模态框 -->
+    <div class="modal" id="virtualCardModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title" id="virtualCardModalTitle">添加虚拟卡</h3>
+                <button class="close" onclick="closeModal('virtualCardModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="virtualCardForm">
+                    <input type="hidden" id="virtualCardId">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="id">ID *</label>
+                            <input type="text" id="id" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="cardName">名称 *</label>
+                            <input type="text" id="cardName" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="status">状态 *</label>
+                            <select id="status" required>
+                                <option value="1">可用</option>
+                                <option value="0">不可用</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="currentStatus">当前状态</label>
+                            <input type="number" id="currentStatus" value="0">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="phoneA">手机A *</label>
+                            <input type="text" id="phoneA" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="pwdA">密码A *</label>
+                            <input type="text" id="pwdA" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="phoneB">手机B</label>
+                            <input type="text" id="phoneB">
+                        </div>
+                        <div class="form-group">
+                            <label for="pwdB">密码B</label>
+                            <input type="text" id="pwdB">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="usageRule">使用规则</label>
+                            <input type="text" id="usageRule" placeholder="例如: 1;3;5;7">
+                        </div>
+                        <div class="form-group">
+                            <label for="notAvailableDates">不可用日期</label>
+                            <input type="text" id="notAvailableDates" placeholder="例如: 2025.10.11;2025.10.12">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="usageDate">使用日期</label>
+                            <input type="date" id="usageDate">
+                        </div>
+                        <div class="form-group">
+                            <label for="todayAccount">当天账号</label>
+                            <input type="text" id="todayAccount">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="todayPassword">当天密码</label>
+                            <input type="text" id="todayPassword">
+                        </div>
+                        <div class="form-group">
+                            <label for="yesterdayAccount">昨天账号</label>
+                            <input type="text" id="yesterdayAccount">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="yesterdayPassword">昨天密码</label>
+                            <input type="text" id="yesterdayPassword">
+                        </div>
+                        <div class="form-group">
+                            <label for="currentUsedBy">当前使用者</label>
+                            <input type="text" id="currentUsedBy">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="currentUsageStartTime">当前使用时间</label>
+                        <input type="datetime-local" id="currentUsageStartTime">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-danger" onclick="closeModal('virtualCardModal')">取消</button>
+                <button class="btn btn-success" onclick="saveVirtualCard()">保存</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 分组模态框 -->
+    <div class="modal" id="groupModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title" id="groupModalTitle">添加分组</h3>
+                <button class="close" onclick="closeModal('groupModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="groupForm">
+                    <input type="hidden" id="groupId">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="groupGroupId">分组ID *</label>
+                            <input type="text" id="groupGroupId" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="groupName">分组名称 *</label>
+                            <input type="text" id="groupName" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="defaultInterval">默认间隔(分钟) *</label>
+                            <input type="number" id="defaultInterval" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="virtualCardId">虚拟卡ID *</label>
+                            <input type="text" id="virtualCardId" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="groupStatus">状态 *</label>
+                        <select id="groupStatus" required>
+                            <option value="ACTIVE">激活</option>
+                            <option value="INACTIVE">未激活</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-danger" onclick="closeModal('groupModal')">取消</button>
+                <button class="btn btn-success" onclick="saveGroup()">保存</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 成员模态框 -->
+    <div class="modal" id="groupMemberModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title" id="groupMemberModalTitle">添加成员</h3>
+                <button class="close" onclick="closeModal('groupMemberModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="groupMemberForm">
+                    <input type="hidden" id="memberAccessCode">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="memberGroupId">分组ID *</label>
+                            <input type="text" id="memberGroupId" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="memberUserId">用户ID *</label>
+                            <input type="text" id="memberUserId" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="memberUserName">用户名称 *</label>
+                            <input type="text" id="memberUserName" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="useOrder">使用顺序 *</label>
+                            <input type="number" id="useOrder" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="passwordSpecialTime">密码特殊时间</label>
+                            <input type="text" id="passwordSpecialTime" placeholder="例如: 06:00-08:00;18:00-20:00">
+                            <small style="color: #666;">特殊时间段，多个时间段用分号分隔</small>
+                        </div>
+                        <div class="form-group">
+                            <label for="memberStatus">状态 *</label>
+                            <select id="memberStatus" required>
+                                <option value="ACTIVE">激活</option>
+                                <option value="INACTIVE">未激活</option>
+                                <option value="ON_LEAVE">休假</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="customInterval">自定义间隔(分钟)</label>
+                            <input type="number" id="customInterval">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="userCardStartTime">开始时间</label>
+                            <input type="text" id="userCardStartTime" placeholder="例如: 06:00">
+                        </div>
+                        <div class="form-group">
+                            <label for="userCardEndTime">结束时间</label>
+                            <input type="text" id="userCardEndTime" placeholder="例如: 23:00">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>个人URL</label>
+                        <div id="personalUrlDisplay" style="padding: 10px; background: #f8f9fa; border-radius: 6px; border: 1px solid #ddd; font-size: 14px; color: #666; word-break: break-all;">
+                            保存后将自动生成URL
+                        </div>
+                        <small style="color: #666;">用户访问的个人链接，保存后自动生成</small>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-danger" onclick="closeModal('groupMemberModal')">取消</button>
+                <button class="btn btn-success" onclick="saveGroupMember()">保存</button>
+            </div>
+        </div>
+    </div>
+
+	<script>
+	    // 全局数据存储
+	    let virtualCards = [];
+	    let groups = [];
+	    let groupMembers = [];
+	    const DOMAIN = "https://ticket-1-6sz7.onrender.com";
+	    let isAuthenticated = false;
+	    let currentPassword = '';
+	    
+	    // 页面加载时初始化
+	    document.addEventListener('DOMContentLoaded', function() {
+	        console.log('页面加载完成，开始检查认证状态');
+	        checkAuthentication();
+	        setupTabEvents();
+	        setupLoginForm();
+	    });
+	    
+	    // 检查认证状态
+	    function checkAuthentication() {
+	        console.log('检查认证状态...');
+	        const savedAuth = localStorage.getItem('adminAuthenticated');
+	        const authTime = localStorage.getItem('adminAuthTime');
+	        const savedPassword = localStorage.getItem('adminPassword');
+	        
+	        console.log('认证状态:', { savedAuth, authTime, savedPassword: savedPassword ? '***' : 'null' });
+	        
+	        // 检查是否在有效期内（24小时）
+	        if (savedAuth === 'true' && authTime && savedPassword) {
+	            const now = new Date().getTime();
+	            const authTimestamp = parseInt(authTime);
+	            const hoursDiff = (now - authTimestamp) / (1000 * 60 * 60);
+	            
+	            console.log(`认证时间差: ${hoursDiff.toFixed(2)} 小时`);
+	            
+	            if (hoursDiff < 24) {
+	                isAuthenticated = true;
+	                currentPassword = savedPassword;
+	                console.log('认证有效，显示主内容');
+	                showMainContent();
+	                loadAllData();
+	            } else {
+	                // 认证过期
+	                console.log('认证过期，显示登录界面');
+	                localStorage.removeItem('adminAuthenticated');
+	                localStorage.removeItem('adminAuthTime');
+	                localStorage.removeItem('adminPassword');
+	                showLoginModal();
+	            }
+	        } else {
+	            console.log('未认证或认证信息不完整，显示登录界面');
+	            showLoginModal();
+	        }
+	    }
+	    
+	    // 显示登录模态框
+	    function showLoginModal() {
+	        console.log('显示登录模态框');
+	        document.getElementById('loginModal').style.display = 'flex';
+	        document.getElementById('mainContainer').style.display = 'none';
+	        document.getElementById('adminPassword').focus();
+	    }
+	    
+	    // 显示主内容
+	    function showMainContent() {
+	        console.log('显示主内容');
+	        document.getElementById('loginModal').style.display = 'none';
+	        document.getElementById('mainContainer').style.display = 'block';
+	    }
+	    
+	    // 设置登录表单事件
+	    function setupLoginForm() {
+	        document.getElementById('loginForm').addEventListener('submit', function(e) {
+	            e.preventDefault();
+	            handleLogin();
+	        });
+	    }
+	    
+	    // 处理登录
+	    async function handleLogin() {
+	        const password = document.getElementById('adminPassword').value;
+	        const errorEl = document.getElementById('loginError');
+	        const loginBtn = document.getElementById('loginBtn');
+	        
+	        console.log('开始处理登录，密码长度:', password.length);
+	        
+	        if (!password) {
+	            errorEl.textContent = '请输入密码';
+	            errorEl.style.display = 'block';
+	            return;
+	        }
+	        
+	        // 禁用登录按钮，显示加载状态
+	        loginBtn.disabled = true;
+	        loginBtn.textContent = '验证中...';
+	        
+	        try {
+	            // 调用后端API验证密码
+	            console.log('开始密码验证...');
+	            const isValid = await validatePasswordWithBackend(password);
+	            console.log('密码验证结果:', isValid);
+	            
+	            if (isValid) {
+	                isAuthenticated = true;
+	                currentPassword = password;
+	                localStorage.setItem('adminAuthenticated', 'true');
+	                localStorage.setItem('adminAuthTime', new Date().getTime().toString());
+	                localStorage.setItem('adminPassword', password);
+	                showMainContent();
+	                loadAllData();
+	                errorEl.style.display = 'none';
+	                console.log('登录成功，开始加载数据');
+	            } else {
+	                errorEl.textContent = '密码错误，请重试';
+	                errorEl.style.display = 'block';
+	                document.getElementById('adminPassword').value = '';
+	                document.getElementById('adminPassword').focus();
+	                console.log('密码验证失败');
+	            }
+	        } catch (error) {
+	            console.error('密码验证失败:', error);
+	            errorEl.textContent = '验证失败，请检查网络连接';
+	            errorEl.style.display = 'block';
+	        } finally {
+	            // 恢复登录按钮
+	            loginBtn.disabled = false;
+	            loginBtn.textContent = '登录';
+	        }
+	    }
+	    
+	    // 与后端API验证密码
+	    async function validatePasswordWithBackend(password) {
+	        try {
+	            // 通过尝试创建一个虚拟卡来验证密码
+	            const testData = {
+	                password: password,
+	                virtualCard: {
+	                    id: "test_validation_only_" + Date.now(),
+	                    cardName: "测试验证",
+	                    status: 0,
+	                    physicalCardAPhone: "test",
+	                    physicalCardAPwd: "test"
+	                }
+	            };
+	            
+	            console.log('发送密码验证请求:', { 
+	                url: '/api/admin/virtual-cards',
+	                method: 'POST',
+	                hasPassword: !!password
+	            });
+	            
+	            const response = await fetch('/api/admin/virtual-cards', {
+	                method: 'POST',
+	                headers: {
+	                    'Content-Type': 'application/json'
+	                },
+	                body: JSON.stringify(testData),
+	                credentials: 'include'
+	            });
+	            
+	            console.log('密码验证响应状态:', response.status, response.statusText);
+	            
+	            const result = await response.json();
+	            console.log('密码验证响应数据:', result);
+	            
+	            // 如果返回未授权错误，说明密码错误
+	            if (response.status === 401 || result.message?.includes('未授权') || result.message?.includes('密码错误')) {
+	                return false;
+	            }
+	            
+	            // 其他情况（如ID已存在等）也认为密码正确
+	            return true;
+	            
+	        } catch (error) {
+	            console.error('密码验证API调用失败:', error);
+	            // 如果网络错误，我们无法确定密码是否正确
+	            throw new Error('网络连接失败');
+	        }
+	    }
+	    
+	    // 退出登录
+	    function logout() {
+	        if (confirm('确定要退出登录吗？')) {
+	            isAuthenticated = false;
+	            currentPassword = '';
+	            localStorage.removeItem('adminAuthenticated');
+	            localStorage.removeItem('adminAuthTime');
+	            localStorage.removeItem('adminPassword');
+	            showLoginModal();
+	            // 清空数据
+	            virtualCards = [];
+	            groups = [];
+	            groupMembers = [];
+	            renderVirtualCards();
+	            renderGroups();
+	            renderGroupMembers();
+	        }
+	    }
+	    
+	    // 检查认证状态的函数，在所有API调用前使用
+	    function checkAuthBeforeRequest() {
+	        if (!isAuthenticated) {
+	            showAlert('请先登录', 'error');
+	            showLoginModal();
+	            return false;
+	        }
+	        return true;
+	    }
+	    
+	    // 设置标签页事件
+	    function setupTabEvents() {
+	        const tabs = document.querySelectorAll('.tab');
+	        tabs.forEach(tab => {
+	            tab.addEventListener('click', function() {
+	                const tabId = this.getAttribute('data-tab');
+	                
+	                // 更新标签状态
+	                tabs.forEach(t => t.classList.remove('active'));
+	                this.classList.add('active');
+	                
+	                // 更新内容显示
+	                document.querySelectorAll('.tab-content').forEach(content => {
+	                    content.classList.remove('active');
+	                });
+	                document.getElementById(tabId + 'Content').classList.add('active');
+	            });
+	        });
+	    }
+	    
+	    // 从URL中提取accessCode
+	    function extractAccessCodeFromUrl(url) {
+	        if (!url) return null;
+	        try {
+	            const urlObj = new URL(url);
+	            return urlObj.searchParams.get('code');
+	        } catch (e) {
+	            // 如果URL解析失败，尝试从字符串中提取
+	            const match = url.match(/[?&]code=([^&]+)/);
+	            return match ? match[1] : null;
+	        }
+	    }
+	    
+	    // 生成新的访问码
+	    function generateAccessCode() {
+	        return Math.random().toString(36).substring(2, 10).toUpperCase();
+	    }
+	    
+	    // 复制URL到剪贴板
+	    function copyUrl(url) {
+	        if (!checkAuthBeforeRequest()) return;
+	        
+	        navigator.clipboard.writeText(url).then(() => {
+	            showAlert('URL已复制到剪贴板', 'success');
+	        }).catch(err => {
+	            console.error('复制失败:', err);
+	            showAlert('复制失败，请手动复制', 'error');
+	        });
+	    }
+	    
+	    // 加载所有数据
+	    async function loadAllData() {
+	        if (!checkAuthBeforeRequest()) return;
+	        
+	        console.log('开始加载所有数据...');
+	        
+	        try {
+	            // 显示加载状态
+	            showLoadingState();
+	            
+	            // 分别加载数据，便于调试
+	            console.log('开始加载虚拟卡数据...');
+	            await loadVirtualCards();
+	            
+	            console.log('开始加载分组数据...');
+	            await loadGroups();
+	            
+	            console.log('开始加载成员数据...');
+	            await loadGroupMembers();
+	            
+	            console.log('所有数据加载完成');
+	            
+	        } catch (error) {
+	            console.error('加载数据失败:', error);
+	            showAlert('加载数据失败: ' + error.message, 'error');
+	        }
+	    }
+	    
+	    // 显示加载状态
+	    function showLoadingState() {
+	        const loadingHTML = `
+	            <tr>
+	                <td colspan="10" style="text-align: center; padding: 20px; color: #7f8c8d;">
+	                    <i class="fas fa-spinner fa-spin"></i> 加载中...
+	                </td>
+	            </tr>
+	        `;
+	        
+	        const virtualCardsBody = document.getElementById('virtualCardsBody');
+	        const groupsBody = document.getElementById('groupsBody');
+	        const groupMembersBody = document.getElementById('groupMembersBody');
+	        
+	        if (virtualCardsBody) virtualCardsBody.innerHTML = loadingHTML;
+	        if (groupsBody) groupsBody.innerHTML = loadingHTML;
+	        if (groupMembersBody) groupMembersBody.innerHTML = loadingHTML;
+	    }
+	    
+		// 修改加载虚拟卡数据 - 使用GET请求
+		async function loadVirtualCards() {
+		    if (!checkAuthBeforeRequest()) return;
+		    
+		    console.log('加载虚拟卡数据...');
+		    
+		    try {
+		        // 使用GET请求，密码通过URL参数传递
+		        const url = `/api/admin/virtual-cards?password=${encodeURIComponent(currentPassword)}`;
+		        
+		        console.log('虚拟卡请求URL:', url);
+		        
+		        const response = await fetch(url, {
+		            method: 'GET',
+		            credentials: 'include'
+		        });
+		        
+		        console.log('虚拟卡响应状态:', response.status, response.statusText);
+		        
+		        if (response.ok) {
+		            const result = await response.json();
+		            console.log('虚拟卡响应数据:', result);
+		            
+		            virtualCards = result.data || [];
+		            console.log(`加载到 ${virtualCards.length} 个虚拟卡`);
+		            renderVirtualCards();
+		        } else {
+		            const errorResult = await response.json();
+		            console.error('虚拟卡加载错误:', errorResult);
+		            throw new Error(errorResult.message || '加载虚拟卡数据失败');
+		        }
+		    } catch (error) {
+		        console.error('加载虚拟卡数据失败:', error);
+		        showAlert('加载虚拟卡数据失败: ' + error.message, 'error');
+		    }
+		}
+
+		// 修改加载分组数据 - 使用GET请求
+		async function loadGroups() {
+		    if (!checkAuthBeforeRequest()) return;
+		    
+		    console.log('加载分组数据...');
+		    
+		    try {
+		        // 使用GET请求，密码通过URL参数传递
+		        const url = `/api/admin/groups?password=${encodeURIComponent(currentPassword)}`;
+		        
+		        console.log('分组请求URL:', url);
+		        
+		        const response = await fetch(url, {
+		            method: 'GET',
+		            credentials: 'include'
+		        });
+		        
+		        console.log('分组响应状态:', response.status, response.statusText);
+		        
+		        if (response.ok) {
+		            const result = await response.json();
+		            console.log('分组响应数据:', result);
+		            
+		            groups = result.data || [];
+		            console.log(`加载到 ${groups.length} 个分组`);
+		            renderGroups();
+		        } else {
+		            const errorResult = await response.json();
+		            console.error('分组加载错误:', errorResult);
+		            throw new Error(errorResult.message || '加载分组数据失败');
+		        }
+		    } catch (error) {
+		        console.error('加载分组数据失败:', error);
+		        showAlert('加载分组数据失败: ' + error.message, 'error');
+		    }
+		}
+
+		// 修改加载成员数据 - 使用GET请求
+		async function loadGroupMembers() {
+		    if (!checkAuthBeforeRequest()) return;
+		    
+		    console.log('加载成员数据...');
+		    
+		    try {
+		        // 使用GET请求，密码通过URL参数传递
+		        const url = `/api/admin/group-members?password=${encodeURIComponent(currentPassword)}`;
+		        
+		        console.log('成员请求URL:', url);
+		        
+		        const response = await fetch(url, {
+		            method: 'GET',
+		            credentials: 'include'
+		        });
+		        
+		        console.log('成员响应状态:', response.status, response.statusText);
+		        
+		        if (response.ok) {
+		            const result = await response.json();
+		            console.log('成员响应数据:', result);
+		            
+		            groupMembers = result.data || [];
+		            console.log(`加载到 ${groupMembers.length} 个成员`);
+		            renderGroupMembers();
+		        } else {
+		            const errorResult = await response.json();
+		            console.error('成员加载错误:', errorResult);
+		            throw new Error(errorResult.message || '加载成员数据失败');
+		        }
+		    } catch (error) {
+		        console.error('加载成员数据失败:', error);
+		        showAlert('加载成员数据失败: ' + error.message, 'error');
+		    }
+		}
+	    
+	    // 渲染虚拟卡表格 - 简化版
+	    function renderVirtualCards() {
+	        const tbody = document.getElementById('virtualCardsBody');
+	        tbody.innerHTML = '';
+	        
+	        console.log('渲染虚拟卡表格，数据量:', virtualCards.length);
+	        
+	        if (virtualCards.length === 0) {
+	            tbody.innerHTML = `
+	                <tr>
+	                    <td colspan="8" style="text-align: center; padding: 20px; color: #7f8c8d;">
+	                        暂无虚拟卡数据
+	                    </td>
+	                </tr>
+	            `;
+	            return;
+	        }
+	        
+	        virtualCards.forEach(card => {
+	            const tr = document.createElement('tr');
+	            tr.className = 'expandable-row';
+	            
+	            // 状态显示
+	            let statusBadge = '';
+	            if (card.status === 1) {
+	                if (card.currentUsedBy) {
+	                    statusBadge = '<span class="status-active">使用中</span>';
+	                } else {
+	                    statusBadge = '<span class="status-active">可用</span>';
+	                }
+	            } else {
+	                statusBadge = '<span class="status-inactive">不可用</span>';
+	            }
+	            
+	            // 账号池信息
+	            const accountPool = `
+	                <div>
+	                    <div class="account-label">账号A:</div>
+	                    <div class="account-info">${card.physicalCardAPhone || '-'} / ${card.physicalCardAPwd || '-'}</div>
+	                    <div class="account-label">账号B:</div>
+	                    <div class="account-info">${card.physicalCardBPhone || '-'} / ${card.physicalCardBPwd || '-'}</div>
+	                </div>
+	            `;
+	            
+	            // 今日账号信息
+	            const todayAccount = `
+	                <div>
+	                    <div class="account-info">${card.todayAccount || '-'}</div>
+	                    <div class="account-info">${card.todayPassword || '-'}</div>
+	                </div>
+	            `;
+	            
+	            // 当前使用信息
+	            let currentUsage = '<div style="color: #bdc3c7; font-style: italic;">未使用</div>';
+	            if (card.currentUsedBy) {
+	                currentUsage = `
+	                    <div class="current-user">
+	                        <div>${card.currentUsedBy}</div>
+	                        <div class="usage-time">${formatDateTime(card.currentUsageStartTime) || '-'}</div>
+	                    </div>
+	                `;
+	            }
+	            
+	            tr.innerHTML = `
+	                <td>${card.id}</td>
+	                <td><strong>${card.cardName || '-'}</strong></td>
+	                <td>${statusBadge}</td>
+	                <td>${accountPool}</td>
+	                <td>${todayAccount}</td>
+	                <td>${currentUsage}</td>
+	                <td>${formatDate(card.usageDate) || '-'}</td>
+	                <td>
+	                    <div class="action-buttons">
+	                        <button class="action-btn reset-btn" onclick="resetVirtualCard('${card.id}')">
+	                            <i class="fas fa-redo"></i> 初始化
+	                        </button>
+	                        <button class="action-btn edit-btn" onclick="editVirtualCard('${card.id}')">
+	                            <i class="fas fa-edit"></i> 编辑
+	                        </button>
+	                        <button class="action-btn delete-btn" onclick="deleteVirtualCard('${card.id}')">
+	                            <i class="fas fa-trash"></i> 删除
+	                        </button>
+	                    </div>
+	                </td>
+	            `;
+	            
+	            // 添加展开详情行
+	            const detailRow = document.createElement('tr');
+	            detailRow.className = 'expanded-details';
+	            detailRow.style.display = 'none';
+	            detailRow.innerHTML = `
+	                <td colspan="8">
+	                    <div class="detail-grid">
+	                        <div class="detail-item">
+	                            <div class="detail-label">昨日账号</div>
+	                            <div class="detail-value">${card.yesterdayAccount || '-'} / ${card.yesterdayPassword || '-'}</div>
+	                        </div>
+	                        <div class="detail-item">
+	                            <div class="detail-label">使用规则</div>
+	                            <div class="detail-value">${card.usageRule || '-'}</div>
+	                        </div>
+	                        <div class="detail-item">
+	                            <div class="detail-label">当前状态</div>
+	                            <div class="detail-value">${card.currentStatus || 0}</div>
+	                        </div>
+	                        <div class="detail-item">
+	                            <div class="detail-label">不可用日期</div>
+	                            <div class="detail-value">${card.notAvailableDates || '-'}</div>
+	                        </div>
+	                        <div class="detail-item">
+	                            <div class="detail-label">账号池关系</div>
+	                            <div class="detail-value">
+	                                <div>今日 ← ${card.todayAccount === card.physicalCardAPhone ? '账号A' : '账号B'}</div>
+	                                <div>昨日 ← ${card.yesterdayAccount === card.physicalCardAPhone ? '账号A' : '账号B'}</div>
+	                            </div>
+	                        </div>
+	                    </div>
+	                </td>
+	            `;
+	            
+	            // 点击行展开/收起详情
+	            tr.addEventListener('click', (e) => {
+	                if (!e.target.closest('.action-buttons')) {
+	                    const isVisible = detailRow.style.display !== 'none';
+	                    detailRow.style.display = isVisible ? 'none' : 'table-row';
+	                }
+	            });
+	            
+	            tbody.appendChild(tr);
+	            tbody.appendChild(detailRow);
+	        });
+	    }
+	    
+	    // 渲染分组表格
+	    function renderGroups() {
+	        const tbody = document.getElementById('groupsBody');
+	        tbody.innerHTML = '';
+	        
+	        console.log('渲染分组表格，数据量:', groups.length);
+	        
+	        if (groups.length === 0) {
+	            tbody.innerHTML = `
+	                <tr>
+	                    <td colspan="7" style="text-align: center; padding: 20px; color: #7f8c8d;">
+	                        暂无分组数据
+	                    </td>
+	                </tr>
+	            `;
+	            return;
+	        }
+	        
+	        groups.forEach(group => {
+	            const tr = document.createElement('tr');
+	            tr.innerHTML = `
+	                <td>${group.groupId}</td>
+	                <td>${group.groupName}</td>
+	                <td>${group.defaultInterval}</td>
+	                <td>${group.virtualCardId}</td>
+	                <td><span class="${group.status === 'ACTIVE' ? 'status-active' : 'status-inactive'}">${group.status}</span></td>
+	                <td>${formatDateTime(group.createTime)}</td>
+	                <td>
+	                    <div class="action-buttons">
+	                        <button class="action-btn edit-btn" onclick="editGroup('${group.groupId}')">
+	                            <i class="fas fa-edit"></i> 编辑
+	                        </button>
+	                        <button class="action-btn delete-btn" onclick="deleteGroup('${group.groupId}')">
+	                            <i class="fas fa-trash"></i> 删除
+	                        </button>
+	                    </div>
+	                </td>
+	            `;
+	            tbody.appendChild(tr);
+	        });
+	    }
+	    
+	    // 渲染成员表格
+	    function renderGroupMembers() {
+	        const tbody = document.getElementById('groupMembersBody');
+	        tbody.innerHTML = '';
+	        
+	        console.log('渲染成员表格，数据量:', groupMembers.length);
+	        
+	        if (groupMembers.length === 0) {
+	            tbody.innerHTML = `
+	                <tr>
+	                    <td colspan="11" style="text-align: center; padding: 20px; color: #7f8c8d;">
+	                        暂无成员数据
+	                    </td>
+	                </tr>
+	            `;
+	            return;
+	        }
+	        
+	        groupMembers.forEach(member => {
+	            // 确保 URL 包含 code 参数
+	            let personalUrl = member.personalUrl;
+	            if (!personalUrl || !personalUrl.includes('code=')) {
+	                const accessCode = member.accessCode || generateAccessCode();
+	                personalUrl = `${DOMAIN}/card.html?uId=${member.userId}&gId=${member.groupId}&code=${accessCode}`;
+	            }
+	            
+	            const truncatedUrl = personalUrl.substring(0, 20) + (personalUrl.length > 20 ? '...' : '');
+	            
+	            const tr = document.createElement('tr');
+	            tr.innerHTML = `
+	                <td>${member.userId}</td>
+	                <td>${member.userName || '-'}</td>
+	                <td><span class="${member.status === 'ACTIVE' ? 'status-active' : 'status-inactive'}">${member.status}</span></td>
+	                <td>${member.passwordSpecialTime || '-'}</td>
+	                <td>${member.groupId}</td>
+	                <td>${member.useOrder}</td>
+	                <td>${member.customInterval || '-'}</td>
+	                <td>${member.userCardStartTime || '-'}</td>
+	                <td>${member.userCardEndTime || '-'}</td>
+	                <td>
+	                    <div style="display: flex; align-items: center; gap: 8px;">
+	                        <div class="url-display" title="${personalUrl}">
+	                            ${truncatedUrl}
+	                        </div>
+	                        <button class="action-btn copy-btn" onclick="copyUrl('${personalUrl}')" title="复制URL">
+	                            <i class="fas fa-copy"></i>
+	                        </button>
+	                    </div>
+	                </td>
+	                <td>
+	                    <div class="action-buttons">
+	                        <button class="action-btn edit-btn" onclick="editGroupMember('${member.groupId}', '${member.userId}')">
+	                            <i class="fas fa-edit"></i> 编辑
+	                        </button>
+	                        <button class="action-btn delete-btn" onclick="deleteGroupMember('${member.groupId}', '${member.userId}')">
+	                            <i class="fas fa-trash"></i> 删除
+	                        </button>
+	                    </div>
+	                </td>
+	            `;
+	            tbody.appendChild(tr);
+	        });
+	    }
+	    
+	    // 打开模态框
+	    function openModal(type) {
+	        if (!checkAuthBeforeRequest()) return;
+	        
+	        let modalId, titleId, title;
+	        
+	        switch(type) {
+	            case 'virtualCard':
+	                modalId = 'virtualCardModal';
+	                titleId = 'virtualCardModalTitle';
+	                title = '添加虚拟卡';
+	                resetVirtualCardForm();
+	                break;
+	            case 'group':
+	                modalId = 'groupModal';
+	                titleId = 'groupModalTitle';
+	                title = '添加分组';
+	                resetGroupForm();
+	                break;
+	            case 'groupMember':
+	                modalId = 'groupMemberModal';
+	                titleId = 'groupMemberModalTitle';
+	                title = '添加成员';
+	                resetGroupMemberForm();
+	                break;
+	        }
+	        
+	        document.getElementById(titleId).textContent = title;
+	        document.getElementById(modalId).classList.add('active');
+	    }
+	    
+	    // 关闭模态框
+	    function closeModal(modalId) {
+	        document.getElementById(modalId).classList.remove('active');
+	    }
+	    
+	    // 重置虚拟卡表单
+	    function resetVirtualCardForm() {
+	        document.getElementById('virtualCardForm').reset();
+	        document.getElementById('virtualCardId').value = '';
+	    }
+	    
+	    // 重置分组表单
+	    function resetGroupForm() {
+	        document.getElementById('groupForm').reset();
+	        document.getElementById('groupId').value = '';
+	    }
+	    
+	    // 重置成员表单
+	    function resetGroupMemberForm() {
+	        document.getElementById('groupMemberForm').reset();
+	        document.getElementById('memberAccessCode').value = '';
+	        document.getElementById('personalUrlDisplay').textContent = '保存后将自动生成URL';
+	        document.getElementById('personalUrlDisplay').style.color = '#666';
+	    }
+	    
+	    // 编辑虚拟卡
+	    function editVirtualCard(id) {
+	        if (!checkAuthBeforeRequest()) return;
+	        
+	        const card = virtualCards.find(c => c.id === id);
+	        if (!card) return;
+	        
+	        document.getElementById('virtualCardModalTitle').textContent = '编辑虚拟卡';
+	        document.getElementById('virtualCardId').value = card.id;
+	        document.getElementById('id').value = card.id;
+	        document.getElementById('cardName').value = card.cardName || '';
+	        document.getElementById('status').value = card.status;
+	        document.getElementById('phoneA').value = card.physicalCardAPhone || '';
+	        document.getElementById('pwdA').value = card.physicalCardAPwd || '';
+	        document.getElementById('phoneB').value = card.physicalCardBPhone || '';
+	        document.getElementById('pwdB').value = card.physicalCardBPwd || '';
+	        document.getElementById('usageRule').value = card.usageRule || '';
+	        document.getElementById('currentStatus').value = card.currentStatus || 0;
+	        document.getElementById('notAvailableDates').value = card.notAvailableDates || '';
+	        
+	        // 新增字段
+	        document.getElementById('usageDate').value = card.usageDate || '';
+	        document.getElementById('todayAccount').value = card.todayAccount || '';
+	        document.getElementById('todayPassword').value = card.todayPassword || '';
+	        document.getElementById('yesterdayAccount').value = card.yesterdayAccount || '';
+	        document.getElementById('yesterdayPassword').value = card.yesterdayPassword || '';
+	        document.getElementById('currentUsedBy').value = card.currentUsedBy || '';
+	        document.getElementById('currentUsageStartTime').value = formatDateTimeForInput(card.currentUsageStartTime) || '';
+	        
+	        document.getElementById('virtualCardModal').classList.add('active');
+	    }
+	    
+	    // 编辑分组
+	    function editGroup(groupId) {
+	        if (!checkAuthBeforeRequest()) return;
+	        
+	        const group = groups.find(g => g.groupId === groupId);
+	        if (!group) return;
+	        
+	        document.getElementById('groupModalTitle').textContent = '编辑分组';
+	        document.getElementById('groupId').value = group.groupId;
+	        document.getElementById('groupGroupId').value = group.groupId;
+	        document.getElementById('groupName').value = group.groupName;
+	        document.getElementById('defaultInterval').value = group.defaultInterval;
+	        document.getElementById('virtualCardId').value = group.virtualCardId;
+	        document.getElementById('groupStatus').value = group.status;
+	        
+	        document.getElementById('groupModal').classList.add('active');
+	    }
+	    
+	    // 编辑成员
+	    function editGroupMember(groupId, userId) {
+	        if (!checkAuthBeforeRequest()) return;
+	        
+	        const member = groupMembers.find(m => m.groupId === groupId && m.userId === userId);
+	        if (!member) return;
+	        
+	        document.getElementById('groupMemberModalTitle').textContent = '编辑成员';
+	        document.getElementById('memberGroupId').value = member.groupId;
+	        document.getElementById('memberUserId').value = member.userId;
+	        document.getElementById('memberUserName').value = member.userName || '';
+	        document.getElementById('useOrder').value = member.useOrder;
+	        document.getElementById('passwordSpecialTime').value = member.passwordSpecialTime || '';
+	        document.getElementById('customInterval').value = member.customInterval || '';
+	        document.getElementById('userCardStartTime').value = member.userCardStartTime || '';
+	        document.getElementById('userCardEndTime').value = member.userCardEndTime || '';
+	        document.getElementById('memberStatus').value = member.status;
+	        
+	        // 获取原有的 accessCode
+	        const existingAccessCode = extractAccessCodeFromUrl(member.personalUrl) || member.accessCode || generateAccessCode();
+	        document.getElementById('memberAccessCode').value = existingAccessCode;
+	        
+	        // 更新URL预览，保持原有的 accessCode
+	        const personalUrl = `${DOMAIN}/card.html?uId=${member.userId}&gId=${member.groupId}&code=${existingAccessCode}`;
+	        document.getElementById('personalUrlDisplay').textContent = personalUrl;
+	        document.getElementById('personalUrlDisplay').style.color = '#333';
+	        
+	        document.getElementById('groupMemberModal').classList.add('active');
+	    }
+	    
+	    // 保存虚拟卡
+	    async function saveVirtualCard() {
+	        if (!checkAuthBeforeRequest()) return;
+	        
+	        const formData = {
+	            id: document.getElementById('id').value,
+	            cardName: document.getElementById('cardName').value,
+	            status: parseInt(document.getElementById('status').value),
+	            physicalCardAPhone: document.getElementById('phoneA').value,
+	            physicalCardAPwd: document.getElementById('pwdA').value,
+	            physicalCardBPhone: document.getElementById('phoneB').value,
+	            physicalCardBPwd: document.getElementById('pwdB').value,
+	            usageRule: document.getElementById('usageRule').value,
+	            currentStatus: parseInt(document.getElementById('currentStatus').value),
+	            notAvailableDates: document.getElementById('notAvailableDates').value,
+	            // 新增字段
+	            usageDate: document.getElementById('usageDate').value,
+	            todayAccount: document.getElementById('todayAccount').value,
+	            todayPassword: document.getElementById('todayPassword').value,
+	            yesterdayAccount: document.getElementById('yesterdayAccount').value,
+	            yesterdayPassword: document.getElementById('yesterdayPassword').value,
+	            currentUsedBy: document.getElementById('currentUsedBy').value,
+	            currentUsageStartTime: document.getElementById('currentUsageStartTime').value
+	        };
+	        
+	        const originalId = document.getElementById('virtualCardId').value;
+	        const isEdit = !!originalId;
+	        
+	        try {
+	            const url = isEdit ? `/api/admin/virtual-cards/${originalId}` : '/api/admin/virtual-cards';
+	            const method = isEdit ? 'PUT' : 'POST';
+	            
+	            // 构建包含密码的请求数据
+	            const requestData = {
+	                password: currentPassword,
+	                virtualCard: formData
+	            };
+	            
+	            const response = await fetch(url, {
+	                method: method,
+	                headers: {
+	                    'Content-Type': 'application/json'
+	                },
+	                body: JSON.stringify(requestData),
+	                credentials: 'include'
+	            });
+	            
+	            const result = await response.json();
+	            
+	            if (result.success) {
+	                showAlert(isEdit ? '虚拟卡更新成功！' : '虚拟卡添加成功！', 'success');
+	                closeModal('virtualCardModal');
+	                await loadVirtualCards();
+	            } else {
+	                // 检查是否是密码错误
+	                if (response.status === 401 || result.message?.includes('未授权') || result.message?.includes('密码错误')) {
+	                    showAlert('密码验证失败，请重新登录', 'error');
+	                    logout();
+	                } else {
+	                    showAlert(result.message || '操作失败', 'error');
+	                }
+	            }
+	        } catch (error) {
+	            console.error('保存虚拟卡失败:', error);
+	            showAlert('保存失败: ' + error.message, 'error');
+	        }
+	    }
+	    
+	    // 保存分组
+	    async function saveGroup() {
+	        if (!checkAuthBeforeRequest()) return;
+	        
+	        const formData = {
+	            groupId: document.getElementById('groupGroupId').value,
+	            groupName: document.getElementById('groupName').value,
+	            defaultInterval: parseInt(document.getElementById('defaultInterval').value),
+	            virtualCardId: document.getElementById('virtualCardId').value,
+	            status: document.getElementById('groupStatus').value
+	        };
+	        
+	        const originalId = document.getElementById('groupId').value;
+	        const isEdit = !!originalId;
+	        
+	        try {
+	            const url = isEdit ? `/api/admin/groups/${originalId}` : '/api/admin/groups';
+	            const method = isEdit ? 'PUT' : 'POST';
+	            
+	            // 构建包含密码的请求数据
+	            const requestData = {
+	                password: currentPassword,
+	                group: formData
+	            };
+	            
+	            const response = await fetch(url, {
+	                method: method,
+	                headers: {
+	                    'Content-Type': 'application/json'
+	                },
+	                body: JSON.stringify(requestData),
+	                credentials: 'include'
+	            });
+	            
+	            const result = await response.json();
+	            
+	            if (result.success) {
+	                showAlert(isEdit ? '分组更新成功！' : '分组添加成功！', 'success');
+	                closeModal('groupModal');
+	                await loadGroups();
+	            } else {
+	                // 检查是否是密码错误
+	                if (response.status === 401 || result.message?.includes('未授权') || result.message?.includes('密码错误')) {
+	                    showAlert('密码验证失败，请重新登录', 'error');
+	                    logout();
+	                } else {
+	                    showAlert(result.message || '操作失败', 'error');
+	                }
+	            }
+	        } catch (error) {
+	            console.error('保存分组失败:', error);
+	            showAlert('保存失败: ' + error.message, 'error');
+	        }
+	    }
+	    
+	    // 保存成员
+	    async function saveGroupMember() {
+	        if (!checkAuthBeforeRequest()) return;
+	        
+	        const groupId = document.getElementById('memberGroupId').value;
+	        const userId = document.getElementById('memberUserId').value;
+	        
+	        // 获取原有的 accessCode，如果没有则生成新的
+	        const accessCode = document.getElementById('memberAccessCode').value || generateAccessCode();
+	        
+	        const formData = {
+	            groupId: groupId,
+	            userId: userId,
+	            userName: document.getElementById('memberUserName').value,
+	            useOrder: parseInt(document.getElementById('useOrder').value),
+	            passwordSpecialTime: document.getElementById('passwordSpecialTime').value,
+	            personalUrl: `${DOMAIN}/card.html?uId=${userId}&gId=${groupId}&code=${accessCode}`,
+	            accessCode: accessCode,
+	            customInterval: document.getElementById('customInterval').value ? parseInt(document.getElementById('customInterval').value) : null,
+	            userCardStartTime: document.getElementById('userCardStartTime').value,
+	            userCardEndTime: document.getElementById('userCardEndTime').value,
+	            status: document.getElementById('memberStatus').value
+	        };
+	        
+	        try {
+	            const requestData = {
+	                password: currentPassword,
+	                groupMember: formData
+	            };
+	            
+	            const response = await fetch('/api/admin/group-members', {
+	                method: 'POST',
+	                headers: {
+	                    'Content-Type': 'application/json'
+	                },
+	                body: JSON.stringify(requestData),
+	                credentials: 'include'
+	            });
+	            
+	            const result = await response.json();
+	            
+	            if (result.success) {
+	                showAlert('成员保存成功！', 'success');
+	                closeModal('groupMemberModal');
+	                await loadGroupMembers();
+	            } else {
+	                // 检查是否是密码错误
+	                if (response.status === 401 || result.message?.includes('未授权') || result.message?.includes('密码错误')) {
+	                    showAlert('密码验证失败，请重新登录', 'error');
+	                    logout();
+	                } else {
+	                    showAlert(result.message || '操作失败', 'error');
+	                }
+	            }
+	        } catch (error) {
+	            console.error('保存成员失败:', error);
+	            showAlert('保存失败: ' + error.message, 'error');
+	        }
+	    }
+	    
+	    // 初始化虚拟卡（调用resetToInitialState方法）
+	    async function resetVirtualCard(id) {
+	        if (!checkAuthBeforeRequest()) return;
+	        if (!confirm(`确定要初始化虚拟卡 ${id} 吗？这将重置当前状态为初始状态。`)) return;
+	        
+	        try {
+	            const response = await fetch(`/api/admin/virtual-cards/${id}/reset`, {
+	                method: 'POST',
+	                headers: {
+	                    'Content-Type': 'application/json'
+	                },
+	                body: JSON.stringify({
+	                    password: currentPassword
+	                }),
+	                credentials: 'include'
+	            });
+	            
+	            const result = await response.json();
+	            
+	            if (result.success) {
+	                showAlert('虚拟卡初始化成功！', 'success');
+	                await loadVirtualCards();
+	            } else {
+	                // 检查是否是密码错误
+	                if (response.status === 401 || result.message?.includes('未授权') || result.message?.includes('密码错误')) {
+	                    showAlert('密码验证失败，请重新登录', 'error');
+	                    logout();
+	                } else {
+	                    showAlert(result.message || '初始化失败', 'error');
+	                }
+	            }
+	        } catch (error) {
+	            console.error('初始化虚拟卡失败:', error);
+	            showAlert('初始化失败: ' + error.message, 'error');
+	        }
+	    }
+	    
+	    // 删除虚拟卡
+	    async function deleteVirtualCard(id) {
+	        if (!checkAuthBeforeRequest()) return;
+	        if (!confirm(`确定要删除虚拟卡 ${id} 吗？`)) return;
+	        
+	        try {
+	            const response = await fetch(`/api/admin/virtual-cards/${id}`, {
+	                method: 'DELETE',
+	                headers: {
+	                    'Content-Type': 'application/json'
+	                },
+	                body: JSON.stringify({
+	                    password: currentPassword
+	                }),
+	                credentials: 'include'
+	            });
+	            
+	            const result = await response.json();
+	            
+	            if (result.success) {
+	                showAlert('虚拟卡删除成功！', 'success');
+	                await loadVirtualCards();
+	            } else {
+	                // 检查是否是密码错误
+	                if (response.status === 401 || result.message?.includes('未授权') || result.message?.includes('密码错误')) {
+	                    showAlert('密码验证失败，请重新登录', 'error');
+	                    logout();
+	                } else {
+	                    showAlert(result.message || '删除失败', 'error');
+	                }
+	            }
+	        } catch (error) {
+	            console.error('删除虚拟卡失败:', error);
+	            showAlert('删除失败: ' + error.message, 'error');
+	        }
+	    }
+	    
+	    // 删除分组
+	    async function deleteGroup(groupId) {
+	        if (!checkAuthBeforeRequest()) return;
+	        if (!confirm(`确定要删除分组 ${groupId} 吗？`)) return;
+	        
+	        try {
+	            const response = await fetch(`/api/admin/groups/${groupId}`, {
+	                method: 'DELETE',
+	                headers: {
+	                    'Content-Type': 'application/json'
+	                },
+	                body: JSON.stringify({
+	                    password: currentPassword
+	                }),
+	                credentials: 'include'
+	            });
+	            
+	            const result = await response.json();
+	            
+	            if (result.success) {
+	                showAlert('分组删除成功！', 'success');
+	                await loadGroups();
+	            } else {
+	                // 检查是否是密码错误
+	                if (response.status === 401 || result.message?.includes('未授权') || result.message?.includes('密码错误')) {
+	                    showAlert('密码验证失败，请重新登录', 'error');
+	                    logout();
+	                } else {
+	                    showAlert(result.message || '删除失败', 'error');
+	                }
+	            }
+	        } catch (error) {
+	            console.error('删除分组失败:', error);
+	            showAlert('删除失败: ' + error.message, 'error');
+	        }
+	    }
+	    
+	    // 删除成员
+	    async function deleteGroupMember(groupId, userId) {
+	        if (!checkAuthBeforeRequest()) return;
+	        if (!confirm(`确定要删除成员 ${userId} 吗？`)) return;
+	        
+	        try {
+	            const response = await fetch(`/api/admin/group-members/${groupId}/${userId}`, {
+	                method: 'DELETE',
+	                headers: {
+	                    'Content-Type': 'application/json'
+	                },
+	                body: JSON.stringify({
+	                    password: currentPassword
+	                }),
+	                credentials: 'include'
+	            });
+	            
+	            const result = await response.json();
+	            
+	            if (result.success) {
+	                showAlert('成员删除成功！', 'success');
+	                await loadGroupMembers();
+	            } else {
+	                // 检查是否是密码错误
+	                if (response.status === 401 || result.message?.includes('未授权') || result.message?.includes('密码错误')) {
+	                    showAlert('密码验证失败，请重新登录', 'error');
+	                    logout();
+	                } else {
+	                    showAlert(result.message || '删除失败', 'error');
+	                }
+	            }
+	        } catch (error) {
+	            console.error('删除成员失败:', error);
+	            showAlert('删除失败: ' + error.message, 'error');
+	        }
+	    }
+	    
+	    // 显示提示信息
+	    function showAlert(message, type = 'success') {
+	        const alertEl = document.getElementById('alertMessage');
+	        alertEl.textContent = message;
+	        alertEl.className = `alert alert-${type}`;
+	        alertEl.style.display = 'block';
+	        
+	        // 3秒后自动隐藏
+	        setTimeout(() => {
+	            alertEl.style.display = 'none';
+	        }, 3000);
+	    }
+	    
+	    // 格式化日期时间
+	    function formatDateTime(dateString) {
+	        if (!dateString) return '-';
+	        try {
+	            const date = new Date(dateString);
+	            return date.toLocaleString('zh-CN');
+	        } catch (e) {
+	            return dateString;
+	        }
+	    }
+	    
+	    // 格式化日期
+	    function formatDate(dateString) {
+	        if (!dateString) return '-';
+	        try {
+	            const date = new Date(dateString);
+	            return date.toLocaleDateString('zh-CN');
+	        } catch (e) {
+	            return dateString;
+	        }
+	    }
+	    
+	    // 格式化日期时间为输入框格式
+	    function formatDateTimeForInput(dateString) {
+	        if (!dateString) return '';
+	        try {
+	            const date = new Date(dateString);
+	            return date.toISOString().slice(0, 16);
+	        } catch (e) {
+	            return '';
+	        }
+	    }
+	</script>
+</body>
+</html>

@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>地铁乘车状态查询</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .section {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #333;
+        }
+        input[type="text"], input[type="password"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+        .hint {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+        }
+        .btn {
+            background: linear-gradient(135deg, #1890ff, #096dd9);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-right: 10px;
+            transition: all 0.3s ease;
+        }
+        .btn:hover {
+            background: linear-gradient(135deg, #40a9ff, #1890ff);
+            transform: translateY(-1px);
+        }
+        .btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .btn-success {
+            background: linear-gradient(135deg, #52c41a, #389e0d);
+        }
+        .btn-success:hover {
+            background: linear-gradient(135deg, #73d13d, #52c41a);
+        }
+        .result-section {
+            margin-top: 20px;
+        }
+        .log-container {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 5px;
+            padding: 15px;
+            height: 300px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            white-space: pre-wrap;
+        }
+        .status-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 5px;
+        }
+        .status-running {
+            background: #1890ff;
+            animation: pulse 1.5s infinite;
+        }
+        .status-success {
+            background: #52c41a;
+        }
+        .status-error {
+            background: #ff4d4f;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+        .info-card {
+            background: #f0f8ff;
+            border: 1px solid #91d5ff;
+            border-radius: 6px;
+            padding: 15px;
+            margin-top: 10px;
+        }
+        .info-card h4 {
+            margin: 0 0 10px 0;
+            color: #1890ff;
+        }
+        .info-item {
+            margin-bottom: 5px;
+        }
+        .info-label {
+            font-weight: bold;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="section">
+        <h1>🚇 地铁乘车状态查询</h1>
+        <p>查询指定手机号的登录状态和最后乘车信息</p>
+        
+        <div class="form-group">
+            <label for="phoneNumber">手机号码：</label>
+            <input type="text" id="phoneNumber" placeholder="请输入手机号码" value="17820635357">
+            <div class="hint">请输入要查询的手机号码</div>
+        </div>
+        
+        <div class="form-group">
+            <label for="password">密码：</label>
+            <input type="password" id="password" placeholder="请输入登录密码" value="1Test12345">
+            <div class="hint">请输入该手机号对应的登录密码</div>
+        </div>
+        
+        <div class="form-group">
+            <button class="btn" id="loginBtn" onclick="startLogin()">
+                <span class="status-indicator status-running" style="display: none;"></span>
+                执行登录
+            </button>
+            <button class="btn btn-success" id="statusBtn" onclick="getLatestStatus()">
+                <span class="status-indicator status-running" style="display: none;"></span>
+                获取最后乘车状态
+            </button>
+            <button class="btn" onclick="clearLog()">清空日志</button>
+        </div>
+    </div>
+    
+    <div class="section result-section">
+        <h3>执行结果：</h3>
+        <div class="log-container" id="logContainer">
+等待操作...
+        </div>
+        
+        <div id="statusResult" style="display: none;">
+            <!-- 这里会动态显示乘车状态信息 -->
+        </div>
+    </div>
+
+    <script>
+        let isRunning = false;
+        const logContainer = document.getElementById('logContainer');
+        const loginBtn = document.getElementById('loginBtn');
+        const statusBtn = document.getElementById('statusBtn');
+        const statusResult = document.getElementById('statusResult');
+        
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const prefix = type === 'error' ? '❌' : type === 'success' ? '✅' : '📝';
+            const logEntry = `[${timestamp}] ${prefix} ${message}\n`;
+            logContainer.innerHTML += logEntry;
+            logContainer.scrollTop = logContainer.scrollHeight;
+        }
+        
+        function clearLog() {
+            logContainer.innerHTML = '日志已清空\n';
+            statusResult.style.display = 'none';
+            statusResult.innerHTML = '';
+        }
+        
+        function updateButtonState(running) {
+            isRunning = running;
+            loginBtn.disabled = running;
+            statusBtn.disabled = running;
+            
+            const loginIndicator = loginBtn.querySelector('.status-indicator');
+            const statusIndicator = statusBtn.querySelector('.status-indicator');
+            
+            if (running) {
+                loginIndicator.style.display = 'inline-block';
+                statusIndicator.style.display = 'inline-block';
+            } else {
+                loginIndicator.style.display = 'none';
+                statusIndicator.style.display = 'none';
+            }
+        }
+        
+        function validatePhoneNumber(phone) {
+            return /^1[3-9]\d{9}$/.test(phone);
+        }
+        
+        function displayStatusResult(data) {
+            if (!data || !data.success) return;
+            
+            let html = '<div class="info-card">';
+            html += '<h4>📊 乘车状态信息</h4>';
+            
+            if (data.rideStatus) {
+                html += `<div class="info-item"><span class="info-label">手机号码：</span>${data.phoneNumber || '未知'}</div>`;
+                html += `<div class="info-item"><span class="info-label">最后乘车时间：</span>${data.rideStatus.lastRideTime || '未知'}</div>`;
+                html += `<div class="info-item"><span class="info-label">最后乘车站点：</span>${data.rideStatus.lastStation || '未知'}</div>`;
+                html += `<div class="info-item"><span class="info-label">乘车状态：</span>${data.rideStatus.status || '未知'}</div>`;
+                html += `<div class="info-item"><span class="info-label">票卡余额：</span>${data.rideStatus.balance || '未知'}</div>`;
+            } else {
+                html += '<div class="info-item">暂无乘车记录或获取失败</div>';
+            }
+            
+            html += '</div>';
+            statusResult.innerHTML = html;
+            statusResult.style.display = 'block';
+        }
+        
+        async function startLogin() {
+            const phoneNumber = document.getElementById('phoneNumber').value.trim();
+            const password = document.getElementById('password').value.trim();
+            
+            if (!phoneNumber) {
+                alert('请输入手机号码');
+                return;
+            }
+            
+            if (!validatePhoneNumber(phoneNumber)) {
+                alert('请输入有效的手机号码');
+                return;
+            }
+            
+            if (!password) {
+                alert('请输入密码');
+                return;
+            }
+            
+            updateButtonState(true);
+            clearLog();
+            
+            log(`开始为手机 ${phoneNumber} 执行登录操作`);
+            
+            try {
+                const response = await fetch('/automation/login-single', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        phoneNumber: phoneNumber,
+                        password: password
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP错误! 状态码: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    log(`登录成功: ${data.message}`, 'success');
+                } else {
+                    log(`登录失败: ${data.message}`, 'error');
+                    if (data.error) {
+                        log(`错误详情: ${data.error}`, 'error');
+                    }
+                }
+                
+            } catch (error) {
+                log(`请求失败: ${error.message}`, 'error');
+            } finally {
+                updateButtonState(false);
+            }
+        }
+        
+        async function getLatestStatus() {
+            const phoneNumber = document.getElementById('phoneNumber').value.trim();
+            const password = document.getElementById('password').value.trim();
+            
+            if (!phoneNumber) {
+                alert('请输入手机号码');
+                return;
+            }
+            
+            if (!validatePhoneNumber(phoneNumber)) {
+                alert('请输入有效的手机号码');
+                return;
+            }
+            
+            if (!password) {
+                alert('请输入密码');
+                return;
+            }
+            
+            updateButtonState(true);
+            clearLog();
+            
+            log(`开始获取手机 ${phoneNumber} 的最后乘车状态`);
+            
+            try {
+                const response = await fetch('/automation/latest-status', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        phoneNumber: phoneNumber,
+                        password: password
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP错误! 状态码: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    log(`获取乘车状态成功`, 'success');
+                    displayStatusResult(data);
+                } else {
+                    log(`获取乘车状态失败: ${data.message}`, 'error');
+                    if (data.error) {
+                        log(`错误详情: ${data.error}`, 'error');
+                    }
+                }
+                
+            } catch (error) {
+                log(`请求失败: ${error.message}`, 'error');
+            } finally {
+                updateButtonState(false);
+            }
+        }
+        
+        // 输入框回车键支持
+        document.getElementById('password').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                startLogin();
+            }
+        });
+    </script>
+</body>
+</html>
