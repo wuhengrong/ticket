@@ -125,6 +125,12 @@ public class VipAdminService {
                 return GenerateRideLinkResponse.success(existingRecord.getQrUrl(), customer.getRideCount());
             }
             
+            //如果是测试账号U1015，返回第一个QR链接
+            if(customer.getUserName().equals("U1015")) {
+            	VipQR qr = vipQRRepository.getReferenceById(1l);
+            	return GenerateRideLinkResponse.success(qr.getCardUrl(), customer.getRideCount());
+            }
+            
             // 查找可用的VipQR
             List<VipQR> vipQRList = vipQRRepository.findByStatus(VipQR.QRStatus.AVAILABLE);
             VipQR vipQR = null;
