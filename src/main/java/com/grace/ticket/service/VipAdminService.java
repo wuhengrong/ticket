@@ -116,6 +116,9 @@ public class VipAdminService {
                 return GenerateRideLinkResponse.error("次卡次数已用完");
             }
             
+            //更新之前的active record
+            vipQrRecordService.batchUpdateExpiredQrRecords();
+            
             // 检查是否已有活跃的二维码记录
             VipQrRecord existingRecord = vipQrRecordService.findActiveByCustomerId(customerId);
             if (existingRecord != null) {

@@ -72,6 +72,52 @@ public class VipQrRecordService {
         return null;
     }
     
+    /**
+     * 查找并更新创建时间超过3小时的记录状态为USED
+     * 只处理状态为ACTIVE的记录
+     * 
+     * @return 更新的记录数量
+     */
+    public int updateExpiredQrRecords() {
+        LocalDateTime threeHoursAgo = LocalDateTime.now().minusHours(3);
+        List<VipQrRecord> expiredRecords = vipQrRecordRepository
+                .findByCreateTimeBeforeAndStatus(threeHoursAgo, "ACTIVE");
+        
+        int updatedCount = 0;
+        for (VipQrRecord record : expiredRecords) {
+            record.setStatus("USED");
+            record.setUpdateTime(LocalDateTime.now());
+            vipQrRecordRepository.saveAndFlush(record);
+            updatedCount++;
+        }
+        
+        return updatedCount;
+    }
+
+    /**
+     * 查找创建时间超过3小时的记录（只读）
+     * 
+     * @return 过期的记录列表
+     */
+    public List<VipQrRecord> findExpiredQrRecords() {
+        LocalDateTime threeHoursAgo = LocalDateTime.now().minusHours(3);
+        return vipQrRecordRepository
+                .findByCreateTimeBeforeAndStatus(threeHoursAgo, "ACTIVE");
+    }
+
+    /**
+     * 批量更新过期记录状态为USED（更高效的版本）
+     * 
+     * @return 更新的记录数量
+     */
+    public int batchUpdateExpiredQrRecords() {
+        LocalDateTime threeHoursAgo = LocalDateTime.now().minusHours(3);
+        int updatedCount = vipQrRecordRepository
+                .updateStatusByCreateTimeBefore(threeHoursAgo, "ACTIVE", "USED");
+        
+        return updatedCount;
+    }
+    
     public boolean deleteVipQrRecord(Long id) {
         if (vipQrRecordRepository.existsById(id)) {
             vipQrRecordRepository.deleteById(id);

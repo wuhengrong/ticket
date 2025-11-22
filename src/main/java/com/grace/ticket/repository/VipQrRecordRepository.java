@@ -1,9 +1,11 @@
 package com.grace.ticket.repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -35,4 +37,19 @@ public interface VipQrRecordRepository extends JpaRepository<VipQrRecord, Long> 
     // 统计各状态数量
     @Query("SELECT q.status, COUNT(q) FROM VipQrRecord q GROUP BY q.status")
     List<Object[]> countByStatus();
+    
+    /**
+     * 根据创建时间和状态查找记录
+     */
+    List<VipQrRecord> findByCreateTimeBeforeAndStatus(LocalDateTime createTime, String status);
+    
+    /**
+     * 批量更新过期记录状态（更高效的方式）
+     */
+    @Modifying
+    @Query("UPDATE VipQrRecord v SET v.status = :newStatus, v.updateTime = CURRENT_TIMESTAMP " +
+           "WHERE v.createTime < :cutoffTime AND v.status = :currentStatus")
+    int updateStatusByCreateTimeBefore(@Param("cutoffTime") LocalDateTime cutoffTime,
+                                      @Param("currentStatus") String currentStatus,
+                                      @Param("newStatus") String newStatus);
 }
