@@ -92,6 +92,104 @@ public class VipAdminController {
     }
     
     /**
+     * 根据乘车记录更新VIP卡信息
+     */
+    @PostMapping("/cards/{cardId}/update-from-ride")
+    public ResponseEntity<Map<String, Object>> updateCardFromRideRecords(
+            @PathVariable Long cardId,
+            @RequestBody RideRecordUpdateRequest updateRequest) {
+        Map<String, Object> response = new HashMap<>();
+        
+        try {
+            VipCardDTO updatedCard = vipAdminService.updateCardFromRideRecords(cardId, updateRequest);
+            response.put("success", true);
+            response.put("message", "VIP卡信息更新成功");
+            response.put("data", updatedCard);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            response.put("success", false);
+            response.put("message", "更新VIP卡信息失败");
+            response.put("error", e.getMessage());
+            return ResponseEntity.badRequest().body(response);
+        }
+    }
+    
+    
+    /**
+     * 根据手机号码和乘车记录更新VIP卡信息
+     */
+    @PostMapping("/cards/update-from-ride-by-phone")
+    public ResponseEntity<Map<String, Object>> updateCardFromRideRecordsByPhone(
+            @RequestBody RideRecordUpdateByPhoneRequest updateRequest) {
+        Map<String, Object> response = new HashMap<>();
+        
+        try {
+            System.out.println("=== 收到更新VIP卡请求（按手机号）===");
+            System.out.println("手机号码: " + updateRequest.getPhoneNumber());
+            System.out.println("乘车记录数量: " + (updateRequest.getRideRecords() != null ? updateRequest.getRideRecords().size() : 0));
+            
+            VipCardDTO updatedCard = vipAdminService.updateCardFromRideRecordsByPhone(updateRequest);
+            
+            response.put("success", true);
+            response.put("message", "VIP卡信息更新成功");
+            response.put("data", updatedCard);
+            
+            System.out.println("=== VIP卡更新成功 ===");
+            return ResponseEntity.ok(response);
+            
+        } catch (Exception e) {
+            System.err.println("=== VIP卡更新失败 ===");
+            System.err.println("错误信息: " + e.getMessage());
+            e.printStackTrace();
+            
+            response.put("success", false);
+            response.put("message", "更新VIP卡信息失败");
+            response.put("error", e.getMessage());
+            return ResponseEntity.badRequest().body(response);
+        }
+    }
+
+    /**
+     * 乘车记录更新请求类（基于卡ID）
+     */
+    public static class RideRecordUpdateRequest {
+        private List<Map<String, String>> rideRecords;
+        
+        public List<Map<String, String>> getRideRecords() {
+            return rideRecords;
+        }
+        
+        public void setRideRecords(List<Map<String, String>> rideRecords) {
+            this.rideRecords = rideRecords;
+        }
+    }
+    
+    /**
+     * 基于手机号码的乘车记录更新请求类
+     */
+    public static class RideRecordUpdateByPhoneRequest {
+        private String phoneNumber;
+        private List<Map<String, String>> rideRecords;
+        
+        public String getPhoneNumber() {
+            return phoneNumber;
+        }
+        
+        public void setPhoneNumber(String phoneNumber) {
+            this.phoneNumber = phoneNumber;
+        }
+        
+        public List<Map<String, String>> getRideRecords() {
+            return rideRecords;
+        }
+        
+        public void setRideRecords(List<Map<String, String>> rideRecords) {
+            this.rideRecords = rideRecords;
+        }
+    }
+    
+    
+    /**
      * 创建VIP卡
      */
     @PostMapping("/cards")

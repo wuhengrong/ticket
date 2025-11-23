@@ -2,7 +2,10 @@ package com.grace.ticket.service;
 
 
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -11,10 +14,12 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.grace.ticket.controller.VipAdminController;
 import com.grace.ticket.dto.GenerateRideLinkResponse;
 import com.grace.ticket.dto.VipCardDTO;
 import com.grace.ticket.dto.VipCustomerDTO;
 import com.grace.ticket.entity.VipCard;
+import com.grace.ticket.entity.VipCard.CardStatus;
 import com.grace.ticket.entity.VipCustomer;
 import com.grace.ticket.entity.VipQR;
 import com.grace.ticket.entity.VipQrRecord;
@@ -50,6 +55,252 @@ public class VipAdminService {
     private VipQrRecordService vipQrRecordService;
     // VipCard 相关方法
     
+    
+    
+    
+    /**
+     * 根据卡ID和乘车记录更新VIP卡信息
+     */
+    public VipCardDTO updateCardFromRideRecords(Long cardId, VipAdminController.RideRecordUpdateRequest updateRequest) {
+        VipCard vipCard = vipCardRepository.findById(cardId)
+                .orElseThrow(() -> new RuntimeException("VIP卡不存在"));
+        
+        List<Map<String, String>> rideRecords = updateRequest.getRideRecords();
+        
+        if (rideRecords == null || rideRecords.isEmpty()) {
+            throw new RuntimeException("没有乘车记录数据");
+        }
+        
+        // 处理乘车记录逻辑
+        processRideRecords(vipCard, rideRecords);
+        
+        VipCard savedCard = vipCardRepository.save(vipCard);
+        return new VipCardDTO(savedCard);
+    }
+    
+    /**
+     * 根据手机号码和乘车记录更新VIP卡信息
+     */
+    public VipCardDTO updateCardFromRideRecordsByPhone(VipAdminController.RideRecordUpdateByPhoneRequest updateRequest) {
+        String phoneNumber = updateRequest.getPhoneNumber();
+        List<Map<String, String>> rideRecords = updateRequest.getRideRecords();
+        
+        if (phoneNumber == null || phoneNumber.trim().isEmpty()) {
+            throw new RuntimeException("手机号码不能为空");
+        }
+        
+        if (rideRecords == null || rideRecords.isEmpty()) {
+            throw new RuntimeException("没有乘车记录数据");
+        }
+        
+        // 根据手机号码查找VIP卡
+        VipCard vipCard = vipCardRepository.findByPhoneNumber(phoneNumber)
+                .orElseThrow(() -> new RuntimeException("未找到手机号码 " + phoneNumber + " 对应的VIP卡"));
+        
+        System.out.println("找到VIP卡: " + vipCard.getCardNumber() + "，状态: " + vipCard.getStatus());
+        
+        // 处理乘车记录逻辑
+        processRideRecords(vipCard, rideRecords);
+        
+        VipCard savedCard = vipCardRepository.save(vipCard);
+        return new VipCardDTO(savedCard);
+    }
+    
+    /**
+     * 处理乘车记录并更新VIP卡信息
+     */
+    private void processRideRecords(VipCard vipCard, List<Map<String, String>> rideRecords) {
+        if (rideRecords.isEmpty()) {
+            return; // 0条记录，不处理
+        }
+        
+        // 获取第一条记录
+        Map<String, String> firstRecord = rideRecords.get(0);
+        String firstTime = firstRecord.get("time");
+        String firstInOut = firstRecord.get("inOut");
+        String firstStation = firstRecord.get("station");
+        
+        System.out.println("第一条记录 - 时间: " + firstTime + ", 进出: " + firstInOut + ", 站点: " + firstStation);
+        
+        // 设置首次使用时间（总是使用第一条记录的时间）
+        if (firstTime != null && !firstTime.trim().isEmpty()) {
+            LocalDateTime firstUseTime = parseDateTime(firstTime);
+            vipCard.setFirstUseTime(firstUseTime);
+            // 设置过期时间（首次使用时间+1天）
+            vipCard.setExpiryTime(firstUseTime.plusDays(1));
+            System.out.println("设置首次使用时间: " + firstUseTime);
+        }
+        
+        if (rideRecords.size() == 1) {
+            // 只有1条记录的情况
+            handleSingleRecord(vipCard, firstRecord);
+        } else {
+            // 多条记录的情况
+            handleMultipleRecords(vipCard, rideRecords);
+        }
+    }
+    
+    /**
+     * 处理单条记录的情况
+     */
+    private void handleSingleRecord(VipCard vipCard, Map<String, String> record) {
+        String time = record.get("time");
+        String inOut = record.get("inOut");
+        String station = record.get("station");
+        
+        if (time != null && !time.trim().isEmpty()) {
+            LocalDateTime dateTime = parseDateTime(time);
+            
+            // 设置上车时间
+           
+            if ("进站".equalsIgnoreCase(inOut)) {
+            	 vipCard.setBoardingTime(dateTime);
+                 vipCard.setFirstUseTime(dateTime);
+                 vipCard.setExpiryTime(dateTime.plusDays(1));
+                vipCard.setInOutStatus(VipCard.InOutStatus.IN);
+                vipCard.setBoardingStation(station);
+                System.out.println("单条记录 - 进站，设置上车时间和站点");
+            } else if ("出站".equalsIgnoreCase(inOut)) {
+                vipCard.setInOutStatus(VipCard.InOutStatus.OUT);
+                vipCard.setAlightingTime(dateTime);
+                vipCard.setAlightingStation(station);
+                System.out.println("单条记录 - 出站，设置下车时间和站点");
+            }
+        }
+    }
+    
+    /**
+     * 处理多条记录的情况
+     */
+    private void handleMultipleRecords(VipCard vipCard, List<Map<String, String>> rideRecords) {
+        // 获取最后一条记录
+        Map<String, String> lastRecord = rideRecords.get(rideRecords.size() - 1);
+        String lastTime = lastRecord.get("time");
+        String lastInOut = lastRecord.get("inOut");
+        String lastStation = lastRecord.get("station");
+        
+        System.out.println("最后一条记录 - 时间: " + lastTime + ", 进出: " + lastInOut + ", 站点: " + lastStation);
+        
+        if (lastTime != null && !lastTime.trim().isEmpty()) {
+            LocalDateTime lastDateTime = parseDateTime(lastTime);
+            
+            if ("进站".equalsIgnoreCase(lastInOut)) {
+                // 最后一条是进站记录
+                vipCard.setInOutStatus(VipCard.InOutStatus.IN);
+                vipCard.setBoardingTime(lastDateTime);
+                vipCard.setBoardingStation(lastStation);
+                // 清空下车信息
+                vipCard.setAlightingTime(null);
+                vipCard.setAlightingStation(null);
+                vipCard.setStatus(CardStatus.IN_USE);
+                System.out.println("多条记录 - 最后是进站，设置上车信息");
+            } else if ("出站".equalsIgnoreCase(lastInOut)) {
+                // 最后一条是出站记录
+                vipCard.setInOutStatus(VipCard.InOutStatus.OUT);
+                vipCard.setAlightingTime(lastDateTime);
+                vipCard.setAlightingStation(lastStation);
+                vipCard.setStatus(CardStatus.AVAILABLE);
+                
+                Map<String, String> lastSecondRecord = rideRecords.get(rideRecords.size() - 2);
+                String lastSecondTime = lastSecondRecord.get("time");
+                String lastSecondStation = lastSecondRecord.get("station");
+                vipCard.setBoardingStation(lastSecondStation);
+                if (lastSecondTime != null && !lastSecondTime.trim().isEmpty()) {
+                    LocalDateTime lastSecondDateTime = parseDateTime(lastSecondTime);
+                    vipCard.setBoardingTime(lastSecondDateTime);
+                }
+                
+                System.out.println("多条记录 - 最后是出站，设置下车信息");
+            }
+        }
+    }
+    
+    
+    
+    private LocalDateTime parseDateTime(String dateTimeStr) {
+        try {
+            if (dateTimeStr == null || dateTimeStr.trim().isEmpty()) {
+                System.err.println("日期时间字符串为空，使用当前时间");
+                return LocalDateTime.now();
+            }
+            
+            // 清理字符串
+            String cleanedDateTimeStr = cleanDateTimeString(dateTimeStr);
+            
+            System.out.println("尝试解析日期时间: '" + cleanedDateTimeStr + "'");
+            
+            // 尝试多种日期时间格式
+            DateTimeFormatter[] formatters = {
+                DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"),
+                DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss"),
+                DateTimeFormatter.ofPattern("yyyy.MM.dd HH:mm:ss"),
+                DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"),
+                DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm"),
+                DateTimeFormatter.ofPattern("yyyy年MM月dd日 HH:mm:ss")
+            };
+            
+            for (DateTimeFormatter formatter : formatters) {
+                try {
+                    LocalDateTime result = LocalDateTime.parse(cleanedDateTimeStr, formatter);
+                    System.out.println("✅ 使用格式 '" + formatter.toString() + "' 解析成功: " + result);
+                    return result;
+                } catch (Exception e) {
+                    // 继续尝试下一个格式
+                }
+            }
+            
+            // 如果所有格式都失败，尝试手动解析
+            return parseDateTimeManually(cleanedDateTimeStr);
+            
+        } catch (Exception e) {
+            System.err.println("❌ 所有解析方法都失败: '" + dateTimeStr + "'");
+            e.printStackTrace();
+            return LocalDateTime.now();
+        }
+    }
+
+    /**
+     * 清理日期时间字符串
+     */
+    private String cleanDateTimeString(String dateTimeStr) {
+        if (dateTimeStr == null) return "";
+        
+        // 移除所有不可见字符和特殊空白字符
+        return dateTimeStr.trim()
+                .replaceAll("[\\s\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF]+", " ")
+                .replaceAll("[\\u200B-\\u200D\\u2060-\\u206F\\uFEFF]", "")
+                .trim();
+    }
+
+    /**
+     * 手动解析日期时间（作为备用方案）
+     */
+    private LocalDateTime parseDateTimeManually(String dateTimeStr) {
+        try {
+            System.out.println("尝试手动解析: " + dateTimeStr);
+            
+            // 提取数字部分
+            String numbersOnly = dateTimeStr.replaceAll("[^0-9]", "");
+            System.out.println("纯数字: " + numbersOnly);
+            
+            if (numbersOnly.length() >= 14) { // yyyyMMddHHmmss
+                int year = Integer.parseInt(numbersOnly.substring(0, 4));
+                int month = Integer.parseInt(numbersOnly.substring(4, 6));
+                int day = Integer.parseInt(numbersOnly.substring(6, 8));
+                int hour = Integer.parseInt(numbersOnly.substring(8, 10));
+                int minute = Integer.parseInt(numbersOnly.substring(10, 12));
+                int second = Integer.parseInt(numbersOnly.substring(12, 14));
+                
+                return LocalDateTime.of(year, month, day, hour, minute, second);
+            }
+            
+            throw new IllegalArgumentException("无法手动解析日期时间");
+            
+        } catch (Exception e) {
+            System.err.println("手动解析也失败: " + e.getMessage());
+            throw e;
+        }
+    }
     public GenerateRideLinkResponse generateRideLink2(Long customerId, String startStation, String endStation) {
         try {
             // 查找客户

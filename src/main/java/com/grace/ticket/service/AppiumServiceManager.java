@@ -5,7 +5,10 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.net.URL;
 import java.time.Duration;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
@@ -496,6 +499,46 @@ private static void sleepWithBackoff(int retryCount) {
      }
  }
  
+ public static void backToHomeFromLastStation(AndroidDriver driver) {
+	    try {
+	        System.out.println("返回HOME页面...");
+	        WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(EXPLICIT_WAIT_SECONDS));
+	        
+	        int maxRetries = 5; // 最大尝试次数
+	        
+	        for (int i = 0; i < maxRetries; i++) {
+	            try {
+	                // 尝试查找返回按钮
+	                WebElement backButton = driver.findElement(By.id("com.iss.shenzhenmetro:id/iv_title_left"));
+	                
+	                if (backButton.isDisplayed()) {
+	                    wait.until(ExpectedConditions.elementToBeClickable(backButton)).click();
+	                    System.out.println("成功点击返回按钮，第 " + (i + 1) + " 次");
+	                    Thread.sleep(1000); // 等待页面响应
+	                } else {
+	                    System.out.println("返回按钮不可见，可能已回到首页");
+	                    break;
+	                }
+	                
+	            } catch (org.openqa.selenium.NoSuchElementException e) {
+	                System.out.println("未找到返回按钮，已回到首页");
+	                break;
+	            } catch (org.openqa.selenium.StaleElementReferenceException e) {
+	                System.out.println("元素状态已过期，重试中...");
+	                // 继续下一次循环重试
+	            } catch (Exception e) {
+	                System.out.println("第 " + (i + 1) + " 次点击时发生异常: " + e.getMessage());
+	                break;
+	            }
+	        }
+	        
+	        System.out.println("返回HOME页面流程完成");
+	        
+	    } catch(Exception e) {
+	        System.out.println("Exception in backToHomeFromQRCode: " + e.getMessage());
+	    }
+	}
+ 
  /**
   * 自动退出登录功能
   * @param driver AppiumDriver实例
@@ -886,11 +929,247 @@ private static void sleepWithBackoff(int retryCount) {
      System.out.println("修改密码失败，已达到最大重试次数: " + maxRetries);
  }
  
+ 
+ public List<Map<String, String>> getLatestStation(AndroidDriver driver) {
+	    WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(EXPLICIT_WAIT_SECONDS));
+	    Map<String, Object> result = new HashMap<>();
+	    List<Map<String, String>> recordList = new ArrayList<Map<String, String>>();
+	    try {
+	        System.out.println("开始执行获取乘车记录流程...");
+	        
+	        // 使用辅助方法执行每个步骤，失败时自动返回主页
+	        if (!executeStep(() -> clickHomeButton(driver, wait))) {
+	            result.put("status", "failed_at_home_button");
+	            return recordList;
+	        }
+	        
+	        if (!executeStep(() -> clickVirtualTicket(driver, wait))) {
+	            result.put("status", "failed_at_virtual_ticket");
+	            return recordList;
+	        }
+	        
+	        if (!executeStep(() -> clickTicketPocket(driver, wait))) {
+	            result.put("status", "failed_at_ticket_pocket");
+	            return recordList;
+	        }
+	        
+	        WebElement dayTicketElement;
+	        try {
+	            dayTicketElement = wait.until(ExpectedConditions.presenceOfElementLocated(By.xpath(
+	                "//android.view.View[@resource-id=\"van-tab-2\"]/android.view.View/android.view.View/android.view.View[2]/android.view.View[1]")));
+	        } catch (Exception e) {
+	            System.out.println("查找一日票元素失败: " + e.getMessage());
+	            backToHomeFromLastStation(driver);
+	            result.put("status", "failed_at_day_ticket");
+	            return recordList;
+	        }
+	        
+	        if (!executeStep(() -> clickTransactionRecord(dayTicketElement, wait))) {
+	            result.put("status", "failed_at_transaction_record");
+	            return recordList;
+	        }
+	        
+	        // 获取交易记录
+	        recordList = returnAllTransactionRecords(driver);
+	        
+	        backToHomeFromLastStation(driver);
+	        return recordList;
+	        
+	    } catch (Exception e) {
+	        System.out.println("获取过程中出现异常: " + e.getMessage());
+	        backToHomeFromLastStation(driver);
+	        e.printStackTrace();
+	        result.put("status", "failed_general_exception");
+	        result.put("error", e.getMessage());
+	        return recordList;
+	    }
+	}
+
+
+	// 辅助方法：执行步骤并在异常时返回主页
+	private boolean executeStep(Runnable step) {
+	    try {
+	        step.run();
+	        return true;
+	    } catch (Exception e) {
+	        System.out.println("步骤执行失败: " + e.getMessage());
+	        return false;
+	    }
+	}
+
+	// 各个步骤的具体实现（使用方案1修复）
+	private void clickHomeButton(AndroidDriver driver, WebDriverWait wait) {
+	    By homeButtonLocator = By.xpath("//android.widget.LinearLayout[@resource-id=\"com.iss.shenzhenmetro:id/home_bottom_tab\"]/android.widget.RelativeLayout[1]/android.widget.LinearLayout/android.widget.ImageView");
+	    wait.until(ExpectedConditions.elementToBeClickable(homeButtonLocator)).click();
+	}
+
+	private void clickVirtualTicket(AndroidDriver driver, WebDriverWait wait) {
+	    try {
+	        WebElement virtualTicketButtonLocator = driver.findElement(By.id("com.iss.shenzhenmetro:id/iconView"));
+	        wait.until(ExpectedConditions.elementToBeClickable(virtualTicketButtonLocator)).click();
+	        Thread.sleep(1000);
+	    } catch (InterruptedException e) {
+	        Thread.currentThread().interrupt();
+	        throw new RuntimeException("点击虚拟票按钮时线程被中断", e);
+	    }
+	}
+
+	private void clickTicketPocket(AndroidDriver driver, WebDriverWait wait) {
+	    try {
+	        WebElement ticketPocketButtonLocator = driver.findElement(By.xpath("//*[@text='我的票卡']"));
+	        wait.until(ExpectedConditions.elementToBeClickable(ticketPocketButtonLocator)).click();
+	        Thread.sleep(1000);
+	    } catch (InterruptedException e) {
+	        Thread.currentThread().interrupt();
+	        throw new RuntimeException("点击我的票卡时线程被中断", e);
+	    }
+	}
+
+	private void clickTransactionRecord(WebElement dayTicketElement, WebDriverWait wait) {
+	    WebElement transactionRecordButton = dayTicketElement
+	        .findElement(By.xpath("//android.widget.Button[@text=\"交易记录\"]"));
+	    wait.until(ExpectedConditions.elementToBeClickable(transactionRecordButton)).click();
+	}
+
+	private void processTransactionRecords(AndroidDriver driver) {
+	    try {
+	        Thread.sleep(3000);
+	        
+	        List<WebElement> objectElements = driver
+	            .findElements(By.xpath("//android.view.View[@text=\"[object Object]\"]"));
+	        
+	        if (objectElements.isEmpty()) {
+	            System.out.println("未找到任何[object Object]元素");
+	            throw new RuntimeException("No transaction records found");
+	        }
+	        
+	        WebElement targetElement = objectElements.get(objectElements.size() - 1);
+	        List<WebElement> allTextElements = targetElement.findElements(
+	            By.xpath(".//*[@text and string-length(@text) > 0 and @text != '[object Object]']"));
+	        
+	        if (allTextElements.size() >= 5) {
+	            System.out.println("时间： " + allTextElements.get(1).getText());
+	            System.out.println("进出： " + allTextElements.get(2).getText());
+	            System.out.println("站点： " + allTextElements.get(4).getText());
+	        }
+	    } catch (InterruptedException e) {
+	        Thread.currentThread().interrupt();
+	        throw new RuntimeException("处理交易记录时线程被中断", e);
+	    }
+	}
+	
+	private List<Map<String, String>> returnAllTransactionRecords(AndroidDriver driver) {
+	    List<Map<String, String>> recordList = new ArrayList<Map<String, String>>();
+	    try {
+	        Thread.sleep(3000);
+	        
+	        List<WebElement> objectElements = driver
+	            .findElements(By.xpath("//android.view.View[@text=\"[object Object]\"]"));
+	        
+	        if (objectElements.isEmpty()) {
+	            System.out.println("未找到任何[object Object]元素");
+	            throw new RuntimeException("No transaction records found");
+	        } else {
+	        	for(WebElement ele:objectElements) {
+	        		 Map<String, String> record = extractTransactionInfo(ele);
+	        		 recordList.add(record);
+	        	}
+	        }
+	        
+	        return recordList;
+	        
+	    } catch (InterruptedException e) {
+	        Thread.currentThread().interrupt();
+	        throw new RuntimeException("处理交易记录时线程被中断", e);
+	    }
+	}
+	
+	private Map<String, Map<String, String>> returnTransactionRecords(AndroidDriver driver) {
+	    Map<String, Map<String, String>> result = new HashMap<>();
+	    
+	    try {
+	        Thread.sleep(3000);
+	        
+	        List<WebElement> objectElements = driver
+	            .findElements(By.xpath("//android.view.View[@text=\"[object Object]\"]"));
+	        
+	        if (objectElements.isEmpty()) {
+	            System.out.println("未找到任何[object Object]元素");
+	            throw new RuntimeException("No transaction records found");
+	        }
+	        
+	        // 处理第一条记录
+	        WebElement firstElement = objectElements.get(0);
+	        Map<String, String> firstRecord = extractTransactionInfo(firstElement);
+	        result.put("first", firstRecord);
+	        
+	        // 处理最后一条记录
+	        WebElement lastElement = objectElements.get(objectElements.size() - 1);
+	        Map<String, String> lastRecord = extractTransactionInfo(lastElement);
+	        result.put("last", lastRecord);
+	        
+	        // 打印结果
+	        printTransactionResult(result);
+	        
+	        return result;
+	        
+	    } catch (InterruptedException e) {
+	        Thread.currentThread().interrupt();
+	        throw new RuntimeException("处理交易记录时线程被中断", e);
+	    }
+	}
+
+	/**
+	 * 提取交易记录信息到Map中
+	 */
+	private Map<String, String> extractTransactionInfo(WebElement element) {
+	    Map<String, String> record = new HashMap<>();
+	    
+	    try {
+	        List<WebElement> allTextElements = element.findElements(
+	            By.xpath(".//*[@text and string-length(@text) > 0 and @text != '[object Object]']"));
+	        
+	        if (allTextElements.size() >= 5) {
+	            record.put("time", allTextElements.get(1).getText());
+	            record.put("inOut", allTextElements.get(2).getText());
+	            record.put("station", allTextElements.get(4).getText());
+	        }
+	        
+	    } catch (Exception e) {
+	        System.out.println("提取交易信息时出错: " + e.getMessage());
+	    }
+	    
+	    return record;
+	}
+
+	/**
+	 * 打印交易记录结果
+	 */
+	private void printTransactionResult(Map<String, Map<String, String>> result) {
+	    System.out.println("=== 交易记录结果 ===");
+	    
+	    Map<String, String> first = result.get("first");
+	    if (!first.isEmpty()) {
+	        System.out.println("第一条记录:");
+	        System.out.println("  时间: " + first.get("time"));
+	        System.out.println("  进出: " + first.get("inOut"));
+	        System.out.println("  站点: " + first.get("station"));
+	    }
+	    
+	    Map<String, String> last = result.get("last");
+	    if (!last.isEmpty()) {
+	        System.out.println("最后一条记录:");
+	        System.out.println("  时间: " + last.get("time"));
+	        System.out.println("  进出: " + last.get("inOut"));
+	        System.out.println("  站点: " + last.get("station"));
+	    }
+	}
+	
  /**
   * 自动退出登录功能
   * @param driver AppiumDriver实例
   */
- public  String getLatestStation(AndroidDriver driver) {
+ public  String getLatestStation2(AndroidDriver driver) {
  	WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(EXPLICIT_WAIT_SECONDS));
  	try {
          System.out.println("开始执行获取二维码流程...");
@@ -960,7 +1239,9 @@ private static void sleepWithBackoff(int retryCount) {
         
          
      } catch (Exception e) {
-         System.out.println("登录过程中出现异常: " + e.getMessage());
+         System.out.println("获取过程中出现异常: " + e.getMessage());
+         
+         backToHomeFromLastStation(driver);
          e.printStackTrace();
      }
  	return "success";
@@ -982,11 +1263,11 @@ private static void sleepWithBackoff(int retryCount) {
          // 下面的流程与原来相同...
          By loginButtonLocator = By.xpath("//android.widget.TextView[@text='立即登录']");
          wait.until(ExpectedConditions.elementToBeClickable(loginButtonLocator)).click();
-         Thread.sleep(2000);
+         Thread.sleep(1000);
 
          By passwordLoginLocator = By.id("com.iss.shenzhenmetro:id/user_tv_psd_or_verify_login");
          wait.until(ExpectedConditions.elementToBeClickable(passwordLoginLocator)).click();
-         Thread.sleep(2000);
+         Thread.sleep(1000);
 
          By phoneInputLocator = By.id("com.iss.shenzhenmetro:id/user_et_pwd_phone_num");
          wait.until(ExpectedConditions.visibilityOfElementLocated(phoneInputLocator)).sendKeys(phoneNumber);
@@ -994,7 +1275,7 @@ private static void sleepWithBackoff(int retryCount) {
          By passwordInputLocator = By.id("com.iss.shenzhenmetro:id/user_et_password");
          wait.until(ExpectedConditions.visibilityOfElementLocated(passwordInputLocator)).sendKeys(password);
          
-         Thread.sleep(5000);
+         Thread.sleep(1000);
          
       // 在 driver 初始化 & wait 创建之后，执行隐私同意点击
          try {
@@ -1012,7 +1293,7 @@ private static void sleepWithBackoff(int retryCount) {
          wait.until(ExpectedConditions.elementToBeClickable(submitButtonLocator)).click();
 
          
-         Thread.sleep(3000);
+         Thread.sleep(1000);
          
 
          System.out.println("登录流程执行完成！");

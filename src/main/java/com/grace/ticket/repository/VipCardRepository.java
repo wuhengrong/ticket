@@ -72,5 +72,6 @@ public interface VipCardRepository extends JpaRepository<VipCard, Long> {
     @Query("SELECT vc FROM VipCard vc WHERE vc.status = 'STANDBY' ORDER BY vc.expiryTime ASC NULLS LAST")
     List<VipCard> findStandbyCards();
     
-    
+    @Query("SELECT vc FROM VipCard vc WHERE vc.cardNumber = :cardNumber")
+    Optional<VipCard> findByPhoneNumber(@Param("cardNumber") String cardNumber);
 }

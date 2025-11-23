@@ -1,6 +1,5 @@
 package com.grace.ticket.controller;
 
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -24,10 +23,9 @@ import io.appium.java_client.android.AndroidDriver;
 //@RequestMapping("/automation")
 public class AutomationController {
     
-    
-    
     @Autowired
     private AppiumServiceManager appiumServiceManager;
+    
     /**
      * 显示自动化管理页面
      */
@@ -36,7 +34,6 @@ public class AutomationController {
         return new ModelAndView("automation-manager"); // 对应HTML文件名
     }
     
-
     /**
      * 单手机号登录接口
      */
@@ -62,11 +59,48 @@ public class AutomationController {
             
             String status = appiumServiceManager.autoLogin(appiumServiceManager.getDriver(), phoneNumber, password);
             
-            //response.putAll("status",status);
+            if ("success".equals(status)) {
+                response.put("success", true);
+                response.put("message", "登录成功");
+            } else {
+                response.put("success", false);
+                response.put("message", "登录失败: " + status);
+            }
             
         } catch (Exception e) {
             response.put("success", false);
             response.put("message", "执行过程中发生错误");
+            response.put("error", e.getMessage());
+        }
+        
+        return response;
+    }
+    
+    /**
+     * 单手机号退出接口
+     */
+    @PostMapping("/logout-single")
+    public Map<String, Object> singleAutoLogout(@RequestBody SingleRequest request) {
+        Map<String, Object> response = new HashMap<>();
+        
+        try {
+            String phoneNumber = request.getPhoneNumber();
+            
+            if (phoneNumber == null || phoneNumber.trim().isEmpty()) {
+                response.put("success", false);
+                response.put("message", "手机号码不能为空");
+                return response;
+            }
+            
+            // 执行退出操作
+            AppiumServiceManager.autoLogout(appiumServiceManager.getDriver());
+            
+            response.put("success", true);
+            response.put("message", "退出成功");
+            
+        } catch (Exception e) {
+            response.put("success", false);
+            response.put("message", "退出过程中发生错误");
             response.put("error", e.getMessage());
         }
         
@@ -82,7 +116,6 @@ public class AutomationController {
         
         try {
             String phoneNumber = request.getPhoneNumber();
-            String password = request.getPassword();
             
             if (phoneNumber == null || phoneNumber.trim().isEmpty()) {
                 response.put("success", false);
@@ -90,14 +123,29 @@ public class AutomationController {
                 return response;
             }
             
-            String status = appiumServiceManager.getLatestStation(appiumServiceManager.getDriver());
-            // 执行获取乘车状态操作
-            Map<String, Object> result = new HashMap<>();
-
-         // 将status添加到结果中
-            result.put("loginStatus", status);
+            // 获取交易记录列表
+            List<Map<String, String>> recordList = appiumServiceManager.getLatestStation(appiumServiceManager.getDriver());
             
-            response.putAll(result);
+            // 构建交易记录响应数据
+            List<Map<String, Object>> transactionRecords = new ArrayList<>();
+            int recordCount = 1;
+            
+            for (Map<String, String> rec : recordList) {
+                Map<String, Object> recordInfo = new HashMap<>();
+                recordInfo.put("recordNumber", recordCount);
+                recordInfo.put("time", rec.get("time"));
+                recordInfo.put("inOut", rec.get("inOut"));
+                recordInfo.put("station", rec.get("station"));
+                transactionRecords.add(recordInfo);
+                recordCount++;
+            }
+            
+            // 构建响应数据
+            response.put("success", true);
+            response.put("message", "获取状态成功");
+            response.put("phoneNumber", phoneNumber);
+            response.put("totalRecords", recordList.size());
+            response.put("transactionRecords", transactionRecords);
             
         } catch (Exception e) {
             response.put("success", false);
@@ -107,7 +155,6 @@ public class AutomationController {
         
         return response;
     }
-    
     /**
      * 批量自动登录接口
      */
@@ -130,10 +177,8 @@ public class AutomationController {
             List<Future<Map<String, Object>>> futures = new ArrayList<>();
             
             for (String phoneNumber : phoneNumbers) {
-            	
-            	appiumServiceManager.autoLogin(appiumServiceManager.getDriver(), phoneNumber, password);
-            	appiumServiceManager.getLatestStation(appiumServiceManager.getDriver());
-               
+                appiumServiceManager.autoLogin(appiumServiceManager.getDriver(), phoneNumber, password);
+                appiumServiceManager.getLatestStation(appiumServiceManager.getDriver());
             }
             
             // 收集所有结果
@@ -178,24 +223,22 @@ public class AutomationController {
                 return response;
             }
             
-            // 为每个手机号码创建异步任务
-            List<Future<Map<String, Object>>> futures = new ArrayList<>();
-            
+            // 为每个手机号码执行退出操作
             for (String phoneNumber : phoneNumbers) {
-              
-            }
-            
-            // 收集所有结果
-            for (Future<Map<String, Object>> future : futures) {
+                Map<String, Object> result = new HashMap<>();
+                result.put("phoneNumber", phoneNumber);
+                
                 try {
-                    results.add(future.get());
+                    // 执行退出操作
+                    AppiumServiceManager.autoLogout(appiumServiceManager.getDriver());
+                    result.put("success", true);
+                    result.put("message", "退出成功");
                 } catch (Exception e) {
-                    Map<String, Object> errorResult = new HashMap<>();
-                    errorResult.put("phoneNumber", "未知");
-                    errorResult.put("success", false);
-                    errorResult.put("error", "任务执行异常: " + e.getMessage());
-                    results.add(errorResult);
+                    result.put("success", false);
+                    result.put("error", "退出失败: " + e.getMessage());
                 }
+                
+                results.add(result);
             }
             
             response.put("success", true);
